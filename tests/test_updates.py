@@ -122,6 +122,16 @@ def test_testing_channel_sees_prereleases(setup):
 
 
 @needs_uv
+def test_stable_channel_hides_saved_prereleases(setup, monkeypatch):
+    """No estavel, um pre-lancamento guardado neste PC nao aparece (so se for o que esta em uso); no testes, sim."""
+    client, ups, home, data, restarted, singing = setup
+    monkeypatch.setattr(versoes.Home, "installed", lambda self: ["0.7.0", "0.9.0-beta.1"])
+    assert [v["version"] for v in client.get("/api/app").get_json()["available"]] == ["0.7.0"]
+    home.set_channel("testes")
+    assert [v["version"] for v in client.get("/api/app").get_json()["available"]] == ["0.9.0-beta.1", "0.7.0"]
+
+
+@needs_uv
 def test_installed_versions_stay_listed_even_offline(setup):
     client, ups, home, data, restarted, singing = setup
     st = client.get("/api/app").get_json()  # nunca procurou (sem internet)

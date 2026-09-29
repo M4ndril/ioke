@@ -11,6 +11,24 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-29
+
+### Changed
+
+- **With the stage open on another screen**, the PC's library no longer plays anything: the highlight with the
+  music videos is hidden and picking a song puts it in the singer queue (opening the player directly offers "Add to
+  the queue" too). The bar at the top of "Sing" has a **Close the stage** button. When the stage closes, everything
+  goes back to normal.
+- The stage opens in its own Edge (or Chrome) window, separate from the app's window.
+
+### Fixed
+
+- **The stage video no longer stutters** when you scroll the library on the other screen.
+- Closing the stage is much faster (about 1 s), and the PC pages see it closed right away.
+- The **Stable** channel no longer lists the pre-releases saved on this PC (only the one in use, if it is one).
+- After installing over an older version, the shortcuts and the program show the new icon right away (Windows kept
+  the old one in its icon cache).
+
 ## [1.0.1-beta.3] - 2026-09-29
 
 ### Changed
@@ -64,7 +82,8 @@ The first public version of IOkê: a karaoke app for Windows that runs on your o
 - **Updates** from this page, in the background, with the Stable and Testing channels, and going back to the
   previous version by itself if a new one doesn't open.
 
-[Unreleased]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.3...HEAD
+[Unreleased]: https://github.com/M4ndril/ioke/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1
 [1.0.1-beta.3]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.2...v1.0.1-beta.3
 [1.0.1-beta.2]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.1...v1.0.1-beta.2
 [1.0.1-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1-beta.1

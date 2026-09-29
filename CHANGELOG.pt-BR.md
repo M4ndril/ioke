@@ -11,6 +11,23 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+## [1.0.1] - 2026-09-29
+
+### Mudado
+
+- **Com o palco aberto em outra tela**, a biblioteca do PC não toca mais nada: o destaque com os clipes some e
+  escolher uma música coloca ela na fila de cantores (abrir o player direto também oferece "Pôr na fila"). A faixa no
+  topo do "Cantar" tem o botão **Fechar o palco**. Quando o palco fecha, tudo volta ao normal.
+- O palco abre numa janela própria do Edge (ou do Chrome), separada da janela do app.
+
+### Corrigido
+
+- **O vídeo do palco não trava mais** quando você rola a biblioteca na outra tela.
+- Fechar o palco ficou bem mais rápido (cerca de 1 s), e as páginas do PC já veem o palco fechado na hora.
+- O canal **Estável** não lista mais os pré-lançamentos guardados neste PC (só o que está em uso, se for um).
+- Depois de instalar por cima de uma versão antiga, os atalhos e o programa já aparecem com o ícone novo (o Windows
+  guardava o antigo no cache de ícones).
+
 ## [1.0.1-beta.3] - 2026-09-29
 
 ### Mudado
@@ -64,7 +81,8 @@ A primeira versão pública do IOkê: um app de karaokê para Windows que roda n
 - **Atualizações** por esta página, em segundo plano, com os canais Estável e Testes, e a volta sozinha para a versão
   anterior se uma nova não abrir.
 
-[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.3...HEAD
+[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1
 [1.0.1-beta.3]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.2...v1.0.1-beta.3
 [1.0.1-beta.2]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.1...v1.0.1-beta.2
 [1.0.1-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1-beta.1

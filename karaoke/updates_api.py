@@ -94,8 +94,11 @@ class Updates:
         with self.lock:
             now = versoes.version_key(current)
             listed = {v["version"] for v in self.available}
-            # as guardadas neste PC aparecem sempre (voltar para elas nao precisa de internet)
-            local = [{"version": v, "date": None, "notes": [], "local": True} for v in installed if v not in listed]
+            # as guardadas neste PC aparecem (voltar para elas nao precisa de internet), mas so as do canal: no
+            # estavel, um pre-lancamento guardado so aparece se for o que esta em uso
+            testes = self.channel()["canal"] == "testes"
+            local = [{"version": v, "date": None, "notes": [], "local": True} for v in installed
+                     if v not in listed and (testes or not versoes.is_prerelease(v) or v == current)]
             idioma = i18n.idioma_do_pedido()
             available = [dict(v, notes=(v.get("notas") or {}).get(idioma, v.get("notes") or []),
                               installed=v["version"] in installed, current=v["version"] == current,
