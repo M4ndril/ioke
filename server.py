@@ -944,6 +944,7 @@ def api_stage_action(action):
         return jsonify(stage.open_stage(f"http://127.0.0.1:{PORT}/palco?tv=1", monitor=monitor))
     if action == "close":
         stage.close_stage()
+        remote.drop_tv()  # as paginas do PC ja veem o palco fechado (sem esperar a conexao dele cair)
         return jsonify(stage.status())
     return error("erro.acao_desconhecida", 404)
 

@@ -397,13 +397,10 @@ function renderPartyStrip(p) {
     </div>
     <div class="ps-actions">
       <button class="btn outline sm" data-ps="queue">${icon("format_list_bulleted")} ${esc(t("sing.ver_fila"))}</button>
-      ${p.tv_stage && !IS_TV // na propria janela do palco, o botao so volta para o palco
-        ? `<button class="btn ghost sm" data-ps="tv">${icon("cast_connected")} ${esc(t("sing.palco_na_tv"))}</button>`
+      ${p.tv_stage && !IS_TV ? "" // o palco esta aberto na TV: o "Fechar o palco" fica na faixa de cima
         : `<a class="btn light sm" href="/palco" data-open-stage>${icon("tv")} ${esc(t("nav.palco"))}</a>`}
     </div>`;
   $('[data-ps="queue"]', strip).onclick = openQueue;
-  const tv = $('[data-ps="tv"]', strip);
-  if (tv) tv.onclick = () => toast(t("sing.palco_na_tv_aviso"), { ms: 5000 });
   strip.classList.remove("hidden");
 }
 
@@ -417,6 +414,22 @@ async function refreshParty() {
     /* sem servidor */
   }
 }
+
+$("#palcoFechar").onclick = async (e) => {
+  if (!confirm(t("palco.fechar_confirmar"))) return;
+  e.currentTarget.disabled = true;
+  try {
+    await api("/api/stage/close", { method: "POST" });
+    toast(t("palco.fechado"));
+  } catch (err) {
+    toast(err.message, { error: true });
+  }
+  e.currentTarget.disabled = false;
+  refresh(); // ja volta o destaque e o "Abrir o palco"
+};
+
+// fechou/abriu o palco por outro lugar desta pagina (Configuracoes): atualiza na hora
+document.addEventListener("karaoke:refresh", () => refresh());
 
 // ------------------------------------------------------------------ dados
 let timer = null;

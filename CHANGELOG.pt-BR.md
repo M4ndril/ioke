@@ -11,6 +11,18 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+## [1.0.1-beta.3] - 2026-09-29
+
+### Mudado
+
+- **Fechar o palco pela biblioteca:** com o palco aberto na TV, a faixa no topo do "Cantar" tem o botão
+  **Fechar o palco**.
+
+### Corrigido
+
+- Fechar o palco ficou bem mais rápido (cerca de 1 s em vez de vários), e as páginas do PC já veem o palco fechado na
+  hora: o destaque e o "Abrir o palco" voltam sozinhos.
+
 ## [1.0.1-beta.2] - 2026-09-29
 
 ### Corrigido
@@ -52,7 +64,8 @@ A primeira versão pública do IOkê: um app de karaokê para Windows que roda n
 - **Atualizações** por esta página, em segundo plano, com os canais Estável e Testes, e a volta sozinha para a versão
   anterior se uma nova não abrir.
 
-[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.2...HEAD
+[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.3...HEAD
+[1.0.1-beta.3]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.2...v1.0.1-beta.3
 [1.0.1-beta.2]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.1...v1.0.1-beta.2
 [1.0.1-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1-beta.1
 [1.0.0]: https://github.com/M4ndril/ioke/releases/tag/v1.0.0

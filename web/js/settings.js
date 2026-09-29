@@ -147,7 +147,10 @@ function mountStage(box) {
       }
     };
     const closeBtn = box.querySelector("[data-close-stage]");
-    if (closeBtn) closeBtn.onclick = async () => render(await api("/api/stage/close", { method: "POST" }).catch(() => st));
+    if (closeBtn) closeBtn.onclick = async () => {
+      render(await api("/api/stage/close", { method: "POST" }).catch(() => st));
+      document.dispatchEvent(new Event("karaoke:refresh")); // a pagina atras ja ve o palco fechado
+    };
   };
   async function load() {
     try {

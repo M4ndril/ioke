@@ -45,6 +45,7 @@ MAKERS = {
 
 _lock = threading.Lock()
 _proc = None
+_fechado = False  # este servidor fechou o palco (sabe que nao ha janela; nao precisa procurar)
 APP_CONTROL = os.environ.get("KARAOKE_APP_CONTROL")  # canal da janela do app (so no app instalado)
 APP_TOKEN = os.environ.get("KARAOKE_APP_TOKEN", "")
 
@@ -238,14 +239,16 @@ def is_open():
     with _lock:
         if _proc is not None:
             return _proc.poll() is None
-    return bool(_find_pids())
+        if _fechado:
+            return False
+    return bool(_find_pids())  # o servidor reiniciou com o palco aberto: procura a janela
 
 
 def open_stage(url, monitor=None):
     """Abre a janela do palco. Palco e um so: se ja houver uma janela aberta, ela
     e fechada antes (reabrir tambem serve para valer o modo/monitor atual).
     `monitor`: a tela escolhida agora (fica guardada como a ultima usada)."""
-    global _proc
+    global _proc, _fechado
     if _na_janela_do_app():
         return _open_in_app(url, monitor)
     found = find_browser()
@@ -282,6 +285,7 @@ def open_stage(url, monitor=None):
         args += ["--start-fullscreen", f"--app={url}"]
     with _lock:
         _proc = subprocess.Popen(args, creationflags=NO_WINDOW)
+        _fechado = False
     log.info("palco aberto (%s) em %s", s["mode"], mon["label"] if mon else "?")
     result = status()
     result["opened_on"] = mon["label"] if mon else None
@@ -306,7 +310,7 @@ def _open_in_app(url, monitor=None):
 
 
 def close_stage():
-    global _proc
+    global _proc, _fechado
     if APP_CONTROL:
         try:
             _app("/palco/fechar", {})  # um palco aberto numa janela do app (sem navegador, ou de antes)
@@ -315,12 +319,22 @@ def close_stage():
         if _na_janela_do_app():
             return True
     with _lock:
-        pids = [_proc.pid] if _proc is not None and _proc.poll() is None else []
-        _proc = None
-    if not pids:
-        pids = _find_pids()
+        proc, _proc = _proc, None
+        _fechado = True
+    if proc is not None:
+        # a janela que este servidor abriu: pede para fechar (como clicar no X) e espera o proprio processo;
+        # em tela cheia o Chrome costuma ignorar o pedido, entao em 1 s forca (o perfil do palco ja e
+        # preparado para nao mostrar "restaurar paginas" depois)
+        if proc.poll() is not None:
+            return False
+        subprocess.run(["taskkill", "/PID", str(proc.pid), "/T"], capture_output=True, creationflags=NO_WINDOW)
+        try:
+            proc.wait(timeout=1)
+        except subprocess.TimeoutExpired:
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True, creationflags=NO_WINDOW)
+        return True
+    pids = _find_pids()  # aberta antes de o servidor reiniciar: procura pelo perfil do palco
     for pid in pids:
-        # primeiro pede para fechar (como clicar no X); se nao fechar, forca
         subprocess.run(["taskkill", "/PID", str(pid), "/T"], capture_output=True, creationflags=NO_WINDOW)
     deadline = time.time() + 4
     while pids and time.time() < deadline and _find_pids():

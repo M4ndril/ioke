@@ -124,6 +124,12 @@ class Hub:
         name = i18n.t(PAGE_NAMES[c["path"]]) if c["path"] in PAGE_NAMES else c["path"]
         return f"{name} (TV)" if c["tv"] else name
 
+    def drop_tv(self):
+        """O palco foi fechado pelo app: esquece a janela dele na hora (sem esperar a conexao cair)."""
+        with self.lock:
+            for page in [p for p, c in self.clients.items() if c["tv"]]:
+                self.clients.pop(page)["queue"].put(None)
+
     def tv_open(self):
         """A janela do "Palco na TV" esta aberta (conectada)?"""
         with self.lock:
