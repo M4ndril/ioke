@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="sing.pagina">Cantar — IOkê</title>
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/fonts/inter.css">
+  <link rel="stylesheet" href="/fonts/icons.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/pages.css">
+</head>
+<body class="sing-page">
+  <nav class="nav" id="nav">
+    <a class="wordmark" href="/"><img class="wordmark-logo" src="/static/img/marca/logo-fundo-escuro.svg" alt="IOkê"></a>
+    <div class="nav-links">
+      <a href="/" data-i18n="nav.inicio">Início</a>
+      <a href="/palco" data-open-stage data-i18n="nav.palco">Abrir o palco</a>
+      <a href="/cantar" class="active" data-i18n="nav.cantar">Cantar</a>
+      <a href="/adicionar" data-i18n="nav.adicionar">Adicionar músicas</a>
+    </div>
+  </nav>
+
+  <section class="hero" id="hero">
+    <div class="hero-media">
+      <div class="hero-bg" id="heroBg"></div>
+      <video class="hero-video" id="heroVideo" muted playsinline loop preload="none"></video>
+    </div>
+    <div class="hero-shade"></div>
+    <div class="hero-inner">
+      <div class="hero-content" id="heroContent">
+        <span class="hero-eyebrow" id="heroEyebrow" data-i18n="sing.recente">Adicionada recentemente</span>
+        <h1 id="heroTitle" data-i18n="sing.biblioteca">Sua biblioteca</h1>
+        <div class="hero-artist" id="heroArtist"></div>
+        <div class="hero-meta" id="heroMeta"></div>
+        <div class="hero-actions">
+          <a class="btn light lg" id="heroPlay" href="#" data-nav-default><span class="ms fill">play_arrow</span> <span data-i18n="sing.cantar">Cantar</span></a>
+          <button class="btn ghost lg" id="heroPreview" data-stop><span class="ms">headphones</span> <span data-i18n="sing.ouvir_trecho">Ouvir trecho</span></button>
+        </div>
+      </div>
+      <div class="hero-art" id="heroArtWrap"><img id="heroArt" alt=""></div>
+    </div>
+    <div class="hero-dots" id="heroDots"></div>
+  </section>
+
+  <section class="party-strip hidden" id="partyStrip"></section>
+
+  <div class="toolbar" id="toolbar">
+    <div class="tb-group">
+      <span class="tb-label" data-i18n="sing.ordenar">Ordenar</span>
+      <button class="chip" data-sort="added" data-i18n="sing.adicionadas">Adicionadas</button>
+      <button class="chip" data-sort="played" data-i18n="sing.cantadas">Cantadas recentemente</button>
+      <button class="chip" data-sort="alpha" data-i18n="sing.alfabetica">Ordem alfabética</button>
+      <button class="chip dir" id="dirBtn" title="Inverter a ordem" data-i18n-title="sing.inverter"><span class="ms sm">swap_vert</span> <span id="dirLabel"></span></button>
+    </div>
+    <div class="tb-group">
+      <span class="tb-label" data-i18n="sing.agrupar">Agrupar</span>
+      <button class="chip" data-group="none" data-i18n="sing.tudo">Tudo</button>
+      <button class="chip" data-group="genre" data-i18n="sing.estilo">Estilo</button>
+      <button class="chip" data-group="artist" data-i18n="sing.artista">Artista</button>
+      <button class="chip" data-group="album" data-i18n="sing.album">Álbum</button>
+    </div>
+    <div class="tb-search">
+      <span class="ms sm">search</span>
+      <input id="filter" placeholder="Buscar na biblioteca" data-i18n-placeholder="fila.buscar_biblioteca" autocomplete="off">
+    </div>
+  </div>
+
+  <main class="library" id="library"><div class="empty" data-i18n="comum.carregando">Carregando...</div></main>
+
+  <script type="module" src="/static/js/sing.js"></script>
+</body>
+</html>

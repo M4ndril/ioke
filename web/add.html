@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="adicionar.pagina">Adicionar músicas — IOkê</title>
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/fonts/inter.css">
+  <link rel="stylesheet" href="/fonts/icons.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/pages.css">
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <a class="wordmark" href="/"><img class="wordmark-logo" src="/static/img/marca/logo-fundo-escuro.svg" alt="IOkê"></a>
+    <div class="nav-links">
+      <a href="/" data-i18n="nav.inicio">Início</a>
+      <a href="/palco" data-open-stage data-i18n="nav.palco">Abrir o palco</a>
+      <a href="/cantar" data-i18n="nav.cantar">Cantar</a>
+      <a href="/adicionar" class="active" data-i18n="nav.adicionar">Adicionar músicas</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <header class="page-head">
+      <h1 data-i18n="nav.adicionar">Adicionar músicas</h1>
+      <p data-i18n="adicionar.lead">Envie os seus arquivos ou busque numa fonte de músicas. A voz é separada e a música aparece pronta para cantar.</p>
+    </header>
+
+    <div class="add-layout">
+      <section class="add-main">
+        <div class="upload-box" id="upload"></div>
+        <p class="small muted hidden" id="semFontes" data-i18n="adicionar.sem_fontes">Para buscar músicas em outros lugares, instale um complemento em Configurações → Complementos.</p>
+        <div id="searchArea" class="hidden">
+        <div class="fontes-bar hidden" id="fontes"></div>
+        <form class="search-pill" id="searchForm">
+          <span class="search-icon ms">search</span>
+          <input id="q" data-i18n-placeholder="adicionar.placeholder" placeholder="Artista ou música" autocomplete="off" autofocus data-nav-default>
+          <button id="searchBtn" type="submit" data-i18n="comum.buscar">Buscar</button>
+        </form>
+        <div class="results" id="results"></div>
+        <div class="tips" id="tips">
+          <div class="tip"><span class="ms tip-icon">person_search</span><b data-i18n="adicionar.dica1">Inclua o artista</b><span data-i18n="adicionar.dica1_texto">"legião urbana tempo perdido" acha mais rápido que só o nome da música.</span></div>
+          <div class="tip"><span class="ms tip-icon">headphones</span><b data-i18n="adicionar.dica2">Ouça antes</b><span data-i18n="adicionar.dica2_texto">O botão "Ouvir trecho" toca 7 segundos do meio para conferir se é a versão certa.</span></div>
+          <div class="tip"><span class="ms tip-icon">playlist_add</span><b data-i18n="adicionar.dica3">Pode enfileirar</b><span data-i18n="adicionar.dica3_texto">Enquanto uma música é separada na GPU, as próximas já vão sendo preparadas.</span></div>
+        </div>
+        </div>
+      </section>
+
+      <aside class="add-aside">
+        <div class="card">
+          <h3 class="card-title"><span class="ms">queue_music</span> <span data-i18n="adicionar.fila">Fila de processamento</span> <span class="badge gray" id="queueCount">0</span></h3>
+          <div class="list" id="jobs"></div>
+          <div class="empty small" id="jobsEmpty" data-i18n="adicionar.nada_processando">Nada sendo processado agora.</div>
+          <div class="queue-foot"><span class="small muted device" id="device"></span><div class="row"><button class="btn outline xs" id="qualityBtn" title="Qualidade da separação" data-i18n-title="qualidade.titulo"><span class="ms">tune</span> <span id="qualityLabel" data-i18n="adicionar.qualidade">Qualidade</span></button></div></div>
+        </div>
+
+        <div class="card session-card">
+          <h3 class="card-title"><span class="ms">qr_code_2</span> <span data-i18n="adicionar.pelo_celular">Adicione pelo celular</span></h3>
+          <div class="session-body">
+            <img id="qr" alt="QR code da sessão" data-i18n-alt="qr.alt">
+            <div>
+              <div class="url" id="lanUrl">...</div>
+              <p class="small muted" data-i18n="adicionar.aponte">Aponte a câmera. Funciona para quem está no mesmo Wi-Fi.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title"><span class="ms">library_music</span> <span data-i18n="adicionar.recentes">Prontas recentemente</span></h3>
+          <div class="mini-list" id="recent"></div>
+          <a class="btn ghost sm" href="/cantar" style="margin-top:12px"><span data-i18n="adicionar.ver_biblioteca">Ver biblioteca</span> <span class="ms">arrow_forward</span></a>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script type="module" src="/static/js/add.js"></script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b0c">
+  <title data-i18n="app.nome">IOkê</title>
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <!-- atalho na tela inicial ("Adicionar a tela inicial"): icone e nome do karaoke. Nao instala nada:
+       o atalho continua abrindo o endereco do PC -->
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="apple-touch-icon" href="/static/img/icon-180.png">
+  <meta name="apple-mobile-web-app-title" content="IOkê">
+  <link rel="stylesheet" href="/fonts/inter.css">
+  <link rel="stylesheet" href="/fonts/icons.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/pages.css">
+  <link rel="stylesheet" href="/static/css/mobile.css">
+</head>
+<body class="mobile">
+  <!-- entrar: nome + PIN (a conta fica no PC do karaoke). Formulario padrao de usuario e
+       senha: o celular oferece salvar o PIN e preencher depois com a digital / Face ID. -->
+  <section class="welcome hidden" id="welcome">
+    <form class="welcome-box" id="loginForm" action="#" method="post" novalidate>
+      <span class="wordmark"><img class="wordmark-logo" src="/static/img/marca/logo-fundo-escuro.svg" alt="IOkê"></span>
+      <h1 id="loginTitle" data-i18n="celular.bem_vindo">Bem-vindo à festa!</h1>
+      <p class="muted" id="loginText" data-i18n="celular.como_aparecer">Como você quer aparecer na fila e no telão?</p>
+      <input class="input" id="loginName" name="username" maxlength="30" placeholder="Seu nome" data-i18n-placeholder="celular.seu_nome"
+        autocomplete="username" autocapitalize="words" enterkeyhint="next">
+      <input class="input pin-input hidden" id="loginPin" name="password" type="password" inputmode="numeric"
+        pattern="[0-9]*" maxlength="4" placeholder="• • • •" autocomplete="current-password" enterkeyhint="go">
+      <button type="button" class="photo-pick hidden" id="loginPhoto">
+        <span class="avatar lg" id="loginAvatar"><span class="ms">add_a_photo</span></span>
+        <span data-i18n-html="celular.foto_opcional">Foto <span class="muted">(opcional)</span></span>
+      </button>
+      <input type="file" id="loginPhotoFile" accept="image/*" hidden>
+      <p class="small welcome-hint" id="loginHint"></p>
+      <button class="btn lg" id="loginGo" type="submit" data-i18n="celular.continuar">Continuar</button>
+      <button class="btn ghost sm hidden" id="loginBack" type="button" data-i18n="celular.nao_e_voce">Não é você? Trocar o nome</button>
+      <p class="small muted login-note hidden" id="loginForgot" data-i18n="celular.esqueceu_pin">Esqueceu o PIN? Peça para quem cuida do karaokê redefinir no PC.</p>
+      <p class="small login-note login-warn hidden" id="loginStorage"><span class="ms">warning</span> <span data-i18n="celular.sem_armazenamento">Este navegador não guarda dados (aba anônima ou cookies bloqueados): ao voltar, entre de novo com seu nome e PIN.</span></p>
+    </form>
+  </section>
+  <!-- sem resposta do servidor: aviso fixo (some sozinho quando a conexao volta) -->
+  <div class="offline-bar hidden" id="offlineBar" role="alert">
+    <span class="ms">wifi_off</span>
+    <span data-i18n-html="celular.offline">Sem conexão com o karaokê. Tentando de novo… Confira se o celular está no mesmo Wi-Fi; se não voltar, escaneie de novo o QR code da TV.</span>
+  </div>
+  <div class="container">
+    <header class="m-head">
+      <span class="wordmark"><img class="wordmark-logo" src="/static/img/marca/logo-fundo-escuro.svg" alt="IOkê"><span class="admin-badge hidden" id="adminBadge" title="Este celular controla o karaokê" data-i18n-title="celular.admin_explica">admin</span></span>
+      <button class="acct-chip" id="acctChip" type="button" title="Sua conta" data-i18n-title="celular.sua_conta">
+        <span class="avatar" id="acctAvatar"></span><span class="acct-name" id="acctName"></span>
+      </button>
+    </header>
+
+    <!-- quem esta cantando / controles quando e a sua vez -->
+
+
+    <section class="tab" id="tab-sing">
+      <div class="m-search"><span class="ms">search</span><input id="libFilter" placeholder="Buscar na biblioteca" data-i18n-placeholder="fila.buscar_biblioteca" autocomplete="off"></div>
+      <div class="list" id="libList"></div>
+    </section>
+
+    <section class="tab hidden" id="tab-queue">
+      <div id="queueTools"></div>
+      <div class="list" id="queueList"></div>
+      <div class="m-history" id="historyList"></div>
+    </section>
+
+    <section class="tab hidden" id="tab-buscar">
+      <div class="fontes-bar hidden" id="fontes"></div>
+      <form class="search-pill" id="searchForm">
+        <span class="search-icon ms">search</span>
+        <input id="q" data-i18n-placeholder="adicionar.placeholder" placeholder="Artista ou música" autocomplete="off" enterkeyhint="search">
+        <button type="submit" id="searchBtn" data-i18n="comum.buscar">Buscar</button>
+      </form>
+      <p class="small muted" data-i18n="celular.buscar_dica">"Baixar" coloca a música na biblioteca. "Baixar e cantar" também te coloca na fila — você sobe ao palco quando ela ficar pronta.</p>
+      <div class="results" id="results"></div>
+      <h3 class="m-sub-title" id="jobsTitle" data-i18n="celular.sendo_preparadas">Sendo preparadas</h3>
+      <div class="list" id="jobsList"></div>
+    </section>
+
+    <section class="tab hidden" id="tab-remote">
+      <div class="rc-target" id="rcTarget"></div>
+
+      <div class="rc-card rc-stage">
+        <div class="rc-stage-row">
+          <span class="ms rc-tv">tv</span>
+          <div class="grow"><b data-i18n="player.palco">Palco</b><div class="small muted" id="stageStatus">…</div></div>
+          <button class="btn sm" id="stageOpen"><span class="ms">cast</span> <span data-i18n="controle.abrir">Abrir</span></button>
+          <button class="rc-icon hidden" id="stageClose" title="Fechar o palco" data-i18n-title="controle.fechar_palco" aria-label="Fechar o palco" data-i18n-aria="controle.fechar_palco"><span class="ms">close</span></button>
+          <button class="rc-icon" id="stageCfgBtn" title="Tela cheia/quiosque e monitor" data-i18n-title="controle.configurar_palco" aria-label="Configurar o palco" data-i18n-aria="controle.configurar_palco_aria"><span class="ms">tune</span></button>
+        </div>
+        <div class="rc-stage-cfg hidden" id="stageCfg">
+          <div class="seg" id="stageMode"><button data-v="fullscreen" data-i18n="player.tela_cheia">Tela cheia</button><button data-v="kiosk" data-i18n="controle.quiosque">Quiosque</button></div>
+          <select class="input" id="stageMonitor" aria-label="Monitor" data-i18n-aria="controle.monitor"></select>
+        </div>
+      </div>
+
+      <div class="dpad">
+        <button class="dp up" data-rc="up" aria-label="Para cima" data-i18n-aria="controle.cima"><span class="ms">keyboard_arrow_up</span></button>
+        <button class="dp left" data-rc="left" aria-label="Para a esquerda" data-i18n-aria="controle.esquerda"><span class="ms">keyboard_arrow_left</span></button>
+        <button class="dp ok" data-rc="ok">OK</button>
+        <button class="dp right" data-rc="right" aria-label="Para a direita" data-i18n-aria="controle.direita"><span class="ms">keyboard_arrow_right</span></button>
+        <button class="dp down" data-rc="down" aria-label="Para baixo" data-i18n-aria="controle.baixo"><span class="ms">keyboard_arrow_down</span></button>
+      </div>
+
+      <div class="rc-keys">
+        <div class="rc-key"><button data-rc="back" aria-label="Voltar" data-i18n-aria="controle.voltar"><span class="ms">arrow_back</span></button><span data-i18n="controle.voltar_t">Voltar</span></div>
+        <div class="rc-key"><button data-rc="home" aria-label="Início" data-i18n-aria="controle.inicio"><span class="ms">home</span></button><span data-i18n="controle.inicio_t">Início</span></div>
+        <div class="rc-key"><button data-rc="playpause" aria-label="Tocar ou pausar" data-i18n-aria="controle.tocar_pausar"><span class="ms">play_pause</span></button><span data-i18n="controle.tocar">Tocar</span></div>
+      </div>
+
+      <div class="rc-volume">
+        <button data-rc="vol_down" aria-label="Diminuir volume" data-i18n-aria="controle.menos_volume"><span class="ms">remove</span></button>
+        <span><span class="ms">volume_up</span> <span data-i18n="controle.volume">Volume</span></span>
+        <button data-rc="vol_up" aria-label="Aumentar volume" data-i18n-aria="controle.mais_volume"><span class="ms">add</span></button>
+      </div>
+
+      <div class="rc-card">
+        <div class="rc-head"><span class="ms">search</span><b data-i18n="controle.pesquisar_tv">Pesquisar na TV</b></div>
+        <input class="input" id="rcSearch" placeholder="Música ou artista" data-i18n-placeholder="controle.musica_artista" autocomplete="off" enterkeyhint="search">
+        <div class="rc-row">
+          <button class="btn sm" id="rcLib"><span class="ms">library_music</span> <span data-i18n="controle.na_biblioteca">Na biblioteca</span></button>
+          <span id="rcFontes" class="rc-fontes"></span>
+        </div>
+        <p class="small muted" style="margin:0" data-i18n="controle.explica">Digitar aqui não mexe na TV — só os botões. Se alguém estiver cantando, a TV pergunta antes de sair da música.</p>
+      </div>
+    </section>
+  </div>
+  <!-- o que esta no palco: barrinha acima das abas; tocando nela abre a tela inteira -->
+  <div class="mini-player hidden" id="miniPlayer">
+    <button class="mp-open" id="mpOpen" aria-label="Ver o que está tocando" data-i18n-aria="celular.ver_tocando">
+      <img id="mpCover" alt="">
+      <span class="mp-text"><b id="mpTitle"></b><span id="mpSub"></span></span>
+    </button>
+    <button class="mp-btn" id="mpAction"></button>
+    <span class="mp-progress"><i id="mpBar"></i></span>
+  </div>
+  <!-- a sua vez e a proxima: aviso fixo acima da barrinha (da tempo de se preparar) -->
+  <div class="next-banner hidden" id="nextBanner" role="status">
+    <span class="ms fill nb-icon">notifications_active</span>
+    <span class="nb-text"><b data-i18n="celular.voce_a_seguir">Você canta a seguir!</b><span id="nbSub"></span></span>
+    <button class="btn outline xs" id="nbPass" type="button" data-i18n="player.passar">Passar a vez</button>
+  </div>
+
+  <section class="np-sheet" id="npSheet" aria-hidden="true">
+    <header class="np-head">
+      <button class="np-close" id="npClose" aria-label="Fechar" data-i18n-aria="comum.fechar"><span class="ms">keyboard_arrow_down</span></button>
+      <span class="np-label" data-i18n="celular.tocando_agora">Tocando agora</span>
+      <span></span>
+    </header>
+    <div class="np-scroll">
+      <div class="stage-card" id="stageCard"></div>
+      <section class="react-wrap hidden" id="reactWrap">
+        <div class="small muted" id="reactWho"></div>
+        <div class="react-bar" id="reactBar"></div>
+      </section>
+      <div class="np-next" id="npNext"></div>
+    </div>
+  </section>
+
+  <nav class="m-tabbar" id="tabbar">
+    <button data-tab="sing" class="on"><span class="tb-ic"><span class="ms">mic</span></span><span data-i18n="sing.cantar">Cantar</span></button>
+    <button data-tab="queue"><span class="tb-ic"><span class="ms">queue_music</span><b class="tab-count" id="queueCount"></b></span><span data-i18n="celular.aba_fila">Fila</span></button>
+    <button data-tab="buscar" class="hidden" id="buscarTab"><span class="tb-ic"><span class="ms">search</span></span><span data-i18n="celular.aba_buscar">Buscar</span></button>
+    <button data-tab="remote" class="hidden" id="remoteTab"><span class="tb-ic"><span class="ms">settings_remote</span></span><span data-i18n="celular.aba_controle">Controle</span></button>
+  </nav>
+  <script type="module" src="/static/js/mobile.js"></script>
+</body>
+</html>

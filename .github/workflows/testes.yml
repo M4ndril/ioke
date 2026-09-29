@@ -1,0 +1,40 @@
+# Testes automaticos (pytest) a cada push (main e as branches de trabalho),
+# em pull requests e antes de cada lancamento (lancamento.yml chama este arquivo).
+name: Testes
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    name: Testes automáticos
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # as tags: no modo de desenvolvimento a versao vem do git describe
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: FFmpeg
+        run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+
+      - name: Python e dependências
+        run: |
+          uv venv --python 3.12
+          # PyTorch de CPU (bem menor; os testes nao usam a placa de video)
+          uv pip install torch==2.8.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+          uv pip install -r requirements-dev.txt
+
+      - name: Testes
+        run: .venv/bin/python -m pytest -q
+
+      - name: Licenças (nada de GPL ou AGPL nas listas travadas)
+        run: .venv/bin/python instalador/licencas.py --conferir

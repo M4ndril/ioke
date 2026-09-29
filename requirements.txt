@@ -1,0 +1,19 @@
+# O PyTorch (com CUDA) e instalado antes (pelo instalador ou pelo dev/instalar.bat).
+audio-separator[cpu]>=0.30
+# o audio-separator importa o audioread mas nao declara a dependencia
+audioread>=3.0
+flask>=3.0
+waitress>=3.0
+segno>=1.6
+requests>=2.31
+librosa>=0.10
+# letra por IA (sincronia palavra a palavra, tudo local): Whisper + alinhador MMS
+# (o torchaudio, que tem o MMS, vem junto com o PyTorch)
+faster-whisper>=1.1
+# fotos (capa enviada, foto da conta)
+pillow>=10
+# separar (e fazer a letra por IA) na nuvem, na conta Modal da pessoa (karaoke/nuvem)
+modal>=1.5
+# app instalado (Karaoke.exe): janela propria (WebView2) e um FFmpeg de reserva
+pywebview>=6.2; sys_platform == "win32"
+imageio-ffmpeg>=0.6

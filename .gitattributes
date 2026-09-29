@@ -1,0 +1,12 @@
+* text=auto
+# o cmd.exe tem bugs com .bat em LF
+*.bat text eol=crlf
+*.py text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.svg text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+# o sh do Git Bash quebra com CRLF (instalador/montar.sh roda tambem no Windows)
+*.sh text eol=lf

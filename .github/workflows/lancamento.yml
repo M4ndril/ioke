@@ -1,0 +1,102 @@
+# Lancamento de uma versao, de dois jeitos:
+#   - uma tag vX.Y.Z (ou vX.Y.Z-beta.N, pre-lancamento) enviada ao GitHub;
+#   - um push na main cujo CHANGELOG.md tem, no topo, uma versao que ainda nao tem tag: o
+#     lancamento cria a tag nesse commit. Uma tag criada pelo proprio Actions nao dispararia
+#     este workflow de novo, por isso tudo acontece aqui mesmo.
+#   1. roda os testes;
+#   2. monta o instalador (IOke-Setup-X.Y.Z.exe), o pacote do codigo que o app baixa para
+#      atualizar (karaoke-X.Y.Z.zip) e a conferencia (SHA256SUMS.txt);
+#   3. publica o lancamento com as notas da versao (CHANGELOG.md em ingles e CHANGELOG.pt-BR.md).
+# Como lancar: README.md -> "Development".
+name: Lançamento
+
+on:
+  push:
+    tags: ["v*"]
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lancamento-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  versao:
+    name: Versão a lançar
+    runs-on: ubuntu-latest
+    outputs:
+      versao: ${{ steps.v.outputs.versao }}
+      publicar: ${{ steps.v.outputs.publicar }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: v
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            V="${GITHUB_REF_NAME#v}"
+            echo "publicar=true" >> "$GITHUB_OUTPUT"
+          else
+            # a primeira versao do CHANGELOG (depois de "Nao lancado"); sem tag ainda: lancar
+            V=$(grep -m1 -oP '^## \[\K[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(?=\])' CHANGELOG.md || true)
+            if [ -n "$V" ] && ! git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then
+              echo "publicar=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "publicar=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+          if ! echo "$V" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::versão fora do padrão X.Y.Z[-pre]: $V"
+            exit 1
+          fi
+          echo "versao=$V" >> "$GITHUB_OUTPUT"
+          echo "Versão: $V"
+
+  testes:
+    needs: versao
+    if: needs.versao.outputs.publicar == 'true'
+    uses: ./.github/workflows/testes.yml
+
+  publicar:
+    name: Instalador e lançamento
+    needs: [versao, testes]
+    if: needs.versao.outputs.publicar == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Versão
+        run: |
+          echo "VERSAO=${{ needs.versao.outputs.versao }}" >> "$GITHUB_ENV"
+          # a tag ainda nao existe (lancamento pelo push): o montar.sh e o describe precisam dela
+          git tag -f "v${{ needs.versao.outputs.versao }}" "$GITHUB_SHA"
+
+      - name: NSIS (monta o instalador do Windows)
+        run: sudo apt-get update -q && sudo apt-get install -y -q nsis
+
+      - name: Instalador
+        run: PIP=pip3 sh instalador/montar.sh
+
+      - name: Pacote do código
+        run: python3 instalador/lancamento.py pacote "$VERSAO"
+
+      - name: Conferência (SHA-256)
+        run: python3 instalador/lancamento.py conferencia
+
+      - name: Notas da versão
+        run: python3 instalador/lancamento.py notas "$VERSAO" > notas.md && cat notas.md
+
+      - name: Publicar o lançamento
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PRE=""
+          case "$VERSAO" in *-*) PRE="--prerelease" ;; esac
+          # cria a tag no commit (se veio pelo push) e publica
+          gh release create "v$VERSAO" dist/IOke-Setup-*.exe dist/karaoke-*.zip dist/SHA256SUMS.txt \
+            --title "IOkê $VERSAO" --notes-file notas.md --target "$GITHUB_SHA" $PRE

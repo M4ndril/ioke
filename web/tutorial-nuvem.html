@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nuvem — IOkê</title>
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/fonts/inter.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    body { overflow-x: hidden; }
+    .tut { max-width: 760px; margin: 0 auto; padding: 22px 22px 40px; line-height: 1.6; }
+    .tut h1 { font-size: 24px; margin: 0 0 6px; }
+    .tut h2 { font-size: 17px; margin: 26px 0 8px; }
+    .tut p, .tut li { color: var(--text, #eee); }
+    .tut .muted { color: var(--muted); }
+    .tut table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    .tut th, .tut td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line, #333); }
+    .tut code { background: rgba(255, 255, 255, 0.08); padding: 1px 6px; border-radius: 6px; }
+    .tut .shot { display: block; max-width: 100%; margin: 10px 0; border-radius: 10px; }
+    .tut .shot:not([src]), .tut .shot[src=""] { display: none; }
+    [data-lang] { display: none; }
+    [data-lang].on { display: block; }
+  </style>
+</head>
+<body>
+  <!-- Capturas de tela: web/img/tutorial/ (o usuario manda depois); enquanto isso, so o texto. -->
+  <article class="tut" data-lang="pt-BR">
+    <h1>Separar na nuvem com o Modal</h1>
+    <p class="muted">Para quem não tem placa de vídeo NVIDIA (ou quer separar duas músicas ao mesmo tempo).</p>
+
+    <h2>O que é o Modal e por que ele</h2>
+    <p>O Modal aluga computadores com placa de vídeo por segundo de uso. O IOkê manda a música para a <b>sua</b>
+      conta, a placa de lá separa a voz e o instrumental em cerca de um minuto, e as faixas voltam para este PC. A
+      máquina só fica ligada enquanto trabalha (mais uns 20 segundos): não tem mensalidade nem tempo parado cobrado.</p>
+
+    <h2>1. Criar a conta</h2>
+    <p>Entre em <a href="https://modal.com" target="_blank" rel="noopener">modal.com</a> e crie a conta com o GitHub ou
+      o Google.</p>
+    <img class="shot" alt="" src="">
+
+    <h2>2. Cadastrar o cartão</h2>
+    <p>O Modal pede um cartão de crédito para liberar as placas de vídeo, mesmo para usar só os créditos grátis.</p>
+
+    <h2>3. Configurar o orçamento (importante)</h2>
+    <ol>
+      <li>No site do Modal, abra <b>Settings → Usage &amp; Billing</b>.</li>
+      <li>Defina o <b>orçamento (budget) em US$ 25</b> por mês: o Modal para tudo ao chegar nele.</li>
+      <li>Deixe o <b>spend limit</b> (gasto além dos créditos) em <b>0</b> se quiser usar só os créditos grátis.</li>
+    </ol>
+    <p class="muted">Os nomes dos campos podem mudar um pouco no site do Modal. O IOkê também tem o próprio teto
+      (Configurações → Nuvem), mas quem garante o limite do cartão é o orçamento do Modal.</p>
+
+    <h2>4. Conectar no IOkê</h2>
+    <p>Em <b>Configurações → Nuvem</b>, clique em <b>Conectar</b> e depois em <b>Autorizar</b>. O navegador abre a
+      página do Modal: confirme lá e volte para o IOkê, que fecha a janela sozinho. Na primeira música, o IOkê
+      instala o programa na sua conta (alguns minutos, só uma vez).</p>
+    <p class="muted">Se o botão não funcionar: em modal.com → Settings → API Tokens, crie uma chave e use
+      <b>Colar a chave manualmente</b>.</p>
+
+    <h2>Os créditos grátis</h2>
+    <p>O plano grátis do Modal dá <b>US$ 30 por mês</b>, que voltam no dia 1º (horário UTC). Isso dá para centenas de
+      músicas.</p>
+
+    <h2>Quanto custa</h2>
+    <table>
+      <tr><th>Placa</th><th>Tempo (música de 4 min)</th><th>Custo por música</th></tr>
+      <tr><td>L40S (recomendada)</td><td>~1 min</td><td>~US$ 0,04</td></tr>
+      <tr><td>L4</td><td>~3 min</td><td>~US$ 0,05</td></tr>
+    </table>
+    <p class="muted">Medido em setembro de 2026, na qualidade Equilibrada. A primeira música depois de um tempo parado
+      demora uns 20 segundos a mais (a máquina liga). A letra por IA na nuvem soma uns US$ 0,003–0,006 por música.</p>
+
+    <h2>Quando o crédito acaba</h2>
+    <p>Se o orçamento do Modal ou o teto do IOkê chegar ao fim, as músicas ficam esperando na fila com o aviso. Você
+      pode separá-las neste PC pelo botão de cada uma (se tiver placa), aumentar o orçamento, ou esperar o dia 1º.</p>
+
+    <h2>Desconectar e apagar tudo</h2>
+    <p>Em <b>Configurações → Nuvem → Desconectar</b>, marque <b>Apagar também da conta Modal</b>: o IOkê apaga o
+      programa e os modelos (~1,5 GB) da sua conta, e a chave deste PC. Depois, se quiser, apague a chave em modal.com →
+      Settings → API Tokens.</p>
+  </article>
+
+  <article class="tut" data-lang="en">
+    <h1>Separating in the cloud with Modal</h1>
+    <p class="muted">For those without an NVIDIA graphics card (or who want to separate two songs at once).</p>
+
+    <h2>What Modal is and why</h2>
+    <p>Modal rents computers with graphics cards by the second. IOkê sends the song to <b>your</b> account, the GPU
+      there separates the voice and the instrumental in about a minute, and the tracks come back to this PC. The machine
+      only stays on while it works (plus about 20 seconds): no monthly fee, no idle time charged.</p>
+
+    <h2>1. Create the account</h2>
+    <p>Go to <a href="https://modal.com" target="_blank" rel="noopener">modal.com</a> and sign up with GitHub or
+      Google.</p>
+    <img class="shot" alt="" src="">
+
+    <h2>2. Add a card</h2>
+    <p>Modal asks for a credit card to unlock GPUs, even if you only use the free credits.</p>
+
+    <h2>3. Set the budget (important)</h2>
+    <ol>
+      <li>On the Modal site, open <b>Settings → Usage &amp; Billing</b>.</li>
+      <li>Set the <b>budget to US$ 25</b> per month: Modal stops everything when it's reached.</li>
+      <li>Leave the <b>spend limit</b> (spending beyond the credits) at <b>0</b> if you only want to use the free
+        credits.</li>
+    </ol>
+    <p class="muted">Field names may change slightly on the Modal site. IOkê also has its own limit (Settings →
+      Cloud), but the card limit is guaranteed by Modal's budget.</p>
+
+    <h2>4. Connect in IOkê</h2>
+    <p>In <b>Settings → Cloud</b>, click <b>Connect</b> and then <b>Authorize</b>. The browser opens the Modal page:
+      confirm there and come back to IOkê, which closes the window by itself. On the first song, IOkê installs
+      the program in your account (a few minutes, only once).</p>
+    <p class="muted">If the button doesn't work: at modal.com → Settings → API Tokens, create a key and use
+      <b>Paste the key manually</b>.</p>
+
+    <h2>Free credits</h2>
+    <p>Modal's free plan gives <b>US$ 30 per month</b>, reset on the 1st (UTC). That covers hundreds of songs.</p>
+
+    <h2>How much it costs</h2>
+    <table>
+      <tr><th>GPU</th><th>Time (4-min song)</th><th>Cost per song</th></tr>
+      <tr><td>L40S (recommended)</td><td>~1 min</td><td>~US$ 0.04</td></tr>
+      <tr><td>L4</td><td>~3 min</td><td>~US$ 0.05</td></tr>
+    </table>
+    <p class="muted">Measured in September 2026, Balanced quality. The first song after a while takes about 20 seconds
+      longer (the machine starts). AI lyrics in the cloud add about US$ 0.003–0.006 per song.</p>
+
+    <h2>When the credit runs out</h2>
+    <p>If Modal's budget or IOkê's limit is reached, songs wait in the queue with a notice. You can separate them on
+      this PC with each song's button (if you have a GPU), raise the budget, or wait for the 1st.</p>
+
+    <h2>Disconnect and delete everything</h2>
+    <p>In <b>Settings → Cloud → Disconnect</b>, check <b>Also delete from the Modal account</b>: IOkê deletes the
+      program and the models (~1.5 GB) from your account, and the key from this PC. Then, if you want, delete the key
+      at modal.com → Settings → API Tokens.</p>
+  </article>
+
+  <script type="module">
+    let idioma = "pt-BR";
+    try {
+      const info = await (await fetch("/api/info")).json();
+      if (info.idioma === "en") idioma = "en";
+    } catch {
+      if (!(navigator.language || "").toLowerCase().startsWith("pt")) idioma = "en";
+    }
+    document.documentElement.lang = idioma;
+    document.querySelector(`[data-lang="${idioma}"]`).classList.add("on");
+  </script>
+</body>
+</html>

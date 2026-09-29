@@ -1,0 +1,1 @@
+Pacotes que o PyPI so tem como codigo-fonte, ja montados (o instalador nao precisa montar nada).

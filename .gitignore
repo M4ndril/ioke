@@ -1,0 +1,41 @@
+# ------------------------------------------------------------------
+# NUNCA versionar: dados pessoais, sessoes de login, musicas e caches
+# ------------------------------------------------------------------
+# musicas, capas, letras, cookies/sessao de login de versoes antigas, fontes em cache
+data/
+*.cookies
+cookies*.txt
+
+# modelos de separacao (baixados pelo instalar.bat, ~1,5 GB)
+models/
+
+# ambiente Python e caches
+.venv/
+.python/
+__pycache__/
+*.py[cod]
+
+# configuracao local (gerada no primeiro uso)
+config.json
+*.tmp
+*.log
+
+# ferramentas / editores
+.claude/
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+
+# testes
+.pytest_cache/
+
+# instalador (instalador/montar.sh)
+build/
+dist/
+
+# gerado: a versao e a tag do Git; o instalador e o atualizador gravam o VERSION na pasta de cada versao
+/VERSION
+
+# complementos instalados no modo de desenvolvimento (o app instalado usa a pasta do programa)
+.complementos/

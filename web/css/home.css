@@ -1,0 +1,257 @@
+/* ============================ Home: tela dividida ============================ */
+body.home { overflow: hidden; height: 100vh; background: #000; }
+
+.home-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding: 22px 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7), transparent);
+}
+.home-top .wordmark { pointer-events: auto; font-size: 30px; letter-spacing: 3px; text-shadow: 0 4px 24px rgba(229, 9, 20, 0.45); }
+
+.split { display: flex; height: 100vh; }
+
+.half {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+  cursor: pointer;
+  transition: flex 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.half + .half { box-shadow: -1px 0 0 rgba(255, 255, 255, 0.08); }
+.split:hover .half:hover, .split .half.tv-focus { flex: 1.08; }
+
+/* fundo escurecido que clareia no hover */
+.half-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: rgba(0, 0, 0, 0.58);
+  transition: background 0.6s ease;
+  pointer-events: none;
+}
+.half:hover .half-shade, .half.tv-focus .half-shade { background: rgba(0, 0, 0, 0.1); }
+
+/* ------------------------------------------------ metade "Adicionar" */
+.half-bg {
+  position: absolute;
+  inset: -2%;
+  z-index: 1;
+  background: #0b0612 center / cover no-repeat;
+  transform: scale(1.02);
+  transition: transform 6s ease-out;
+}
+.half-bg.machine { background-image: url("/media/home-bg"); }
+.half:hover .half-bg, .half.tv-focus .half-bg { transform: scale(1.08); }
+
+/* ------------------------------------------------ metade "Cantar": carrossel */
+.carousel {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  perspective: 1100px;
+  perspective-origin: 50% 35%;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 70%, #26070b 0%, #0a0406 55%, #000 100%);
+}
+.plane {
+  --tile: clamp(130px, 12.5vw, 230px);
+  --gap: calc(var(--tile) * 0.1);
+  position: absolute;
+  left: -70%;
+  right: -70%;
+  top: -18%;
+  bottom: -38%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--gap);
+  transform-style: preserve-3d;
+  transform: rotateX(54deg) rotateZ(-14deg);
+  transform-origin: 50% 62%;
+  transition: opacity 0.8s;
+}
+.plane.fading { opacity: 0; }
+.plane .row { display: flex; }
+.plane .track {
+  display: flex;
+  gap: var(--gap);
+  width: max-content;
+  animation: slide linear infinite;
+  will-change: transform;
+}
+.plane .track.rev { animation-direction: reverse; }
+@keyframes slide { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
+.tile {
+  width: var(--tile);
+  height: var(--tile);
+  flex: none;
+  border-radius: calc(var(--tile) * 0.06);
+  overflow: hidden;
+  background: #1a1a1e;
+  box-shadow: 0 30px 50px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+.tile img { width: 100%; height: 100%; object-fit: cover; }
+.tile.placeholder {
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--tile) * 0.3);
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* desfoque progressivo na parte mais distante (como profundidade de campo) */
+.dof { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.dof-1 {
+  backdrop-filter: blur(1.5px);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 42%, transparent 62%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 42%, transparent 62%);
+}
+.dof-2 {
+  backdrop-filter: blur(3.5px);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 26%, transparent 44%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 26%, transparent 44%);
+}
+.dof-3 {
+  backdrop-filter: blur(7px);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 10%, transparent 27%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 10%, transparent 27%);
+}
+/* neblina ao fundo + vinheta para a perspectiva sumir no escuro */
+.fog {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.45) 22%, transparent 45%),
+    radial-gradient(ellipse at 50% 60%, transparent 45%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+/* --------------------------------------------------------- textos */
+.half-content {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  padding: 0 7%;
+  max-width: 620px;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.half-content::before {
+  content: "";
+  position: absolute;
+  inset: -40% -30%;
+  z-index: -1;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, transparent 65%);
+  pointer-events: none;
+}
+.half:hover .half-content, .half.tv-focus .half-content { transform: translateY(-6px); }
+.eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 14px;
+}
+.half-content h2 {
+  margin: 0;
+  font-size: clamp(46px, 6.4vw, 108px);
+  line-height: 0.95;
+  font-weight: 900;
+  letter-spacing: -2px;
+  text-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+.half-content p {
+  margin: 18px auto 0;
+  font-size: clamp(14px, 1.2vw, 18px);
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 420px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding: 13px 26px;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 16px;
+  background: #fff;
+  color: #000;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.35s, transform 0.35s, background 0.2s;
+}
+.half:hover .cta, .half.tv-focus .cta { opacity: 1; transform: none; }
+.half-sing .cta { background: var(--accent); color: #fff; }
+.cta .arrow { transition: transform 0.3s; }
+.half:hover .cta .arrow, .half.tv-focus .cta .arrow { transform: translateX(4px); }
+/* pelo controle remoto, o mouse parado em cima da outra metade nao pode parecer selecionado */
+body:has(.tv-focus) .split .half:hover:not(.tv-focus) { flex: 1; }
+body:has(.tv-focus) .half:hover:not(.tv-focus) .half-shade { background: rgba(0, 0, 0, 0.58); }
+body:has(.tv-focus) .half:hover:not(.tv-focus) .half-bg { transform: scale(1.02); }
+body:has(.tv-focus) .half:hover:not(.tv-focus) .half-content { transform: none; }
+body:has(.tv-focus) .half:hover:not(.tv-focus) .cta { opacity: 0; transform: translateY(10px); }
+
+/* entrada do modo festa (palco) */
+.party-pill {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  z-index: 25;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px 10px 14px;
+  border-radius: 999px;
+  background: rgba(15, 15, 17, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+}
+.party-pill:hover { transform: translateX(-50%) translateY(-2px); border-color: #fff; background: rgba(25, 25, 28, 0.92); }
+.party-pill > .ms { font-size: 24px; color: var(--accent); }
+.party-pill .pp-text { display: flex; flex-direction: column; line-height: 1.2; }
+.party-pill .pp-text b { font-size: 14px; }
+.party-pill .pp-text span { font-size: 12px; color: var(--muted); }
+.party-pill .pp-arrow { font-size: 18px; color: var(--muted); }
+.party-pill.live { border-color: rgba(229, 9, 20, 0.7); }
+.party-pill.live > .ms { animation: pp-pulse 1.6s ease-in-out infinite; }
+@keyframes pp-pulse { 50% { transform: scale(1.18); } }
+
+/* QR no modal */
+.qr-modal { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.qr-modal img { width: 220px; height: 220px; background: #fff; border-radius: 12px; padding: 8px; }
+.qr-modal .url { font-family: Consolas, monospace; font-size: 18px; font-weight: 700; word-break: break-all; margin: 6px 0 10px; }
+
+@media (max-width: 800px) {
+  body.home { overflow: auto; height: auto; }
+  .split { flex-direction: column; height: auto; }
+  .half { min-height: 52vh; }
+  .half + .half { box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.08); }
+  .cta { opacity: 1; transform: none; }
+  .home-top { position: absolute; padding: 16px 0; }
+  .home-top .wordmark { font-size: 22px; }
+  .half-add .half-content { padding-top: 64px; }
+  .party-pill { position: static; transform: none; margin: 16px auto 24px; width: max-content; }
+  .party-pill:hover { transform: none; }
+}
+.tile.placeholder .ms { font-size: calc(var(--tile) * 0.32); width: auto; }
+.cta .ms { font-size: 20px; }

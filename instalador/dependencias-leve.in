@@ -1,0 +1,5 @@
+# Entrada da lista travada da instalacao LEVE (requirements-lock-leve.txt): tudo do
+# requirements.txt MENOS o que separa e faz a letra por IA nesta maquina (PyTorch,
+# audio-separator, faster-whisper, onnxruntime). Na leve, isso roda na nuvem (karaoke/nuvem).
+# Gere de novo com instalador/travar.sh (que monta o requirements-leve.txt).
+-r requirements-leve.txt

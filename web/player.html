@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="player.pagina">Player — IOkê</title>
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/fonts/inter.css">
+  <link rel="stylesheet" href="/fonts/icons.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/player.css">
+</head>
+<body class="player-body">
+  <div class="player ui-on" id="player">
+    <!-- palco: fundo + letra -->
+    <div class="stage" id="stage">
+      <div class="bg" id="bg"></div>
+      <video class="bgvideo" id="bgVideo" muted playsinline preload="auto" disablepictureinpicture></video>
+      <div class="shade"></div>
+      <div class="tint"></div><!-- camada de cor do visual (cor e opacidade) -->
+      <div class="lyrics" id="lyrics"><div class="lyrics-inner" id="lyricsInner"></div></div>
+      <canvas class="lane hidden" id="lane" aria-hidden="true"></canvas>
+      <div class="live-score hidden" id="liveScore" title="Pontuação até agora" data-i18n-title="player.pontuacao_agora"></div>
+      <div class="no-lyrics hidden" id="noLyrics">
+        <span class="ms xl">lyrics</span>
+        <div data-i18n="player.sem_letra">Esta música ainda não tem letra.</div>
+        <div class="row" style="justify-content:center">
+          <button class="btn" id="findLyrics"><span class="ms">search</span> <span data-i18n="player.buscar_letra">Buscar letra</span></button>
+          <button class="btn outline" id="writeLyrics"><span class="ms">edit_note</span> <span data-i18n="player.colar_sincronizar">Colar e sincronizar</span></button>
+        </div>
+      </div>
+    </div>
+
+    <button class="big-play" id="bigPlay" aria-label="Tocar" data-i18n-aria="player.tocar"><span class="ms fill">play_arrow</span></button>
+    <div class="reactions" id="reactions" aria-hidden="true"></div>
+    <div class="vol-osd" id="volOsd" aria-hidden="true">
+      <span class="ms" id="volOsdIcon">volume_up</span>
+      <div class="vol-osd-track"><i id="volOsdBar"></i></div>
+      <b id="volOsdVal"></b>
+    </div>
+
+    <!-- ===== modo palco (fila de cantores) ===== -->
+    <section class="party-overlay hidden" id="stageOverlay">
+      <div class="po-card">
+        <img class="po-cover" id="poCover" alt="">
+        <div class="po-body">
+          <span class="po-eyebrow"><span class="ms">mic</span> <span data-i18n="player.na_vez">Na vez</span></span>
+          <h1 class="po-singer" id="poSinger"></h1>
+          <div class="po-song" id="poSong"></div>
+          <div class="po-actions">
+            <button class="btn light lg" id="poStart" data-nav-default><span class="ms fill">play_arrow</span> <span data-i18n="player.comecar">Começar</span></button>
+            <button class="btn outline lg hidden" id="poPass" title="As próximas pessoas cantam antes; esta volta logo depois" data-i18n-title="player.passar_explica"><span class="ms">low_priority</span> <span data-i18n="player.passar">Passar a vez</span></button>
+            <span class="small muted" id="poHint" data-i18n="player.play_celular">ou dê play pelo celular</span>
+          </div>
+        </div>
+      </div>
+      <div class="po-next" id="poNext"></div>
+      <div class="po-join"><img id="poQr" alt="QR code"><div><b data-i18n="player.quer_cantar">Quer cantar?</b><div class="small muted" data-i18n="player.entre_fila">Entre na fila pelo celular</div><div class="po-url" id="poUrl"></div></div></div>
+    </section>
+
+    <section class="party-overlay hidden" id="partyIdle">
+      <div class="idle-card">
+        <span class="ms idle-icon">queue_music</span>
+        <h1 data-i18n="player.palco_livre">Palco livre</h1>
+        <p id="idleText" data-i18n="player.ninguem_fila">Ninguém na fila. Escaneie o QR code e escolha uma música para cantar!</p>
+        <div class="idle-join">
+          <img id="idleQr" alt="QR code">
+          <div><div class="small muted" data-i18n="player.no_celular_abra">No celular, abra:</div><div class="idle-url" id="idleUrl">...</div></div>
+        </div>
+        <div class="idle-waiting" id="idleWaiting"></div>
+        <button class="btn outline" id="idleAdd"><span class="ms">playlist_add</span> <span data-i18n="player.adicionar_biblioteca">Adicionar da biblioteca</span></button>
+      </div>
+    </section>
+
+    <section class="score-card hidden" id="scoreCard">
+      <div class="sc-box">
+        <div class="sc-eyebrow"><span class="ms">mic</span> <span data-i18n="player.pontuacao">Pontuação</span></div>
+        <div class="sc-number" id="scNumber">0</div>
+        <div class="sc-stars" id="scStars"></div>
+        <div class="sc-verdict" id="scVerdict"></div>
+        <div class="small muted" id="scSinger"></div>
+        <div class="row sc-actions" id="scActions">
+          <button class="btn light" id="scAgain"><span class="ms">replay</span> <span data-i18n="player.cantar_de_novo">Cantar de novo</span></button>
+          <button class="btn outline" id="scClose" data-i18n="comum.fechar">Fechar</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="unlock hidden" id="unlock">
+      <button class="unlock-btn" id="unlockBtn">
+        <span class="ms fill">celebration</span>
+        <b data-i18n="player.ativar_palco">Ativar o palco</b>
+        <span class="small" data-i18n="player.ativar_texto">Clique uma vez para liberar o som. Depois disso quem estiver na vez pode dar play pelo celular.</span>
+      </button>
+    </section>
+
+    <aside class="drawer le-drawer" id="lyricsEditor" aria-hidden="true"></aside>
+
+    <!-- o palco ja esta aberto na TV: esta janela fica parada (nada de musica em dois lugares) -->
+    <section class="stage-block hidden" id="stageBlock">
+      <div class="sb-box">
+        <span class="ms sb-icon">tv</span>
+        <h2 data-i18n="player.palco_aberto_tv">O palco já está aberto na TV</h2>
+        <p class="muted" data-i18n="player.palco_aberto_texto">Para a música não tocar em dois lugares ao mesmo tempo, este palco fica parado enquanto o da TV
+          estiver aberto.</p>
+        <div class="row sb-actions">
+          <a class="btn light" href="/cantar"><span class="ms">arrow_back</span> <span data-i18n="player.voltar_biblioteca">Voltar para a biblioteca</span></a>
+          <button class="btn outline" id="sbTakeOver"><span class="ms">swap_horiz</span> <span data-i18n="player.usar_este">Fechar o da TV e usar este</span></button>
+        </div>
+      </div>
+    </section>
+
+    <div class="pills">
+      <div class="pill" id="loading"><span class="spinner"></span> <span id="loadingText" data-i18n="player.carregando_faixas">Carregando faixas...</span></div>
+      <div class="pill ai-pill hidden" id="aiPill"></div>
+      <div class="pill hidden" id="videoStatus"></div>
+      <div class="pill upnext hidden" id="upNext"></div>
+      <div class="pill accent hidden" id="syncHint"><span class="ms">ads_click</span> <span data-i18n-html="player.clique_linha">Clique na linha que está sendo cantada <b>agora</b> · Esc cancela</span></div>
+    </div>
+
+    <!-- barra de cima -->
+    <header class="top-bar ui">
+      <a class="ub" href="/cantar" title="Voltar para a biblioteca" data-i18n-title="player.voltar_biblioteca"><span class="ms">arrow_back</span></a>
+      <span class="grow"></span>
+      <button class="ub party-only" id="queueBtn" title="Fila de cantores" data-i18n-title="player.fila_cantores"><span class="ms">queue_music</span><span class="q-count" id="queueCount"></span></button>
+      <div class="menu-wrap drop" id="scoreMenu">
+        <button class="ub trigger" title="Pontuação pelo microfone" data-i18n-title="player.pontuacao_mic"><span class="ms" id="scoreIcon">mic_off</span></button>
+        <div class="menu">
+          <div class="menu-title" data-i18n="player.pontuacao">Pontuação</div>
+          <div class="seg full" id="scoreSeg">
+            <button data-score="off" data-i18n="player.desligada">Desligada</button>
+            <button data-score="on"><span class="ms">mic</span> <span data-i18n="player.ligada">Ligada</span></button>
+          </div>
+          <div id="scoreMenuBody">
+            <label class="field mic-field"><span data-i18n="player.microfone">Microfone</span><select class="input compact" id="micSel"></select></label>
+            <div class="mic-meter"><i id="micLevel"></i></div>
+            <label class="toggle-row small"><input type="checkbox" id="laneToggle"> <span data-i18n="player.mostrar_notas">Mostrar a faixa de notas</span></label>
+          </div>
+          <p class="menu-note" id="scoreNote"></p>
+        </div>
+      </div>
+      <button class="ub" id="lyricsBtn" title="Trocar a letra" data-i18n-title="player.trocar_letra"><span class="ms">lyrics</span></button>
+      <button class="ub" id="coverBtn" title="Trocar a capa" data-i18n-title="player.trocar_capa"><span class="ms">image</span></button>
+      <div class="menu-wrap drop" id="helpMenu">
+        <button class="ub trigger" title="Atalhos do teclado" data-i18n-title="player.atalhos"><span class="ms">keyboard</span></button>
+        <div class="menu">
+          <div class="menu-title" data-i18n="player.atalhos">Atalhos do teclado</div>
+          <dl class="shortcuts">
+            <dt data-i18n="player.espaco">Espaço</dt><dd data-i18n="player.tocar_pausar">Tocar / pausar</dd>
+            <dt>← →</dt><dd data-i18n="player.voltar_avancar">Voltar / avançar 5 s</dd>
+            <dt>F</dt><dd data-i18n="player.tela_cheia">Tela cheia</dd>
+            <dt>M</dt><dd data-i18n="player.mudo">Mudo</dd>
+            <dt>V</dt><dd data-i18n="player.atalho_voz">Liga / desliga a voz original</dd>
+            <dt>, &nbsp;.</dt><dd data-i18n="player.atalho_letra">Letra 0,1 s mais cedo / mais tarde</dd>
+            <dt>− &nbsp;+</dt><dd data-i18n="player.atalho_tom">Tom meio tom abaixo / acima</dd>
+            <dt data-i18n="player.clique_letra">Clique na letra</dt><dd data-i18n="player.pula_linha">Pula para aquela linha</dd>
+            <dt data-i18n="player.clique_fundo">Clique no fundo</dt><dd data-i18n="player.tocar_pausar2">Tocar / pausar</dd>
+          </dl>
+        </div>
+      </div>
+    </header>
+
+    <!-- barra de baixo -->
+    <footer class="bottom-bar ui">
+      <div class="timeline">
+        <input type="range" class="seek" id="seek" min="0" max="1" step="0.01" value="0" aria-label="Posição da música" data-i18n-aria="player.posicao">
+        <span class="time" id="remTime">0:00</span>
+      </div>
+      <div class="cbar">
+        <div class="cgroup">
+          <button class="cb" id="playBtn" title="Tocar / pausar (espaço)" data-i18n-title="player.tocar_pausar_espaco" data-nav-default><span class="ms fill">play_arrow</span></button>
+          <button class="cb" id="back10" title="Voltar 10 s" data-i18n-title="player.voltar10"><span class="ms">replay_10</span></button>
+          <button class="cb" id="fwd10" title="Avançar 10 s" data-i18n-title="player.avancar10"><span class="ms">forward_10</span></button>
+          <button class="cb party-only" id="skipBtn" title="Pular para o próximo cantor" data-i18n-title="player.pular_cantor"><span class="ms fill">skip_next</span></button>
+
+          <div class="menu-wrap" id="volMenu">
+            <button class="cb trigger" title="Áudio: volumes e vozes" data-i18n-title="player.audio_titulo"><span class="ms" id="volIcon">volume_up</span></button>
+            <div class="menu left">
+              <div class="menu-title" data-i18n="player.audio">Áudio</div>
+              <div class="seg full" id="modeSeg">
+                <button data-mode="instrumental" data-i18n="player.karaoke">IOkê</button>
+                <button data-mode="original" data-i18n="player.musica_original">Música original</button>
+              </div>
+              <div class="sliders">
+                <label class="srow"><span class="ms">volume_up</span><span class="sl" data-i18n="player.volume_geral">Volume geral</span><input type="range" id="master" min="0" max="1" step="0.01"><b id="masterVal"></b></label>
+                <label class="srow instr-only"><span class="ms">record_voice_over</span><span class="sl" data-i18n="player.voz_original">Voz original</span><input type="range" id="leadVol" min="0" max="1.5" step="0.01"><b id="leadVolVal"></b></label>
+                <label class="srow instr-only"><span class="ms">groups</span><span class="sl" data-i18n="player.vocais_apoio">Vocais de apoio</span><input type="range" id="backVol" min="0" max="1.5" step="0.01"><b id="backVolVal"></b></label>
+              </div>
+              <p class="menu-note" id="mixNote"></p>
+            </div>
+          </div>
+          <span class="clock"><span id="curTime">0:00</span> / <span id="durTime">0:00</span></span>
+        </div>
+
+        <div class="now" id="nowTitle"></div>
+
+        <div class="cgroup right">
+          <div class="menu-wrap" id="keyMenu">
+            <button class="cb chip trigger" title="Tom da música (autotune)" data-i18n-title="player.tom_titulo"><span class="ms">piano</span><span id="keyLabel">—</span></button>
+            <div class="menu">
+              <div class="menu-title" data-i18n="player.mudar_tom">Mudar o tom</div>
+              <div class="transpose-row">
+                <button class="sbtn" id="tDown" title="Meio tom mais grave (−)" data-i18n-title="player.meio_tom_grave"><span class="ms">remove</span></button>
+                <button class="sbtn" id="tVal" title="Clique para voltar ao tom original" data-i18n-title="player.voltar_tom">Original</button>
+                <button class="sbtn" id="tUp" title="Meio tom mais agudo (+)" data-i18n-title="player.meio_tom_agudo"><span class="ms">add</span></button>
+              </div>
+              <p class="menu-note" id="tNote"></p>
+              <div class="menu-title" data-i18n="player.tom_gravacao">Tom da gravação</div>
+              <div class="fields">
+                <label class="field"><span data-i18n="player.nota">Nota</span><select class="input compact" id="keySel"></select></label>
+                <label class="field"><span data-i18n="player.escala">Escala</span><select class="input compact" id="scaleSel"></select></label>
+              </div>
+              <p class="menu-note" id="keyInfo"></p>
+              <button class="menu-item" id="pianoBtn"><span class="ms">piano</span> <span data-i18n="player.abrir_piano">Abrir o piano para conferir</span></button>
+              <div class="menu-title" data-i18n="player.autotune_midi">Autotune via MIDI</div>
+              <div class="midi-box" id="midiBox"></div>
+            </div>
+          </div>
+
+          <div class="menu-wrap" id="bgMenu">
+            <button class="cb trigger" title="Fundo" data-i18n-title="player.fundo"><span class="ms">wallpaper</span></button>
+            <div class="menu"><div class="menu-scroll">
+              <div class="menu-title" data-i18n="player.fundo">Fundo</div>
+              <div class="lk-mode-slot"></div>
+              <div id="lookBg"></div>
+            </div></div>
+          </div>
+
+          <div class="menu-wrap" id="textMenu">
+            <button class="cb trigger" title="Letra: visual e sincronia" data-i18n-title="player.letra_titulo"><span class="ms">subtitles</span></button>
+            <div class="menu"><div class="menu-scroll">
+              <div class="menu-title" data-i18n="player.letra">Letra</div>
+              <div class="lk-mode-slot"></div>
+              <div id="lookText"></div>
+              <div class="menu-title" data-i18n="player.sincronia">Sincronia</div>
+              <div class="sync-grid">
+                <button class="sbtn" data-off="-0.5" title="Letra mais cedo" data-i18n-title="player.letra_cedo">-0,5</button>
+                <button class="sbtn" data-off="-0.1" title="Letra mais cedo" data-i18n-title="player.letra_cedo">-0,1</button>
+                <button class="sbtn offset" id="offsetVal" title="Clique para zerar" data-i18n-title="player.zerar">0,0 s</button>
+                <button class="sbtn" data-off="0.1" title="Letra mais tarde" data-i18n-title="player.letra_tarde">+0,1</button>
+                <button class="sbtn" data-off="0.5" title="Letra mais tarde" data-i18n-title="player.letra_tarde">+0,5</button>
+              </div>
+              <p class="menu-note" data-i18n="player.negativo">Negativo = a letra aparece mais cedo. Clique no valor para zerar.</p>
+              <button class="menu-item" id="syncMouse"><span class="ms">ads_click</span> <span data-i18n="player.sync_mouse">Sincronizar com o mouse</span></button>
+              <button class="menu-item" id="editLyrics"><span class="ms">edit_note</span> <span data-i18n="player.editar_linha">Editar e sincronizar linha a linha</span></button>
+              <button class="menu-item" id="aiLyrics"><span class="ms">auto_awesome</span> <span data-i18n="player.sync_ia">Sincronizar com IA</span></button>
+              <button class="menu-item" id="aiAdapt"><span class="ms">repeat</span> <span data-i18n="player.ajustar_versao">Ajustar à versão (ao vivo, bis)</span></button>
+              <p class="menu-note" id="aiNote"></p>
+            </div></div>
+          </div>
+
+          <button class="cb" id="fsBtn" title="Tela cheia (F)" data-i18n-title="player.tela_cheia_f"><span class="ms">fullscreen</span></button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="/static/js/player.js"></script>
+</body>
+</html>

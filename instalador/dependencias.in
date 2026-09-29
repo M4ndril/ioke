@@ -1,0 +1,5 @@
+# Entrada das listas travadas (requirements-lock-*.txt). Gere de novo com instalador/travar.sh.
+-r ../requirements.txt
+torch==2.8.0
+torchvision==0.23.0
+torchaudio==2.8.0

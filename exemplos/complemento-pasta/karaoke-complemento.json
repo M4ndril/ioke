@@ -1,0 +1,26 @@
+{
+  "formato": 1,
+  "api": 1,
+  "id": "exemplo-pasta",
+  "nome": {"pt-BR": "Pasta de músicas", "en": "Music folder"},
+  "descricao": {"pt-BR": "Busca músicas numa pasta do seu PC (exemplo de complemento).", "en": "Finds songs in a folder on your PC (example add-on)."},
+  "autor": "IOkê",
+  "versao": "1.0.0",
+  "app_minimo": "1.0.0-alpha.5",
+  "python": "3.12",
+  "entrada": "complemento.py",
+  "dependencias": "requirements.txt",
+  "oferece": ["fonte_musicas"],
+  "icone": "folder",
+  "celular": true,
+  "opcoes": [
+    {"id": "pasta", "tipo": "pasta", "rotulo": {"pt-BR": "Pasta", "en": "Folder"},
+     "ajuda": {"pt-BR": "A pasta com as músicas (as subpastas também contam).", "en": "The folder with the songs (subfolders included)."}, "padrao": ""}
+  ],
+  "acoes": [
+    {"id": "contar", "rotulo": {"pt-BR": "Contar as músicas", "en": "Count the songs"}, "onde": "configuracoes", "icone": "tag"}
+  ],
+  "acoes_musica": [
+    {"id": "copiar_de_novo", "rotulo": {"pt-BR": "Copiar da pasta de novo", "en": "Copy from the folder again"}, "icone": "sync"}
+  ]
+}

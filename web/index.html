@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="app.nome">IOkê</title>
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/fonts/inter.css">
+  <link rel="stylesheet" href="/fonts/icons.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/home.css">
+</head>
+<body class="home">
+  <header class="home-top">
+    <a class="wordmark" href="/"><img class="wordmark-logo" src="/static/img/marca/logo-fundo-escuro.svg" alt="IOkê"></a>
+  </header>
+
+  <main class="split">
+    <a class="half half-add" href="/adicionar">
+      <div class="half-bg machine"></div>
+      <div class="half-shade"></div>
+      <div class="half-content">
+        <span class="eyebrow" id="addEyebrow" data-i18n="inicio.adicionar_eyebrow">Dos seus arquivos para o palco</span>
+        <h2 data-i18n-html="inicio.adicionar_titulo">Adicionar<br>músicas</h2>
+        <p data-i18n="inicio.adicionar_texto">Envie seus arquivos ou busque numa fonte. A voz é separada na hora.</p>
+        <span class="cta"><span data-i18n="inicio.adicionar_cta">Adicionar músicas</span> <span class="arrow ms">arrow_forward</span></span>
+      </div>
+    </a>
+
+    <a class="half half-sing" href="/cantar" data-nav-default>
+      <div class="carousel" aria-hidden="true"><div class="plane" id="plane"></div></div>
+      <div class="dof dof-1"></div>
+      <div class="dof dof-2"></div>
+      <div class="dof dof-3"></div>
+      <div class="fog"></div>
+      <div class="half-shade"></div>
+      <div class="half-content">
+        <span class="eyebrow" id="singEyebrow" data-i18n="sing.biblioteca">Sua biblioteca</span>
+        <h2 data-i18n="inicio.cantar">Cantar</h2>
+        <p data-i18n="inicio.cantar_texto">Escolha uma música, apague as luzes e solte a voz.</p>
+        <span class="cta"><span data-i18n="inicio.abrir_biblioteca">Abrir biblioteca</span> <span class="arrow ms">arrow_forward</span></span>
+      </div>
+    </a>
+  </main>
+
+  <a class="party-pill" href="/palco" id="partyPill" data-open-stage title="Abrir o palco: fila de cantores na TV" data-i18n-title="inicio.palco_titulo">
+    <span class="ms">celebration</span>
+    <span class="pp-text"><b data-i18n="nav.palco">Abrir o palco</b><span id="partyInfo" data-i18n="inicio.fila_celular">fila de cantores pelo celular</span></span>
+    <span class="ms pp-arrow">arrow_forward</span>
+  </a>
+
+  <script type="module" src="/static/js/home.js"></script>
+</body>
+</html>

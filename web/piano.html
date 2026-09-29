@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="piano.pagina">Piano — IOkê</title>
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/fonts/inter.css">
+  <link rel="stylesheet" href="/fonts/icons.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    body { overflow-x: hidden; }
+    .piano-page { padding: 18px 20px; }
+    .piano-page h1 { margin: 0 0 14px; font-size: 22px; display: flex; align-items: center; gap: 10px; }
+    .bar { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
+    .keyboard { position: relative; height: 150px; margin: 0 auto; user-select: none; touch-action: none; }
+    .white, .black { position: absolute; top: 0; border-radius: 0 0 6px 6px; cursor: pointer; display: flex; align-items: flex-end; justify-content: center; font-size: 11px; padding-bottom: 8px; transition: background .08s, transform .05s; }
+    .white { height: 150px; background: #e9ebf3; color: #555; border: 1px solid #9aa0b0; z-index: 1; }
+    .black { height: 92px; background: #1b1e26; color: #bbb; z-index: 2; border: 1px solid #000; font-size: 9px; }
+    .white.in { background: #ffd6d9; color: #7a0a10; }
+    .black.in { background: #6b1a21; color: #ffd6d9; }
+    .white.root, .black.root { background: var(--accent); color: #fff; font-weight: 800; box-shadow: inset 0 -6px 0 rgba(255, 255, 255, 0.85); }
+    .white.down { background: #ff8a92 !important; transform: translateY(2px); }
+    .black.down { background: #ff4d59 !important; }
+    .song-line { text-align: center; color: var(--muted); font-size: 12px; margin-bottom: 12px; min-height: 16px; }
+    .tips { text-align: center; color: var(--muted); font-size: 11px; margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <div class="piano-page">
+    <h1><span class="ms lg">piano</span> Piano</h1>
+    <div class="song-line" id="songLine"></div>
+    <div class="bar">
+      <label class="ctl-inline small muted"><span data-i18n="player.nota">Nota</span> <select class="input compact" id="keySel"></select></label>
+      <label class="ctl-inline small muted"><span data-i18n="player.escala">Escala</span> <select class="input compact" id="scaleSel"></select></label>
+      <button class="btn ghost sm" id="playScale"><span class="ms fill">play_arrow</span> <span data-i18n="piano.escala">Escala</span></button>
+      <button class="btn ghost sm" id="playChord"><span class="ms fill">play_arrow</span> <span data-i18n="piano.acorde">Acorde</span></button>
+      <label class="small muted"><input type="checkbox" id="follow" checked> <span data-i18n="piano.seguir">seguir a música</span></label>
+      <button class="btn sm" id="apply" title="Muda o tom da música aberta no player (e manda pro autotune)" data-i18n-title="piano.aplicar_explica"><span class="ms">check</span> <span data-i18n="piano.aplicar">Aplicar à música</span></button>
+    </div>
+    <div class="keyboard" id="keyboard"></div>
+    <div class="tips" data-i18n-html="piano.dicas">Clique nas teclas ou use o teclado do PC: <b>A W S E D F T G Y H U J K O L P ;</b> · Z / X mudam a oitava</div>
+  </div>
+  <script type="module" src="/static/js/piano.js"></script>
+</body>
+</html>

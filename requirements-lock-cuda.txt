@@ -1,0 +1,323 @@
+# Gerado por instalador/travar.sh: requirements-lock-cpu.txt com o PyTorch da CUDA 12.8
+--extra-index-url https://download.pytorch.org/whl/cu128
+absl-py==2.5.0
+    # via ml-collections
+aiohappyeyeballs==2.7.1
+    # via aiohttp
+aiohttp==3.14.3
+    # via modal
+aiosignal==1.4.0
+    # via aiohttp
+anyio==4.15.1
+    # via
+    #   httpx
+    #   watchfiles
+attrs==26.1.0
+    # via aiohttp
+audio-separator==0.47.0
+    # via -r ../requirements.txt
+audioread==3.1.0
+    # via -r ../requirements.txt
+av==18.1.0
+    # via faster-whisper
+beartype==0.18.5
+    # via audio-separator
+blinker==1.9.0
+    # via flask
+bottle==0.13.4
+    # via pywebview
+cbor2==6.1.4
+    # via modal
+certifi==2026.7.22
+    # via
+    #   httpcore
+    #   httpx
+    #   modal
+    #   requests
+cffi==2.1.1
+    # via
+    #   clr-loader
+    #   samplerate
+    #   soundfile
+charset-normalizer==3.5.1
+    # via requests
+click==8.5.0
+    # via
+    #   flask
+    #   huggingface-hub
+    #   modal
+cloudpickle==3.1.2
+    # via joblib
+clr-loader==0.3.1
+    # via pythonnet
+colorama==0.4.6
+    # via tqdm
+ctranslate2==4.8.2
+    # via faster-whisper
+cython==3.3.0
+    # via diffq-fixed
+decorator==5.3.1
+    # via librosa
+diffq-fixed==0.2.4
+    # via audio-separator
+einops==0.8.2
+    # via
+    #   audio-separator
+    #   rotary-embedding-torch
+faster-whisper==1.2.1
+    # via -r ../requirements.txt
+filelock==4.0.5
+    # via
+    #   huggingface-hub
+    #   torch
+flask==3.1.3
+    # via -r ../requirements.txt
+flatbuffers==25.12.19
+    # via onnxruntime
+frozenlist==1.8.0
+    # via
+    #   aiohttp
+    #   aiosignal
+fsspec==2026.9.0
+    # via
+    #   huggingface-hub
+    #   torch
+grpclib==0.4.9
+    # via modal
+h11==0.16.0
+    # via httpcore
+h2==4.4.1
+    # via grpclib
+hf-xet==1.6.0
+    # via huggingface-hub
+hpack==4.2.0
+    # via h2
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via huggingface-hub
+huggingface-hub==1.33.0
+    # via
+    #   faster-whisper
+    #   tokenizers
+hyperframe==6.1.0
+    # via h2
+idna==3.20
+    # via
+    #   anyio
+    #   httpx
+    #   requests
+    #   yarl
+imageio-ffmpeg==0.6.0
+    # via -r ../requirements.txt
+itsdangerous==2.2.0
+    # via flask
+jinja2==3.1.6
+    # via
+    #   flask
+    #   torch
+joblib==1.6.0
+    # via
+    #   librosa
+    #   scikit-learn
+julius==0.2.8
+    # via audio-separator
+lazy-loader==0.6
+    # via librosa
+librosa==1.0.0
+    # via
+    #   -r ../requirements.txt
+    #   audio-separator
+llvmlite==0.49.0
+    # via numba
+markdown-it-py==4.2.0
+    # via rich
+markupsafe==3.0.3
+    # via
+    #   flask
+    #   jinja2
+    #   werkzeug
+mdurl==0.1.2
+    # via markdown-it-py
+ml-collections==1.1.0
+    # via audio-separator
+ml-dtypes==0.6.0
+    # via onnx-weekly
+modal==1.5.5
+    # via -r ../requirements.txt
+mpmath==1.3.0
+    # via sympy
+msgpack==1.2.2
+    # via librosa
+multidict==6.9.1
+    # via
+    #   aiohttp
+    #   grpclib
+    #   yarl
+narwhals==2.26.0
+    # via scikit-learn
+networkx==3.7
+    # via torch
+numba==0.67.0
+    # via
+    #   librosa
+    #   resampy
+numpy==2.5.3
+    # via
+    #   audio-separator
+    #   ctranslate2
+    #   diffq-fixed
+    #   librosa
+    #   ml-dtypes
+    #   numba
+    #   onnx-weekly
+    #   onnx2torch-py313
+    #   onnxruntime
+    #   resampy
+    #   samplerate
+    #   scikit-learn
+    #   scipy
+    #   soundfile
+    #   soxr
+    #   torchvision
+onnx-weekly==1.24.0.dev20260928
+    # via
+    #   audio-separator
+    #   onnx2torch-py313
+onnx2torch-py313==1.6.0
+    # via audio-separator
+onnxruntime==1.30.0
+    # via
+    #   audio-separator
+    #   faster-whisper
+packaging==26.3
+    # via
+    #   audio-separator
+    #   huggingface-hub
+    #   lazy-loader
+    #   onnxruntime
+    #   pooch
+pillow==12.3.0
+    # via
+    #   -r ../requirements.txt
+    #   torchvision
+platformdirs==4.12.1
+    # via pooch
+pooch==1.9.0
+    # via librosa
+propcache==0.5.4
+    # via
+    #   aiohttp
+    #   yarl
+protobuf==6.33.6
+    # via
+    #   modal
+    #   onnx-weekly
+    #   onnxruntime
+proxy-tools==0.1.0
+    # via pywebview
+pycparser==3.0
+    # via cffi
+pydub==0.25.1
+    # via audio-separator
+pygments==2.21.0
+    # via rich
+pythonnet==3.1.0
+    # via pywebview
+pywebview==6.2.1
+    # via -r ../requirements.txt
+pyyaml==6.0.3
+    # via
+    #   audio-separator
+    #   ctranslate2
+    #   huggingface-hub
+    #   ml-collections
+requests==2.34.2
+    # via
+    #   -r ../requirements.txt
+    #   audio-separator
+    #   pooch
+resampy==0.4.3
+    # via audio-separator
+rich==15.0.0
+    # via modal
+rotary-embedding-torch==0.6.5
+    # via audio-separator
+samplerate==0.1.0
+    # via audio-separator
+scikit-learn==1.9.1
+    # via librosa
+scipy==1.18.1
+    # via
+    #   audio-separator
+    #   librosa
+    #   scikit-learn
+segno==1.6.6
+    # via -r ../requirements.txt
+setuptools==84.0.0
+    # via torch
+six==1.17.0
+    # via audio-separator
+soundfile==0.14.0
+    # via
+    #   audio-separator
+    #   librosa
+soxr==1.1.0
+    # via librosa
+sympy==1.14.0
+    # via torch
+synchronicity==0.12.5
+    # via modal
+threadpoolctl==3.7.0
+    # via scikit-learn
+tokenizers==0.23.2
+    # via faster-whisper
+toml==0.10.2
+    # via modal
+torch==2.8.0+cu128
+    # via
+    #   -r dependencias.in
+    #   audio-separator
+    #   diffq-fixed
+    #   julius
+    #   onnx2torch-py313
+    #   rotary-embedding-torch
+    #   torchaudio
+    #   torchvision
+torchaudio==2.8.0+cu128
+    # via -r dependencias.in
+torchvision==0.23.0+cu128
+    # via
+    #   -r dependencias.in
+    #   onnx2torch-py313
+tqdm==4.70.1
+    # via
+    #   audio-separator
+    #   faster-whisper
+    #   huggingface-hub
+types-certifi==2021.10.8.3
+    # via modal
+types-toml==0.10.8.20260518
+    # via modal
+typing-extensions==4.16.0
+    # via
+    #   aiohttp
+    #   aiosignal
+    #   anyio
+    #   huggingface-hub
+    #   modal
+    #   onnx-weekly
+    #   pywebview
+    #   soundfile
+    #   synchronicity
+    #   torch
+urllib3==2.8.0
+    # via requests
+waitress==3.0.2
+    # via -r ../requirements.txt
+watchfiles==1.3.0
+    # via modal
+werkzeug==3.1.9
+    # via flask
+yarl==1.25.1
+    # via aiohttp
