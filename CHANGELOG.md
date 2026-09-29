@@ -11,6 +11,12 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+### Changed
+
+- **With the stage open on another screen**, the PC's library no longer plays anything: the highlight with the
+  music videos is hidden (it slowed down the stage's video) and picking a song puts it in the singer queue. Opening
+  the player directly offers "Add to the queue" too. When the stage closes, everything goes back to normal.
+
 ## [1.0.0] - 2026-09-29
 
 The first public version of IOkê: a karaoke app for Windows that runs on your own PC.

@@ -11,6 +11,12 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+### Mudado
+
+- **Com o palco aberto em outra tela**, a biblioteca do PC não toca mais nada: o destaque com os clipes some (ele
+  deixava o vídeo do palco lento) e escolher uma música coloca ela na fila de cantores. Abrir o player direto também
+  oferece "Pôr na fila". Quando o palco fecha, tudo volta ao normal.
+
 ## [1.0.0] - 2026-09-29
 
 A primeira versão pública do IOkê: um app de karaokê para Windows que roda no seu próprio PC.

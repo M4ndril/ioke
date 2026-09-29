@@ -113,9 +113,11 @@ function cardEl(s) {
         <div class="art-hover">
           <button class="mini-btn corner left" data-queue title="${esc(t("fila.entrar_titulo"))}">${icon("playlist_add")}</button>
           <button class="mini-btn corner right danger" data-del title="${esc(t("sing.excluir"))}">${icon("delete")}</button>
-          <button class="play-circle" data-play title="${esc(t("sing.cantar"))}">${icon("play_arrow", "fill xl")}</button>
+          ${palcoAberto // palco aberto em outra janela: aqui a musica vai para a fila
+            ? `<button class="play-circle" data-play title="${esc(t("fila.entrar_titulo"))}">${icon("playlist_add", "xl")}</button>`
+            : `<button class="play-circle" data-play title="${esc(t("sing.cantar"))}">${icon("play_arrow", "fill xl")}</button>`}
           <div class="art-actions">
-            <button class="mini-btn" data-prev title="${esc(t("sing.ouvir_trecho"))}">${icon("headphones")}</button>
+            ${palcoAberto ? "" : `<button class="mini-btn" data-prev title="${esc(t("sing.ouvir_trecho"))}">${icon("headphones")}</button>`}
             <button class="mini-btn" data-lyr title="${esc(t("player.trocar_letra"))}">${icon("lyrics")}</button>
             <button class="mini-btn" data-art title="${esc(t("player.trocar_capa"))}">${icon("image")}</button>
             <button class="mini-btn" data-edit title="${esc(t("sing.editar"))}">${icon("edit")}</button>
@@ -128,11 +130,12 @@ function cardEl(s) {
         <div class="m">${metaLine(s)}</div>
       </div>
     </article>`);
-  const open = () => (location.href = `/player?id=${s.id}`);
+  const open = () => (palcoAberto ? addToQueue(s, { onDone: refreshParty }) : (location.href = `/player?id=${s.id}`));
   el.addEventListener("click", (e) => !e.target.closest("[data-queue],[data-prev],[data-lyr],[data-art],[data-edit],[data-del]") && open());
   el.querySelector("[data-queue]").onclick = () => addToQueue(s, { onDone: refreshParty });
   el.addEventListener("keydown", (e) => e.key === "Enter" && e.target === el && open());
-  el.querySelector("[data-prev]").onclick = (e) =>
+  const prev = el.querySelector("[data-prev]");
+  if (prev) prev.onclick = (e) =>
     togglePreview(e.currentTarget, `/api/songs/${s.id}/audio/instrumental`, { start: 0.4, relative: true, seconds: 12 });
   el.querySelector("[data-lyr]").onclick = async () => (await chooseLyrics(s)) && refresh();
   el.querySelector("[data-art]").onclick = async () => (await chooseCover(s)) && refresh();
@@ -240,6 +243,35 @@ let heroIndex = 0;
 let heroTimer = null;
 let heroHover = false;
 const heroVideo = $("#heroVideo");
+let ultimasRecentes = [];
+
+// O palco aberto em outra janela (a TV): o destaque com os videos sai (os videos daqui pesavam no palco) e
+// nada toca nesta janela: escolher uma musica coloca ela na fila. Fechou o palco, volta tudo.
+let palcoAberto = false;
+
+function pararHero() {
+  clearTimeout(heroTimer);
+  heroVideo.pause();
+  heroVideo.removeAttribute("src");
+  heroVideo.load();
+  $("#hero").classList.remove("has-video");
+}
+
+/** Muda o estado; true se mudou (os cards precisam ser feitos de novo). */
+function aplicarPalco(aberto, redesenhar = true) {
+  if (aberto === palcoAberto) return false;
+  palcoAberto = aberto;
+  stopPreview();
+  $("#hero").classList.toggle("hidden", aberto);
+  $("#palcoAviso").classList.toggle("hidden", !aberto);
+  if (aberto) pararHero();
+  else {
+    heroList = [];
+    setupHero(ultimasRecentes);
+  }
+  if (redesenhar) render(true);
+  return true;
+}
 
 function heroMeta(s) {
   const bits = [s.album, s.year, s.genre, fmtTime(s.duration)].filter(Boolean).map(esc);
@@ -258,7 +290,7 @@ function heroMeta(s) {
 }
 
 function showHero(i) {
-  if (!heroList.length) return;
+  if (!heroList.length || palcoAberto) return;
   heroIndex = (i + heroList.length) % heroList.length;
   const s = heroList[heroIndex];
   stopPreview();
@@ -277,7 +309,7 @@ function showHero(i) {
     $$("#heroDots button").forEach((d, n) => d.classList.toggle("on", n === heroIndex));
     content.classList.remove("swap");
     // Como na Netflix: se tiver o clipe, ele roda mudo no fundo
-    if (s.video && s.video.status === "ready") {
+    if (s.video && s.video.status === "ready" && !palcoAberto) {
       heroVideo.preload = "auto";
       heroVideo.src = s.video.url;
       heroVideo.load();
@@ -299,6 +331,8 @@ function showHero(i) {
 }
 
 function setupHero(recent) {
+  ultimasRecentes = recent;
+  if (palcoAberto) return;
   const same = signature(recent, ["id", "cover", "video", "title", "key", "lyrics"]) === signature(heroList, ["id", "cover", "video", "title", "key", "lyrics"]);
   if (same) return;
   const current = heroList[heroIndex] && heroList[heroIndex].id;
@@ -375,6 +409,7 @@ function renderPartyStrip(p) {
 async function refreshParty() {
   try {
     const p = await api("/api/party");
+    aplicarPalco(!IS_TV && !!p.tv_stage);
     showNotices(p);
     renderPartyStrip(p);
   } catch {
@@ -388,14 +423,20 @@ async function refresh() {
   clearTimeout(timer);
   try {
     // as 5 mais novas vem completas (o destaque); a lista toda so quando muda
-    const [state, bib] = await Promise.all([api("/api/state?musicas=0&recentes=5"), biblioteca()]);
+    const [state, bib, p] = await Promise.all([api("/api/state?musicas=0&recentes=5"), biblioteca(),
+      api("/api/party").catch(() => null)]);
     if (bib.mudou) {
       songs = bib.songs;
       indexar(songs);
     }
+    // antes do destaque: com o palco aberto, o video nem comeca
+    const mudouPalco = p ? aplicarPalco(!IS_TV && !!p.tv_stage, false) : false;
     setupHero(state.recentes || []);
-    render(false, { mudou: bib.mudou });
-    refreshParty();
+    render(mudouPalco, { mudou: bib.mudou });
+    if (p) {
+      showNotices(p);
+      renderPartyStrip(p);
+    }
   } catch {
     /* servidor reiniciando */
   }

@@ -12,7 +12,7 @@ import {
 } from "./common.js";
 import { openPiano } from "./floating.js";
 import { initMidi, mountMidiPicker, sendKey } from "./midi.js";
-import { pickSongForQueue } from "./partyui.js";
+import { addToQueue, pickSongForQueue } from "./partyui.js";
 import { Mic, Scorer, drawLane, scoreVerdict } from "./score.js";
 import { openLyricsEditor } from "./lyricsedit.js";
 import { IS_TV } from "./tvnav.js";
@@ -2035,7 +2035,32 @@ async function init() {
     location.href = "/cantar";
     return;
   }
+  if (!IS_TV) {
+    const p = await api("/api/party").catch(() => null);
+    if (p && p.tv_stage) return blockSolo();
+  }
   await loadSong(songId);
+}
+
+/** O palco esta aberto em outra janela (a TV): esta nao toca nada (nem pesa no palco); a musica vai para a fila. */
+function blockSolo() {
+  const box = $("#stageBlock");
+  box.querySelector("p").textContent = tr("player.palco_aberto_fila");
+  box.classList.remove("hidden");
+  const queue = $("#sbQueue");
+  queue.classList.remove("hidden");
+  queue.onclick = async () => {
+    try {
+      addToQueue(await api(`/api/songs/${songId}`), { onDone: () => (location.href = "/cantar") });
+    } catch (err) {
+      toast(err.message, { error: true });
+    }
+  };
+  $("#sbTakeOver").onclick = async () => {
+    if (!confirm(tr("player.usar_este_confirmar"))) return;
+    await api("/api/stage/close", { method: "POST" }).catch((err) => toast(err.message, { error: true }));
+    location.reload();
+  };
 }
 
 init();

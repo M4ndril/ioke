@@ -335,6 +335,10 @@
 
 .party-strip { display: flex; align-items: center; gap: 18px; padding: 14px 4vw; background: linear-gradient(90deg, rgba(229, 9, 20, 0.16), rgba(229, 9, 20, 0.03)); border-top: 1px solid rgba(229, 9, 20, 0.3); flex-wrap: wrap; margin-top: -40px; position: relative; z-index: 2; }
 .party-strip:not(.hidden) + .toolbar { margin-top: 0; }
+/* palco aberto em outra janela (sing.js, aplicarPalco): sem o destaque, este aviso no lugar */
+.palco-aviso { display: flex; align-items: center; gap: 12px; padding: calc(var(--nav-h) + 18px) 4vw 18px; font-weight: 600; background: linear-gradient(90deg, rgba(229, 9, 20, 0.16), rgba(229, 9, 20, 0.03)); }
+.palco-aviso .ms { color: var(--accent); font-size: 26px; }
+.palco-aviso:not(.hidden) ~ .party-strip, .palco-aviso:not(.hidden) ~ .toolbar { margin-top: 0; }
 .ps-actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
 .ps-title { display: flex; align-items: center; gap: 8px; font-weight: 800; white-space: nowrap; }
 .ps-title .ms { color: var(--accent-2); }
