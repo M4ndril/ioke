@@ -11,6 +11,13 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+## [1.0.2] - 2026-09-29
+
+### Corrigido
+
+- O Windows Defender podia acusar o instalador da 1.0.1 como ameaça (um falso positivo): o instalador não roda mais a
+  ferramenta do Windows que usava para atualizar o cache de ícones, que os antivírus tratam como suspeita.
+
 ## [1.0.1] - 2026-09-29
 
 ### Mudado
@@ -81,7 +88,8 @@ A primeira versão pública do IOkê: um app de karaokê para Windows que roda n
 - **Atualizações** por esta página, em segundo plano, com os canais Estável e Testes, e a volta sozinha para a versão
   anterior se uma nova não abrir.
 
-[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.0.1...HEAD
+[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/M4ndril/ioke/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1
 [1.0.1-beta.3]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.2...v1.0.1-beta.3
 [1.0.1-beta.2]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.1...v1.0.1-beta.2

@@ -266,9 +266,9 @@ Section "IOkê" SecMain
   CreateShortCut "$SMPROGRAMS\$(T_NOME).lnk" "$INSTDIR\Karaoke.exe" "" "$INSTDIR\karaoke.ico"
   CreateShortCut "$DESKTOP\$(T_NOME).lnk" "$INSTDIR\Karaoke.exe" "" "$INSTDIR\karaoke.ico"
   ; o Windows guarda os icones pelo caminho do arquivo: instalando por cima de uma versao com outro icone,
-  ; os atalhos e o Karaoke.exe continuariam com o antigo. Pede para ele atualizar os icones.
+  ; os atalhos e o Karaoke.exe continuariam com o antigo. Avisa o Windows que os icones mudaram.
+  ; (Nada de ie4uinit.exe: antivirus tratam como suspeito e acusavam o instalador.)
   System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
-  nsExec::Exec '"$WINDIR\System32\ie4uinit.exe" -show'
 
   WriteRegStr HKCU "Software\Karaoke" "InstallDir" "$INSTDIR"
   WriteRegStr HKCU "Software\Karaoke" "DataDir" "$DataDir"
