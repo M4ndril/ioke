@@ -11,6 +11,8 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+## [1.0.1-beta.1] - 2026-09-29
+
 ### Changed
 
 - **With the stage open on another screen**, the PC's library no longer plays anything: the highlight with the
@@ -41,5 +43,6 @@ The first public version of IOkê: a karaoke app for Windows that runs on your o
 - **Updates** from this page, in the background, with the Stable and Testing channels, and going back to the
   previous version by itself if a new one doesn't open.
 
-[Unreleased]: https://github.com/M4ndril/ioke/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.1...HEAD
+[1.0.1-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1-beta.1
 [1.0.0]: https://github.com/M4ndril/ioke/releases/tag/v1.0.0

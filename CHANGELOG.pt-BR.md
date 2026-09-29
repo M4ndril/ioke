@@ -11,6 +11,8 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+## [1.0.1-beta.1] - 2026-09-29
+
 ### Mudado
 
 - **Com o palco aberto em outra tela**, a biblioteca do PC não toca mais nada: o destaque com os clipes some (ele
@@ -41,5 +43,6 @@ A primeira versão pública do IOkê: um app de karaokê para Windows que roda n
 - **Atualizações** por esta página, em segundo plano, com os canais Estável e Testes, e a volta sozinha para a versão
   anterior se uma nova não abrir.
 
-[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.0.0...HEAD
+[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.1...HEAD
+[1.0.1-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1-beta.1
 [1.0.0]: https://github.com/M4ndril/ioke/releases/tag/v1.0.0
