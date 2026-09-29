@@ -112,6 +112,12 @@ recente sem "Pre-release" é a versão estável) e rode. O instalador:
 **Requisitos:** Windows 10 ou 11, 64 bits. Placa de vídeo NVIDIA é opcional: sem ela, use a nuvem ou o processador.
 Uns 5 GB livres para o programa e alguns GB para as músicas.
 
+> [!NOTE]
+> O instalador não é assinado com um certificado pago, então o Windows pode mostrar **"O Windows protegeu o
+> computador"** na primeira vez. Clique em **Mais informações → Executar assim mesmo**. Para conferir que o arquivo é
+> o original, compare o SHA-256 dele (`Get-FileHash IOke-Setup-<versão>.exe` no PowerShell) com o do
+> `SHA256SUMS.txt`, no mesmo lançamento.
+
 O IOkê abre numa janela própria, em tela cheia (F11 alterna para janela). Para sair: o botão de desligar no canto
 de cima, ou Alt+F4. O palco para a TV abre como uma segunda janela, no monitor escolhido.
 

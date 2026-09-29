@@ -112,6 +112,11 @@ latest one without "Pre-release" is the stable version) and run it. The installe
 **Requirements:** Windows 10 or 11, 64-bit. An NVIDIA graphics card is optional: without one, use the cloud or the
 processor. About 5 GB free for the program and a few GB for songs.
 
+> [!NOTE]
+> The installer isn't signed with a paid certificate, so Windows may show **"Windows protected your PC"** the first
+> time. Click **More info → Run anyway**. To check that the file is the original, compare its SHA-256
+> (`Get-FileHash IOke-Setup-<version>.exe` in PowerShell) with the one in `SHA256SUMS.txt`, in the same release.
+
 IOkê opens in its own full-screen window (F11 switches to a window). To quit: the power button in the top
 corner, or Alt+F4. The stage for the TV opens as a second window, on the monitor you choose.
 
