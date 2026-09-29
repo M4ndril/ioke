@@ -261,6 +261,7 @@ function pararHero() {
 function aplicarPalco(aberto, redesenhar = true) {
   if (aberto === palcoAberto) return false;
   palcoAberto = aberto;
+  document.body.classList.toggle("palco-aberto", aberto); // rolagem mais leve (pages.css)
   stopPreview();
   $("#hero").classList.toggle("hidden", aberto);
   $("#palcoAviso").classList.toggle("hidden", !aberto);

@@ -11,6 +11,15 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+## [1.0.1-beta.2] - 2026-09-29
+
+### Fixed
+
+- **The stage video no longer stutters when you scroll the library on the other screen.** In the installed app, the
+  stage was a second window of the app itself, sharing with the main window the process that draws the screen and
+  decodes the video. It now opens in its own Edge (or Chrome) window, as it already did in development mode; only
+  without either of them does it use a window of the app. With the stage open, scrolling the library is also lighter.
+
 ## [1.0.1-beta.1] - 2026-09-29
 
 ### Changed
@@ -43,6 +52,7 @@ The first public version of IOkê: a karaoke app for Windows that runs on your o
 - **Updates** from this page, in the background, with the Stable and Testing channels, and going back to the
   previous version by itself if a new one doesn't open.
 
-[Unreleased]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.1...HEAD
+[Unreleased]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.2...HEAD
+[1.0.1-beta.2]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.1...v1.0.1-beta.2
 [1.0.1-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1-beta.1
 [1.0.0]: https://github.com/M4ndril/ioke/releases/tag/v1.0.0

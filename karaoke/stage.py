@@ -10,9 +10,11 @@ celular administrador sem encostar no PC.
   tela cheia: F11 / Esc no teclado do PC saem da tela cheia
   quiosque:   trava a tela cheia; so fecha com Alt+F4 ou pelo botao "Fechar"
 
-No app instalado (Karaoke.exe), o palco e uma segunda janela do proprio app (sem
-Chrome): o servidor pede para a janela abrir/fechar pelo canal local dela
-(KARAOKE_APP_CONTROL). O som ja e liberado la tambem.
+No app instalado (Karaoke.exe) tambem e assim: o palco numa janela do proprio app dividia com a
+janela principal o mesmo processo do WebView2 (o que desenha a tela e decodifica o video), e rolar a
+biblioteca no monitor principal travava o video do palco, com o PC sobrando. Num navegador separado,
+cada um tem o seu. So sem Chrome/Edge o palco abre numa segunda janela do app: o servidor pede pelo
+canal local dela (KARAOKE_APP_CONTROL).
 """
 import json
 import logging
@@ -55,6 +57,11 @@ def _app(path, body=None):
     with urllib.request.urlopen(req, timeout=15) as r:
         return json.loads(r.read() or b"{}")
 _names_cache = (0.0, {})
+
+
+def _na_janela_do_app():
+    """O palco numa janela do app so no app instalado sem Chrome/Edge (veja no topo)."""
+    return bool(APP_CONTROL) and not find_browser()
 
 
 def settings():
@@ -222,8 +229,11 @@ def _find_pids():
 def is_open():
     if APP_CONTROL:
         try:
-            return bool(_app("/palco").get("open"))
+            if _app("/palco").get("open"):
+                return True
         except OSError:
+            pass
+        if _na_janela_do_app():
             return False
     with _lock:
         if _proc is not None:
@@ -236,7 +246,7 @@ def open_stage(url, monitor=None):
     e fechada antes (reabrir tambem serve para valer o modo/monitor atual).
     `monitor`: a tela escolhida agora (fica guardada como a ultima usada)."""
     global _proc
-    if APP_CONTROL:
+    if _na_janela_do_app():
         return _open_in_app(url, monitor)
     found = find_browser()
     if not found:
@@ -299,10 +309,11 @@ def close_stage():
     global _proc
     if APP_CONTROL:
         try:
-            _app("/palco/fechar", {})
+            _app("/palco/fechar", {})  # um palco aberto numa janela do app (sem navegador, ou de antes)
         except OSError:
-            return False
-        return True
+            pass
+        if _na_janela_do_app():
+            return True
     with _lock:
         pids = [_proc.pid] if _proc is not None and _proc.poll() is None else []
         _proc = None
@@ -320,7 +331,7 @@ def close_stage():
 
 
 def status():
-    found = ("IOkê", None) if APP_CONTROL else find_browser()
+    found = ("IOkê", None) if _na_janela_do_app() else find_browser()
     return {
         **settings(),
         "open": is_open(),

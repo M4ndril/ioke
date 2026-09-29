@@ -11,6 +11,15 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+## [1.0.1-beta.2] - 2026-09-29
+
+### Corrigido
+
+- **O vídeo do palco não trava mais quando você rola a biblioteca na outra tela.** No app instalado, o palco era uma
+  segunda janela do próprio app, e dividia com a janela principal o processo que desenha a tela e decodifica o vídeo.
+  Agora ele abre numa janela própria do Edge (ou do Chrome), como já acontecia no modo de desenvolvimento; só sem
+  nenhum dos dois ele usa uma janela do app. Com o palco aberto, rolar a biblioteca também ficou mais leve.
+
 ## [1.0.1-beta.1] - 2026-09-29
 
 ### Mudado
@@ -43,6 +52,7 @@ A primeira versão pública do IOkê: um app de karaokê para Windows que roda n
 - **Atualizações** por esta página, em segundo plano, com os canais Estável e Testes, e a volta sozinha para a versão
   anterior se uma nova não abrir.
 
-[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.1...HEAD
+[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.2...HEAD
+[1.0.1-beta.2]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.1...v1.0.1-beta.2
 [1.0.1-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1-beta.1
 [1.0.0]: https://github.com/M4ndril/ioke/releases/tag/v1.0.0
