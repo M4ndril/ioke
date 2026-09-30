@@ -394,6 +394,41 @@ class Library:
             out["recentes"] = recentes
         return out
 
+    def atividades(self, client=None, account=None):
+        """O que esta rodando em segundo plano (a central de atividades do PC): as musicas sendo preparadas ou
+        separadas, e as que falharam (jobs, como no /api/state: tem tentar de novo e remover), e o resto que
+        esta rodando: letra por IA, refazer voz/apoio, video de fundo e acoes de complemento, cada uma
+        {tipo, id, titulo, etapa, progresso, estado}. Os erros desses aparecem na propria musica."""
+        outras = []
+        with self.lock:
+            jobs = [self.summary(m, client, account) for m in self.songs.values()
+                    if m.get("status") != "ready" and not m.get("deleting")]
+            for sid, m in self.songs.items():
+                if m.get("deleting"):
+                    continue
+                titulo = m.get("track") or m.get("title") or sid
+                base = {"id": sid, "titulo": titulo, "artista": m.get("artist") or ""}
+                ai = self._ai_state(sid, m) or {}
+                if ai.get("state") in ("queued", "running"):
+                    outras.append({**base, "tipo": "letra", "estado": ai["state"], "progresso": ai.get("progress") or 0,
+                                   "etapa": ai.get("busy_with") or ai.get("stage") or ""})
+                rs = _com_etapa(m.get("resplit")) or {}
+                if rs.get("state") in ("queued", "running"):  # o erro aparece na propria musica
+                    outras.append({**base, "tipo": "voz_apoio", "estado": rs["state"], "progresso": rs.get("progress") or 0,
+                                   "etapa": rs.get("stage") or "", "erro": rs.get("error")})
+                if (m.get("video") or {}).get("status") == "downloading":
+                    outras.append({**base, "tipo": "video", "estado": "running",
+                                   "progresso": m["video"].get("progress") or 0, "etapa": ""})
+            for sid, a in self.acoes_rodando.items():
+                if a.get("estado") != "rodando":  # o erro ou o aviso aparece no Editar da musica
+                    continue
+                m = self.songs.get(sid) or {}
+                outras.append({"id": sid, "titulo": m.get("track") or m.get("title") or sid, "artista": m.get("artist") or "",
+                               "tipo": "acao", "estado": "running" if a.get("estado") == "rodando" else a.get("estado"),
+                               "progresso": a.get("progresso") or 0, "etapa": a.get("rotulo") or "", "erro": a.get("erro")})
+        jobs.sort(key=lambda i: i["created_at"] or 0)
+        return {"jobs": jobs, "outras": outras}
+
     def biblioteca(self):
         """(versao, musicas prontas so com o que as listas usam: cards, busca e ordem), das mais novas para as
         mais antigas. Com milhares de musicas, montar tudo a cada pedido pesa (o celular pergunta a cada 2 s):

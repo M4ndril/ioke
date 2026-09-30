@@ -13,12 +13,18 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ### Adicionado
 
+- **Central "Em andamento"** nas telas do PC (início, Adicionar, Cantar): uma pílula ao lado dos botões do topo mostra o
+  que está rodando em segundo plano (músicas sendo preparadas ou separadas, letra por IA, refazer voz/apoio, vídeos,
+  ações de complemento); clicar abre um painel lateral com os detalhes, para cancelar ou tentar de novo. Nunca
+  aparece no player, no palco nem nos celulares.
 - **Faixas guardadas:** cada separação (e cada "refazer só voz/apoio") fica guardada, até 4 por música. No Editar da
   música, escolha de qual veio cada faixa (instrumental, voz principal, vocal de apoio): por exemplo, a voz de uma
   separação e o apoio de outra, sem separar de novo.
 
 ### Mudado
 
+- Botões do topo: a tela inicial ganha o de Configurações; os de piano e MIDI saem da página "Cantar" (ficam no
+  player).
 - A sincronização da letra por IA segue o "onde separar": com **Nuvem** escolhida, ela roda na nuvem mesmo num PC com
   placa NVIDIA.
 - Refazer só voz/apoio não sincroniza mais a letra de novo sozinho (o áudio é o mesmo, então o tempo não muda; uma

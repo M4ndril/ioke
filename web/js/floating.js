@@ -1,8 +1,9 @@
-// Botoes flutuantes no canto superior direito: sessao (QR), piano, MIDI e qualidade.
+// Botoes flutuantes no canto superior direito: atividades, sessao (QR), piano, MIDI e configuracoes.
 import { api, esc, gb, h, icon, keyLabel, openModal, store, toast } from "./common.js";
 import { mountMidiPicker } from "./midi.js";
 import { openSettings } from "./settings.js";
 import { appApi } from "./appwin.js";
+import { mountAtividades } from "./atividades.js";
 import { t } from "./i18n.js";
 
 /* icons: power_settings_new */
@@ -61,8 +62,9 @@ async function checkAddress() {
   }
 }
 
-/** Monta os botoes. Opcoes: qr, piano, midi, settings, getKey (tom atual para o MIDI). */
-export function mountFabs({ qr = false, piano = false, midi = false, settings = false, getKey = null } = {}) {
+/** Monta os botoes. Opcoes: qr, piano, midi, settings, atividades (a central do que roda em segundo plano),
+ *  getKey (tom atual para o MIDI). */
+export function mountFabs({ qr = false, piano = false, midi = false, settings = false, atividades = false, getKey = null } = {}) {
   const box = h('<div class="fabs"></div>');
   const add = (name, title, onclick) => {
     const b = h(`<button class="fab" title="${esc(title)}" aria-label="${esc(title)}">${icon(name)}</button>`);
@@ -107,6 +109,7 @@ export function mountFabs({ qr = false, piano = false, midi = false, settings = 
   if (settings) add("settings", t("config.titulo"), () => openSettings());
   // app instalado (tela cheia, sem barra de titulo): a saida do programa
   appApi().then((app) => app && add("power_settings_new", t("app.fechar"), () => quitApp(app)));
+  if (atividades) mountAtividades(box);
   document.body.append(box);
   return box;
 }

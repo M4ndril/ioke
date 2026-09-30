@@ -7,7 +7,7 @@ import { initI18n, t } from "./i18n.js";
 
 await initI18n(); // os textos antes de desenhar a pagina
 
-mountFabs({ qr: true });
+mountFabs({ qr: true, settings: true, atividades: true });
 
 const ROWS = 6;
 const MIN_TILES = 14; // por fileira, antes de duplicar para o loop infinito

@@ -112,6 +112,12 @@ html.app-window::-webkit-scrollbar, html.app-window body::-webkit-scrollbar { di
 }
 .fab:hover { transform: scale(1.08); background: rgba(40, 40, 44, 0.9); border-color: rgba(255, 255, 255, 0.3); }
 .fab.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+/* central de atividades (atividades.js): pilula ao lado dos botoes flutuantes */
+.ativ-pill { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-2); background: rgba(20, 20, 22, 0.85); backdrop-filter: blur(10px); color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.ativ-pill:hover { border-color: #fff; }
+.ativ-pill .spinner { width: 14px; height: 14px; border-width: 2px; }
+.ativ-pill.err, .ativ-pill .ativ-err { color: var(--danger); }
+.ativ-pill .ativ-err { display: inline-flex; align-items: center; gap: 2px; }
 .fab .dot { position: absolute; width: 8px; height: 8px; border-radius: 50%; margin: -22px -22px 0 0; background: var(--ok); box-shadow: 0 0 8px var(--ok); }
 .popover {
   position: fixed;

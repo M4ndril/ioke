@@ -50,6 +50,20 @@
  "arquivo.sem_video": "este arquivo não tem vídeo",
  "arquivo.so_pc": "Só o PC do IOkê envia arquivos.",
  "arquivo.sumiu": "o arquivo original desta música sumiu da pasta dela: envie o arquivo de novo",
+ "atividades.acao": "Complemento",
+ "atividades.erros": {
+  "one": "{n} com erro",
+  "other": "{n} com erro"
+ },
+ "atividades.letra": "Letra por IA",
+ "atividades.nada": "Nada rodando agora.",
+ "atividades.rodando": {
+  "one": "{n} em andamento",
+  "other": "{n} em andamento"
+ },
+ "atividades.titulo": "Em andamento",
+ "atividades.video": "Preparando o vídeo",
+ "atividades.voz_apoio": "Refazendo voz/apoio",
  "atualizacoes.atualizar": "Atualizar",
  "atualizacoes.canal": "Canal:",
  "atualizacoes.continuar_usando": "(você pode continuar usando)",

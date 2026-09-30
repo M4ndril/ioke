@@ -14,7 +14,7 @@ import { idioma, initI18n, t } from "./i18n.js";
 await initI18n(); // os textos antes de desenhar a pagina
 
 bindNav();
-mountFabs({ qr: true, piano: true, midi: true, settings: true });
+mountFabs({ qr: true, settings: true, atividades: true });
 
 const SORTS = {
   added: { asc: t("sing.antigas"), desc: t("sing.novas"), def: "desc" },

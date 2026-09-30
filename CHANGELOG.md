@@ -13,12 +13,18 @@ app (Settings → Updates), in the user's language.
 
 ### Added
 
+- **"In progress" center** on the PC screens (home, Add, Sing): a pill next to the top buttons shows what is running
+  in the background (songs being prepared or separated, AI lyrics, redoing lead/backing, videos, add-on actions);
+  clicking it opens a side panel with the details, to cancel or retry. It never shows on the player, the stage or
+  the phones.
 - **Saved tracks:** each separation (and each "redo only lead/backing") is kept, up to 4 per song. In the song's
   Edit window, choose where each track comes from (instrumental, lead vocals, backing vocals): for example, the
   lead from one separation and the backing from another, without separating again.
 
 ### Changed
 
+- The top buttons: the home screen gets Settings; the piano and MIDI buttons leave the "Sing" page (they are in
+  the player).
 - AI lyrics sync follows "where to separate": with **Cloud** chosen, it runs in the cloud even on a PC with an NVIDIA
   card.
 - Redoing only lead/backing no longer syncs the lyrics again by itself (the audio is the same, so the timing doesn't

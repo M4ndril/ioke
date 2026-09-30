@@ -338,6 +338,14 @@ def api_state():
     return jsonify(data)
 
 
+@app.get("/api/atividades")
+def api_atividades():
+    """A central de atividades (so nas telas do PC): o que esta rodando em segundo plano."""
+    if not can_manage():
+        return error("erro.so_pc", 403)
+    return jsonify(lib.atividades(*viewer()))
+
+
 @app.get("/api/biblioteca")
 def api_biblioteca():
     """As musicas prontas (so o que as listas usam). ?v=<versao que a pagina ja tem>: se nao mudou, nao manda

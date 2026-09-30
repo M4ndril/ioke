@@ -12,7 +12,7 @@ import { avisoCustos } from "./nuvem.js";
 await initI18n(); // os textos antes de desenhar a pagina
 
 bindNav();
-mountFabs({ qr: true, settings: true });
+mountFabs({ qr: true, settings: true, atividades: true });
 mountEnviar($("#upload"), { onDone: () => document.dispatchEvent(new CustomEvent("karaoke:refresh")) });
 // "Buscar em:": as fontes de musicas dos complementos ligados (sem nenhuma, a busca some)
 let fonte = store("karaoke.fonte") || "";

@@ -50,6 +50,20 @@
  "arquivo.sem_video": "this file has no video",
  "arquivo.so_pc": "Only the IOkê PC can send files.",
  "arquivo.sumiu": "this song's original file is missing from its folder: send the file again",
+ "atividades.acao": "Add-on",
+ "atividades.erros": {
+  "one": "{n} failed",
+  "other": "{n} failed"
+ },
+ "atividades.letra": "AI lyrics",
+ "atividades.nada": "Nothing running right now.",
+ "atividades.rodando": {
+  "one": "{n} in progress",
+  "other": "{n} in progress"
+ },
+ "atividades.titulo": "In progress",
+ "atividades.video": "Preparing the video",
+ "atividades.voz_apoio": "Redoing lead/backing",
  "atualizacoes.atualizar": "Update",
  "atualizacoes.canal": "Channel:",
  "atualizacoes.continuar_usando": "(you can keep using it)",
