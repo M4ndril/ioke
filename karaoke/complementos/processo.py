@@ -40,11 +40,14 @@ def _vivo(pid):
         return False
     if WINDOWS:
         try:
+            # em bytes: o tasklist escreve na pagina de codigo do console, e um nome de processo com acento
+            # (outro programa com o mesmo pid, depois de reiniciar o PC) quebrava a leitura em texto e,
+            # com ela, o ligar de todos os complementos
             out = subprocess.run(["tasklist", "/FI", f"PID eq {int(pid)}", "/FO", "CSV", "/NH"], capture_output=True,
-                                 text=True, timeout=10, creationflags=NO_WINDOW).stdout.lower()
+                                 timeout=10, creationflags=NO_WINDOW).stdout or b""
         except (OSError, subprocess.SubprocessError):
             return False
-        return "python" in out
+        return b"python" in out.lower()
     try:
         return b"python" in Path(f"/proc/{int(pid)}/cmdline").read_bytes().lower()
     except OSError:
@@ -264,7 +267,10 @@ class Gerente:
 
     def ligar_todos(self):
         """Ao abrir o servidor: os complementos ligados (cada um em segundo plano)."""
-        self.limpar_restos()
+        try:
+            self.limpar_restos()
+        except Exception:  # noqa: BLE001 - limpar sobras nunca impede de ligar os complementos
+            log.exception("complementos: limpar os processos que sobraram falhou")
         for cid, item in self.registro.ler().items():
             if item.get("ligado") and self.registro.pronta(cid, item.get("versao")):
                 try:

@@ -664,6 +664,7 @@ class Library:
                     self._rmtree(sid)
                 tmp.rename(destino)
                 self.songs[sid] = meta
+                self._save(sid)  # tambem muda a versao da lista da biblioteca (senao so aparecia reiniciando)
                 self.cond.notify_all()
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
@@ -1130,11 +1131,10 @@ class Library:
             return
         finally:
             shutil.rmtree(work, ignore_errors=True)
-        # a melodia (pontuacao) sai da voz principal; a letra por IA usa as duas faixas
+        # a melodia (pontuacao) sai da voz principal. A letra ja sincronizada fica como esta: o audio e o mesmo,
+        # entao o tempo das palavras nao muda (sincronizar de novo sozinho so arriscava estragar uma letra boa;
+        # quem quiser, manda sincronizar pelo menu Letra)
         threading.Thread(target=self.melody, args=(sid,), name="melodia", daemon=True).start()
-        lyr = meta.get("lyrics") or {}
-        if lyr.get("source") == "ia":
-            self.align_lyrics(sid, mode=lyr.get("mode") or "sync")
 
     def video_context(self, sid):
         """Titulo, canal, descricao e data da versao (para reconhecer a versao da letra: "Live on
@@ -1180,7 +1180,7 @@ class Library:
         (ex.: baixando o modelo de 3 GB na primeira vez), para ninguem achar que travou."""
         ai = _ai_summary(meta.get("lyrics_ai"))
         act = self.ai_activity
-        if ai and ai.get("state") == "queued" and act and act["sid"] != sid:
+        if ai and ai.get("state") == "queued" and act:  # ate a mesma musica (escolhendo a letra, baixando o modelo)
             ai["busy_with"] = etapa(*act["text"])
         return ai
 
@@ -1230,9 +1230,12 @@ class Library:
             if not pronta:
                 raise RuntimeError(i18n.t("nuvem.espera.conectar" if not c["conectada"] else "nuvem.espera.aceitar"))
             return True
+        onde = CONFIG.get("separar_onde") or "auto"
+        if onde == "nuvem":  # escolheu a nuvem: vale tambem para a IA, mesmo com placa NVIDIA
+            return pronta
         if (self.device or {}).get("device") == "cuda":
             return False
-        return pronta and (CONFIG.get("separar_onde") or "auto") in ("auto", "nuvem")
+        return pronta and onde == "auto"
 
     def _alinhador(self, aligner):
         """O aligner daqui ou o da nuvem (as mesmas funcoes)."""

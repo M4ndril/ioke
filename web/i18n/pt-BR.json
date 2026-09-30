@@ -680,7 +680,7 @@
  "musica.carregando_modelos": "Carregando os modelos...",
  "musica.editar": "Editar informações",
  "musica.estilo": "Estilo",
- "musica.explica": "<b>Trocar o áudio</b> usa outro arquivo seu (de melhor qualidade, por exemplo) e separa de novo com a qualidade atual. Letra, capa, tom e ajustes ficam como estão. A música sai da biblioteca enquanto processa; se der errado, o áudio atual continua. <b>Refazer só voz/apoio</b> separa de novo só a voz principal do vocal de apoio, com o modelo escolhido, em cima das vozes que já estão separadas: uns minutos, a música continua na biblioteca e a letra por IA é refeita em seguida. Nenhum modelo acerta tudo: se nesta música o coral fica na voz principal (ou a voz vaza para o apoio), tente outro — dá para voltar quando quiser.",
+ "musica.explica": "<b>Trocar o áudio</b> usa outro arquivo seu (de melhor qualidade, por exemplo) e separa de novo com a qualidade atual. Letra, capa, tom e ajustes ficam como estão. A música sai da biblioteca enquanto processa; se der errado, o áudio atual continua. <b>Refazer só voz/apoio</b> separa de novo só a voz principal do vocal de apoio, com o modelo escolhido, em cima das vozes que já estão separadas: uns minutos, a música continua na biblioteca e a letra fica como está. Nenhum modelo acerta tudo: se nesta música o coral fica na voz principal (ou a voz vaza para o apoio), tente outro — dá para voltar quando quiser.",
  "musica.itunes": "Preencher pelo iTunes",
  "musica.itunes_nada": "Não achei essa música no iTunes",
  "musica.itunes_ok": "Dados preenchidos — confira e salve",

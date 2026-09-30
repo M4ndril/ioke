@@ -1245,7 +1245,7 @@ function watchAi(id) {
     if (aiWatching !== songId) return;
     let s;
     try {
-      s = await api(`/api/songs/${id}`);
+      s = await api(`/api/songs/${id}`, { timeout: 8000 }); // um pedido preso nao pode parar o acompanhamento
     } catch {
       aiTimer = setTimeout(tick, 3000);
       return;

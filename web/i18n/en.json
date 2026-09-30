@@ -680,7 +680,7 @@
  "musica.carregando_modelos": "Loading the models...",
  "musica.editar": "Edit info",
  "musica.estilo": "Genre",
- "musica.explica": "<b>Replace the audio</b> uses another file of yours (better quality, for example) and separates again with the current quality. Lyrics, cover, key and settings stay as they are. The song leaves the library while it processes; if something goes wrong, the current audio stays. <b>Redo only lead/backing</b> separates again only the lead voice from the backing vocals, with the chosen model, on top of the voices already separated: a few minutes, the song stays in the library and the AI lyrics are redone right after. No model gets everything right: if in this song the choir ends up in the lead voice (or the voice leaks into the backing), try another — you can go back anytime.",
+ "musica.explica": "<b>Replace the audio</b> uses another file of yours (better quality, for example) and separates again with the current quality. Lyrics, cover, key and settings stay as they are. The song leaves the library while it processes; if something goes wrong, the current audio stays. <b>Redo only lead/backing</b> separates again only the lead voice from the backing vocals, with the chosen model, on top of the voices already separated: a few minutes, the song stays in the library and the lyrics stay as they are. No model gets everything right: if in this song the choir ends up in the lead voice (or the voice leaks into the backing), try another — you can go back anytime.",
  "musica.itunes": "Fill in from iTunes",
  "musica.itunes_nada": "Couldn't find this song on iTunes",
  "musica.itunes_ok": "Info filled in — check and save",

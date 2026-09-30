@@ -11,6 +11,24 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+### Mudado
+
+- A sincronização da letra por IA segue o "onde separar": com **Nuvem** escolhida, ela roda na nuvem mesmo num PC com
+  placa NVIDIA.
+- Refazer só voz/apoio não sincroniza mais a letra de novo sozinho (o áudio é o mesmo, então o tempo não muda; uma
+  sincronia boa podia piorar).
+- Pacotes cujo nome ganhou ".zip" no fim (o Google Drive faz isso) também são aceitos.
+
+### Corrigido
+
+- Pacotes .karaoke importados aparecem na biblioteca na hora (antes, só reiniciando o app).
+- As prateleiras por estilo (e por artista e álbum): a seta da direita não rolava e escondia o botão de excluir de um
+  card.
+- Complementos ligados podiam abrir desligados depois de reiniciar o PC.
+- Fechar o app também fecha a janela do palco.
+- Enquanto a IA baixa os modelos pela primeira vez, o player diz isso e continua acompanhando o andamento (antes,
+  podia ficar em "na fila" até sair do player).
+
 ## [1.0.2] - 2026-09-29
 
 ### Corrigido

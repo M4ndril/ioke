@@ -210,6 +210,12 @@ class App:
     def shutdown(self):
         self.quitting = True
         if self.server and self.server.poll() is None:
+            try:  # o palco abre numa janela do Chrome/Edge (outro processo): fecha junto com o app
+                req = urllib.request.Request(self.url + "api/stage/close", data=b"{}", method="POST",
+                                             headers={"Content-Type": "application/json"})
+                urllib.request.urlopen(req, timeout=6).read()
+            except Exception:  # noqa: BLE001
+                pass
             self.server.terminate()
             try:
                 self.server.wait(8)
@@ -355,7 +361,7 @@ class MainApi:
         """Janela do Windows para escolher musicas (Adicionar -> Enviar arquivos). [] se cancelar."""
         from .midia import ACEITAS
 
-        tipos = ("Audio, video e pacotes (" + ";".join(f"*{e}" for e in (*ACEITAS, ".karaoke")) + ")", "Todos (*.*)")
+        tipos = ("Audio, video e pacotes (" + ";".join(f"*{e}" for e in (*ACEITAS, ".karaoke", ".zip")) + ")", "Todos (*.*)")
         chosen = self._app.window.create_file_dialog(self._app.webview.FileDialog.OPEN, allow_multiple=True,
                                                      file_types=tipos)
         return list(chosen or [])

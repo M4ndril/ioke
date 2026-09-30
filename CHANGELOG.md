@@ -11,6 +11,23 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+### Changed
+
+- AI lyrics sync follows "where to separate": with **Cloud** chosen, it runs in the cloud even on a PC with an NVIDIA
+  card.
+- Redoing only lead/backing no longer syncs the lyrics again by itself (the audio is the same, so the timing doesn't
+  change; a good sync could get worse).
+- Packages whose name got a ".zip" at the end (Google Drive does that) are accepted too.
+
+### Fixed
+
+- Imported .karaoke packages show up in the library right away (before, only after restarting the app).
+- The genre (and artist, album) shelves: the right arrow didn't scroll, and it hid the delete button of a card.
+- Add-ons turned on could start off after restarting the PC.
+- Closing the app also closes the stage window.
+- While the AI downloads its models the first time, the player says so and keeps following the progress (before, it
+  could stay on "queued" until you left the player).
+
 ## [1.0.2] - 2026-09-29
 
 ### Fixed

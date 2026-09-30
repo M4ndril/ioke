@@ -175,11 +175,11 @@ function shelfEl(title, items) {
   const track = el.querySelector(".shelf-track");
   aosPoucos(track, items, cardEl, { lote: LOTE_PRATELEIRA, horizontal: true });
   const scroll = (dir) => track.scrollBy({ left: dir * track.clientWidth * 0.85, behavior: "smooth" });
-  el.querySelector(".left").onclick = () => scroll(-1);
-  el.querySelector(".right").onclick = () => scroll(1);
+  el.querySelector(".shelf-arrow.left").onclick = () => scroll(-1);
+  el.querySelector(".shelf-arrow.right").onclick = () => scroll(1);
   const arrows = () => {
-    el.querySelector(".left").classList.toggle("hidden", track.scrollLeft < 8);
-    el.querySelector(".right").classList.toggle("hidden", track.scrollLeft + track.clientWidth >= track.scrollWidth - 8);
+    el.querySelector(".shelf-arrow.left").classList.toggle("hidden", track.scrollLeft < 8);
+    el.querySelector(".shelf-arrow.right").classList.toggle("hidden", track.scrollLeft + track.clientWidth >= track.scrollWidth - 8);
   };
   track.addEventListener("scroll", arrows, { passive: true });
   requestAnimationFrame(arrows);

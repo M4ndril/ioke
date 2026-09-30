@@ -9,7 +9,8 @@ import { resolverRepetidos } from "./pacotes.js";
 /* icons: upload_file audio_file folder_open check_circle error content_copy */
 export const ACEITAS = [".mp3", ".m4a", ".aac", ".flac", ".wav", ".ogg", ".opus", ".wma", ".aiff", ".aif",
   ".mp4", ".m4v", ".mkv", ".webm", ".mov", ".avi"];
-const ePacote = (nome) => nome.toLowerCase().endsWith(".karaoke"); // pacote .karaoke de outro PC
+// pacote .karaoke de outro PC; o Google Drive (e outros) as vezes acrescenta ".zip" no nome: vale tambem
+const ePacote = (nome) => /\.(karaoke|zip)$/i.test(nome);
 const ok = (nome) => ACEITAS.some((ext) => nome.toLowerCase().endsWith(ext)) || nome.toLowerCase().endsWith(".m4p") || ePacote(nome);
 const mb = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : `${Math.max(0.1, n / 1e6).toFixed(1)} MB`);
 
@@ -23,7 +24,7 @@ export function mountEnviar(box, { onDone } = {}) {
         <button class="btn outline sm" data-folder>${icon("folder_open")} ${t("enviar.escolher_pasta")}</button>
       </div>
     </div>
-    <input type="file" data-input multiple hidden accept="${[...ACEITAS, ".karaoke"].join(",")}">
+    <input type="file" data-input multiple hidden accept="${[...ACEITAS, ".karaoke", ".zip"].join(",")}">
     <input type="file" data-input-folder multiple hidden webkitdirectory>
     <div class="upload-list" data-list></div>
     <p class="small muted upload-formats">${t("enviar.formatos", { formatos: ACEITAS.join(" ") })}</p>`;
