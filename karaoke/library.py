@@ -35,6 +35,11 @@ from .util import Canceled, disk_free, norm, probe_audio, read_json, run_ffmpeg,
 log = logging.getLogger("karaoke.library")
 
 STEMS = ("original", "instrumental", "lead", "backing")
+# As faixas separadas. Cada separacao (e cada "refazer so voz/apoio") vira uma versao guardada em
+# faixas/<versao>/; as em uso ficam na pasta da musica com o nome de sempre (lead.flac...). Da para
+# usar a voz de uma versao e o apoio de outra (escolher_faixas). Guardamos ate FAIXAS_MAX versoes.
+FAIXAS = ("instrumental", "lead", "backing")
+FAIXAS_MAX = 4
 # Folga de volume antes de separar: o separador reduz cada stem que passa de
 # 0 dBFS de forma independente, o que desequilibraria a mixagem. O player
 # devolve esse ganho na hora de tocar.
@@ -360,6 +365,8 @@ class Library:
                 if path:  # ?v= muda quando a faixa e refeita (o navegador guarda as faixas)
                     data["stems"][stem] = f"/api/songs/{sid}/audio/{stem}?v={int(path.stat().st_mtime)}"
             data["stem_gain"] = round(10 ** ((meta.get("headroom_db") or 0) / 20), 4)
+            versoes, ativas = self._versoes_faixas(meta)
+            data["faixas"], data["faixas_ativas"] = versoes, ativas
             if meta.get("lyrics_ai"):
                 data["lyrics_ai"] = {**self._ai_state(sid, meta), "report": meta["lyrics_ai"].get("report")}
             if meta.get("lyrics_rank"):
@@ -1117,8 +1124,8 @@ class Library:
                 with self.gpu_lock:
                     new_lead, new_back = self.separator.split(model, vocals, tick)
             with self.lock:
-                shutil.move(str(new_lead), d / "lead.flac")  # as duas trocam juntas
-                shutil.move(str(new_back), d / "backing.flac")
+                self._guardar_faixas(sid, meta, {"lead": new_lead, "backing": new_back},  # as duas trocam juntas
+                                     {"tipo": "voz_apoio", "backing": _modelo(model)})
                 meta["separation"] = {**(meta.get("separation") or {}), "backing": model,
                                       "backing_redone_at": time.time(), "backing_seconds": round(time.time() - started)}
                 meta.pop("resplit", None)
@@ -1135,6 +1142,80 @@ class Library:
         # entao o tempo das palavras nao muda (sincronizar de novo sozinho so arriscava estragar uma letra boa;
         # quem quiser, manda sincronizar pelo menu Letra)
         threading.Thread(target=self.melody, args=(sid,), name="melodia", daemon=True).start()
+
+    # ------------------------------------------------------- versoes das faixas
+    def _versoes_faixas(self, meta):
+        """([{id, em, tipo, qualidade?, vocals?, backing?, stems}], {faixa: id da versao em uso}). Musica de
+        antes das versoes: as faixas que ela tem viram a versao "v0"."""
+        if meta.get("faixas"):
+            return [dict(v) for v in meta["faixas"]], dict(meta.get("faixas_ativas") or {})
+        d = self.dir(meta["id"])
+        tem = [s for s in FAIXAS if (d / f"{s}.flac").exists()]
+        if not tem:
+            return [], {}
+        sep = meta.get("separation") or {}
+        v0 = {"id": "v0", "em": meta.get("ready_at") or 0, "tipo": "separacao", "qualidade": _quality_label(sep),
+              "vocals": _modelo(sep.get("vocals")), "backing": _modelo(sep.get("backing")), "stems": tem}
+        return [v0], {s: "v0" for s in tem}
+
+    def _guardar_faixas(self, sid, meta, novas, info):
+        """As faixas `novas` ({faixa: arquivo}) entram em uso como uma versao nova; as que saem de uso vao
+        para faixas/<versao de onde vieram>/ (da para voltar a elas). Chamar com o lock."""
+        d = self.dir(sid)
+        versoes, ativas = self._versoes_faixas(meta)
+        vid = f"v{uuid.uuid4().hex[:8]}"
+        for stem, arquivo in novas.items():
+            self._tirar_de_uso(d, stem, ativas.get(stem))
+            atual = d / f"{stem}.flac"
+            shutil.move(str(arquivo), atual)
+            os.utime(atual)  # o player, o tom mudado e a melodia percebem a troca pela data
+            ativas[stem] = vid
+        versoes.append({"id": vid, "em": time.time(), **{k: v for k, v in info.items() if v}, "stems": list(novas)})
+        # guarda as FAIXAS_MAX mais novas; uma versao com faixa em uso nunca sai
+        em_uso = set(ativas.values())
+        manter = {v["id"] for v in versoes[-FAIXAS_MAX:]} | em_uso
+        for v in versoes:
+            if v["id"] not in manter:
+                shutil.rmtree(d / "faixas" / v["id"], ignore_errors=True)
+        meta["faixas"] = [v for v in versoes if v["id"] in manter]
+        meta["faixas_ativas"] = ativas
+
+    @staticmethod
+    def _tirar_de_uso(d, stem, vid):
+        """A faixa em uso volta para a pasta da versao dela (faixas/<vid>/)."""
+        atual = d / f"{stem}.flac"
+        if atual.exists() and vid:
+            (d / "faixas" / vid).mkdir(parents=True, exist_ok=True)
+            shutil.move(str(atual), d / "faixas" / vid / f"{stem}.flac")
+
+    def escolher_faixas(self, sid, escolha):
+        """Usa, para cada faixa de `escolha` ({faixa: id da versao}), a daquela versao (ex.: a voz de uma
+        separacao e o apoio de outra). So troca os arquivos de lugar. False se nao da agora."""
+        with self.lock:
+            meta = self.songs.get(sid)
+            if not meta or meta.get("status") != "ready" or (meta.get("resplit") or {}).get("state") in ("queued", "running"):
+                return False
+            d = self.dir(sid)
+            versoes, ativas = self._versoes_faixas(meta)
+            por_id = {v["id"]: v for v in versoes}
+            trocar = {s: v for s, v in (escolha or {}).items() if ativas.get(s) != v}
+            for stem, vid in trocar.items():
+                if stem not in FAIXAS or vid not in por_id or stem not in por_id[vid]["stems"] \
+                        or not (d / "faixas" / vid / f"{stem}.flac").exists():
+                    return False
+            for stem, vid in trocar.items():
+                self._tirar_de_uso(d, stem, ativas.get(stem))
+                atual = d / f"{stem}.flac"
+                shutil.move(str(d / "faixas" / vid / f"{stem}.flac"), atual)
+                os.utime(atual)
+                ativas[stem] = vid
+                try:
+                    (d / "faixas" / vid).rmdir()  # vazia: todas as faixas dela estao em uso
+                except OSError:
+                    pass
+            meta["faixas"], meta["faixas_ativas"] = versoes, ativas
+            self._save(sid)
+        return True
 
     def video_context(self, sid):
         """Titulo, canal, descricao e data da versao (para reconhecer a versao da letra: "Live on
@@ -1951,9 +2032,14 @@ class Library:
         with self.lock:
             if sid in self.cancel:
                 raise Canceled()
+            if meta.get("troca"):  # audio trocado: as versoes guardadas sao de outro audio, nao combinam mais
+                shutil.rmtree(d / "faixas", ignore_errors=True)
+                meta.pop("faixas", None)
+                meta.pop("faixas_ativas", None)
             # as tres faixas trocam juntas: nunca fica metade nova, metade antiga
-            for stem in ("instrumental", "lead", "backing"):
-                shutil.move(str(files[stem]), d / f"{stem}.flac")
+            self._guardar_faixas(sid, meta, {stem: files[stem] for stem in FAIXAS},
+                                 {"tipo": "separacao", "qualidade": _quality_label(separation),
+                                  "vocals": _modelo(separation.get("vocals")), "backing": _modelo(separation.get("backing"))})
             meta["files"].update({"instrumental": "instrumental.flac", "lead": "lead.flac", "backing": "backing.flac"})
             meta["headroom_db"] = HEADROOM_DB
             meta["separation"] = separation

@@ -431,6 +431,16 @@ def api_resplit(sid):
     return jsonify({"ok": True})
 
 
+@app.put("/api/songs/<sid>/faixas")
+def api_song_tracks(sid):
+    """Qual versao guardada usar em cada faixa: {"escolha": {"instrumental"|"lead"|"backing": id}}."""
+    if not can_edit(sid):
+        return error("erro.sem_permissao", 403)
+    if not lib.escolher_faixas(sid, (request.get_json(silent=True) or {}).get("escolha") or {}):
+        return error("musica.faixas_agora_nao")
+    return jsonify(lib.full(sid, *viewer()))
+
+
 @app.post("/api/songs/<sid>/reprocess")
 def api_reprocess(sid):
     if not can_edit(sid):

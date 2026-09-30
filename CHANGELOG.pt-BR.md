@@ -11,6 +11,12 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Faixas guardadas:** cada separação (e cada "refazer só voz/apoio") fica guardada, até 4 por música. No Editar da
+  música, escolha de qual veio cada faixa (instrumental, voz principal, vocal de apoio): por exemplo, a voz de uma
+  separação e o apoio de outra, sem separar de novo.
+
 ### Mudado
 
 - A sincronização da letra por IA segue o "onde separar": com **Nuvem** escolhida, ela roda na nuvem mesmo num PC com

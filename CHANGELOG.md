@@ -11,6 +11,12 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+### Added
+
+- **Saved tracks:** each separation (and each "redo only lead/backing") is kept, up to 4 per song. In the song's
+  Edit window, choose where each track comes from (instrumental, lead vocals, backing vocals): for example, the
+  lead from one separation and the backing from another, without separating again.
+
 ### Changed
 
 - AI lyrics sync follows "where to separate": with **Cloud** chosen, it runs in the cloud even on a PC with an NVIDIA

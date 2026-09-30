@@ -725,6 +725,7 @@ export function editSong(song, { genres = [] } = {}) {
           <select class="input" data-resplit-model style="flex:1;min-width:240px"><option>${t("musica.carregando_modelos")}</option></select>
           <button class="btn outline sm" data-resplit disabled>${icon("record_voice_over")} ${t("musica.resplit")}</button>
         </div>
+        <div data-faixas></div>
         <p class="small muted" style="margin:0">${t("musica.explica")}</p>
       </div>
       <div class="row wrap" style="margin-top:18px">
@@ -821,8 +822,55 @@ export function editSong(song, { genres = [] } = {}) {
       }
       if (r && r.state === "error") resplitBtn.title = t("musica.ultima_falhou", { erro: r.error || "" });
       const acaoRodando = renderAcao();
+      renderFaixas();
       clearTimeout(resplitTimer);
       if (busy || acaoRodando) resplitTimer = setTimeout(refreshResplit, 2000);
+    };
+    // faixas guardadas: de qual versao (separacao) vem cada faixa
+    const faixasBox = modal.querySelector("[data-faixas]");
+    let faixasSig = "";
+    const renderFaixas = () => {
+      const versoes = fresh.faixas || [];
+      const ativas = fresh.faixas_ativas || {};
+      const sig = JSON.stringify([versoes.map((v) => v.id), ativas]);
+      if (sig === faixasSig) return; // nao desfaz a escolha enquanto a pessoa mexe
+      faixasSig = sig;
+      if (versoes.length < 2) {
+        faixasBox.innerHTML = "";
+        return;
+      }
+      const quando = (v) => new Date(v.em * 1000).toLocaleString(idiomaAtual, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      const nome = (v) => `${quando(v)} — ${v.tipo === "voz_apoio" ? t("musica.faixas_voz_apoio", { m: v.backing || "?" })
+        : t("musica.faixas_separacao", { q: v.qualidade || "?" })}`;
+      const sel = (stem, rotulo) => {
+        const opcoes = versoes.filter((v) => v.stems.includes(stem)).reverse();
+        return `<label class="faixa-escolha"><span class="small muted">${rotulo}</span>
+          <select class="input compact" data-faixa="${stem}">${opcoes.map((v) =>
+            `<option value="${esc(v.id)}"${ativas[stem] === v.id ? " selected" : ""}>${esc(nome(v))}${ativas[stem] === v.id ? ` · ${esc(t("musica.faixas_em_uso"))}` : ""}</option>`).join("")}</select></label>`;
+      };
+      faixasBox.innerHTML = `
+        <div class="faixas-box">
+          <b>${esc(t("musica.faixas_titulo"))}</b>
+          <div class="small muted">${esc(t("musica.faixas_texto"))}</div>
+          ${sel("instrumental", esc(t("musica.faixa_instrumental")))}
+          ${sel("lead", esc(t("musica.faixa_voz")))}
+          ${sel("backing", esc(t("musica.faixa_apoio")))}
+          <div class="row"><button class="btn outline sm" data-faixas-usar>${icon("tune")} ${esc(t("musica.faixas_usar"))}</button></div>
+        </div>`;
+      faixasBox.querySelector("[data-faixas-usar]").onclick = async (e) => {
+        const escolha = {};
+        faixasBox.querySelectorAll("[data-faixa]").forEach((s) => (escolha[s.dataset.faixa] = s.value));
+        e.currentTarget.disabled = true;
+        try {
+          fresh = await api(`/api/songs/${song.id}/faixas`, { method: "PUT", body: { escolha } });
+          saved = true;
+          toast(t("musica.faixas_ok"));
+          renderResplit();
+        } catch (err) {
+          toast(err.message, { error: true });
+          e.currentTarget.disabled = false;
+        }
+      };
     };
     const refreshResplit = () => api(`/api/songs/${song.id}`).then((s) => { fresh = s; renderResplit(); }).catch(() => {
       resplitTimer = setTimeout(refreshResplit, 4000);
