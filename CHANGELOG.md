@@ -11,6 +11,8 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+## [1.1.0-beta.1] - 2026-09-30
+
 ### Added
 
 - **"In progress" center** on the PC screens (home, Add, Sing): a pill next to the top buttons shows what is running
@@ -136,7 +138,8 @@ The first public version of IOkê: a karaoke app for Windows that runs on your o
 - **Updates** from this page, in the background, with the Stable and Testing channels, and going back to the
   previous version by itself if a new one doesn't open.
 
-[Unreleased]: https://github.com/M4ndril/ioke/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/M4ndril/ioke/compare/v1.1.0-beta.1...HEAD
+[1.1.0-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.2...v1.1.0-beta.1
 [1.0.2]: https://github.com/M4ndril/ioke/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1
 [1.0.1-beta.3]: https://github.com/M4ndril/ioke/compare/v1.0.1-beta.2...v1.0.1-beta.3
