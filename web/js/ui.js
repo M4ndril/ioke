@@ -1,5 +1,5 @@
 // Pedacos de interface usados em varias paginas (PC e celular).
-import { api, esc, fmtTime, h, icon, readyIn, toast, togglePreview } from "./common.js";
+import { api, esc, fmtTime, h, icon, perguntarOnde, readyIn, toast, togglePreview } from "./common.js";
 import { idioma, t } from "./i18n.js";
 
 /** Barra de navegacao: transparente no topo, solida ao rolar. */
@@ -116,9 +116,11 @@ function resultEl(it, getName, sing = false) {
   const add = el.querySelector("[data-add]");
   if (!add) return el;
   add.onclick = async () => {
+    const onde = await perguntarOnde("musica");
+    if (onde === null) return;
     add.disabled = true;
     try {
-      const r = await api("/api/songs", { method: "POST", body: { ...origem, name: getName ? getName() : "" } });
+      const r = await api("/api/songs", { method: "POST", body: { ...origem, name: getName ? getName() : "", onde } });
       if (r.created) {
         add.innerHTML = `${icon("check")} ${esc(t("busca.na_fila"))}`;
         toast(t("busca.adicionada"));

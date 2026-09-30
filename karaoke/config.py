@@ -72,6 +72,12 @@ DEFAULTS = {
     # Onde separar as musicas: "auto" (a placa NVIDIA, se tiver; senao a nuvem, se estiver
     # conectada; senao o processador) | "local" | "nuvem" (a conta Modal, Configuracoes -> Nuvem)
     "separar_onde": "auto",
+    # Onde sincronizar a letra por IA: "auto" (a placa NVIDIA, se tiver; senao a nuvem, se conectada) |
+    # "local" | "nuvem"
+    "letra_onde": "auto",
+    # true: separar e sincronizar usam sempre o configurado; false: com a nuvem conectada, o PC pergunta
+    # "neste PC ou na nuvem?" a cada musica nova, separar de novo, refazer voz/apoio e sincronizar letra
+    "onde_automatico": True,
     # true = nunca usa a GPU (lento, mas funciona sem placa NVIDIA)
     "force_cpu": False,
     # false = descarrega um modelo antes de carregar o outro (economiza VRAM)

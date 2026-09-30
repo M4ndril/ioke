@@ -1,6 +1,6 @@
 """Rotas dos pacotes .karaoke (so o PC do karaoke).
 
-- POST /api/pacotes/exportar            {"ids": [...], "destino"?: pasta (app), "formato"?, "video"?, "original"?}
+- POST /api/pacotes/exportar            {"ids": [...], "destino"?: pasta (app), "formato"?, "video"? (padrao: sim, se tiver), "original"?}
                                         -> tarefa (em segundo plano)
 - GET  /api/pacotes/tarefas/<id>        andamento e os arquivos prontos
 - GET  /api/pacotes/baixar/<id>/<nome>  o pacote pronto (navegador: download)
@@ -55,7 +55,7 @@ def make_blueprint(lib, is_host, quem, versao_app=""):
         def rodar():
             for sid in ids:
                 try:
-                    p = lib.exportar_pacote(sid, destino, formato, bool(body.get("video")), bool(body.get("original")),
+                    p = lib.exportar_pacote(sid, destino, formato, bool(body.get("video", True)), bool(body.get("original")),
                                             versao_app)
                     t["arquivos"].append({"nome": p.name, "caminho": str(p), "tamanho": p.stat().st_size})
                 except Exception as exc:  # noqa: BLE001

@@ -7,8 +7,8 @@
 // acaba, carrega a proxima SEM recarregar a pagina (o navegador so libera o
 // som depois de um clique, e esse clique precisa valer para a festa toda).
 import {
-  $, $$, api, avatar, chooseCover, chooseLyrics, esc, fmtTime, icon, keyLabel, NOTES, num, openModal, readyIn, SCALES, shiftText, store, toast,
-  transposeKey,
+  $, $$, api, avatar, chooseCover, chooseLyrics, esc, fmtTime, icon, keyLabel, NOTES, num, openModal, perguntarOnde,
+  readyIn, SCALES, shiftText, store, toast, transposeKey,
 } from "./common.js";
 import { openPiano } from "./floating.js";
 import { initMidi, mountMidiPicker, sendKey } from "./midi.js";
@@ -1274,8 +1274,10 @@ function watchAi(id) {
 
 async function startAi(body = {}) {
   if (!song) return;
+  const onde = await perguntarOnde("letra");
+  if (onde === null) return;
   try {
-    const s = await api(`/api/songs/${songId}/align`, { method: "POST", body });
+    const s = await api(`/api/songs/${songId}/align`, { method: "POST", body: { ...body, onde } });
     renderAi(s.lyrics_ai);
     watchAi(songId);
   } catch (err) {

@@ -53,6 +53,8 @@ def make_blueprint(lib, is_host):
             "perfil": perfil(),
             "placa": lib.device,
             "separar_onde": CONFIG.get("separar_onde") or "auto",
+            "letra_onde": CONFIG.get("letra_onde") or "auto",
+            "onde_automatico": CONFIG.get("onde_automatico", True) is not False,
             "conta": c,
             "login": conta.estado_login(),
             "instalacao": separador_nuvem.estado_instalacao(),
@@ -88,10 +90,14 @@ def make_blueprint(lib, is_host):
             if not conta.conectada():
                 return jsonify({"error": i18n.t("nuvem.erro.desconectada")}), 400
             conta.gravar(**campos)
-        if "separar_onde" in data:
-            if data["separar_onde"] not in ONDE:
-                return jsonify({"error": i18n.t("nuvem.onde_invalido")}), 400
-            CONFIG["separar_onde"] = data["separar_onde"]
+        for chave in ("separar_onde", "letra_onde"):
+            if chave in data:
+                if data[chave] not in ONDE:
+                    return jsonify({"error": i18n.t("nuvem.onde_invalido")}), 400
+                CONFIG[chave] = data[chave]
+                save_config()
+        if "onde_automatico" in data:
+            CONFIG["onde_automatico"] = bool(data["onde_automatico"])
             save_config()
         with lib.cond:
             lib.cond.notify_all()  # musicas esperando pela nuvem podem ir agora

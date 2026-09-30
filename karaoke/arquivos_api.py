@@ -34,10 +34,10 @@ def make_blueprint(lib, is_host, quem):
             return jsonify({"error": i18n.t("arquivo.so_pc")}), 403
         return None
 
-    def adicionar(caminho, nome, mover, resp):
+    def adicionar(caminho, nome, mover, resp, onde=None):
         client, name, account = quem()
         try:
-            meta, nova = lib.add_file(caminho, nome, client, name, account, mover=mover)
+            meta, nova = lib.add_file(caminho, nome, client, name, account, mover=mover, onde=onde)
         except midia.ArquivoRecusado as exc:
             resp["recusados"].append(_recusa(nome, exc.motivo))
             if mover:
@@ -70,7 +70,7 @@ def make_blueprint(lib, is_host, quem):
                 resp["recusados"].append({"nome": nome, "motivo": i18n.t("arquivo.recusado.grande", nome=nome,
                                                                             mb=limite // 1024 // 1024)})
                 continue
-            adicionar(tmp, nome, True, resp)
+            adicionar(tmp, nome, True, resp, request.form.get("onde"))
         return jsonify(resp)
 
     @bp.post("/api/arquivos/caminhos")
@@ -79,7 +79,8 @@ def make_blueprint(lib, is_host, quem):
         if bloqueado:
             return bloqueado
         resp = {"musicas": [], "repetidas": [], "recusados": []}
-        for c in (request.get_json(silent=True) or {}).get("caminhos") or []:
+        body = request.get_json(silent=True) or {}
+        for c in body.get("caminhos") or []:
             p = Path(str(c))
             if not p.is_file():
                 resp["recusados"].append({"nome": p.name, "motivo": i18n.t("arquivo.nao_encontrado", nome=p.name)})
@@ -87,7 +88,7 @@ def make_blueprint(lib, is_host, quem):
             if p.suffix.lower() not in midia.ACEITAS + midia.PROTEGIDAS:
                 resp["recusados"].append(_recusa(p.name, "formato"))
                 continue
-            adicionar(p, p.name, False, resp)  # copia: o arquivo da pessoa fica onde estava
+            adicionar(p, p.name, False, resp, body.get("onde"))  # copia: o arquivo da pessoa fica onde estava
         return jsonify(resp)
 
     @bp.post("/api/arquivos/trocar/<sid>")

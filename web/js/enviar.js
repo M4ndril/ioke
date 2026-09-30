@@ -1,7 +1,7 @@
 // Enviar os proprios arquivos (so no PC). No app instalado, a janela do Windows
 // escolhe e o servidor copia do disco (o arquivo da pessoa fica onde estava); no
 // navegador, cada arquivo vai por HTTP, com a barra do envio.
-import { $, $$, api, esc, h, icon, openModal, toast } from "./common.js";
+import { $, $$, api, esc, h, icon, openModal, perguntarOnde, toast } from "./common.js";
 import { appApi } from "./appwin.js";
 import { idioma, t } from "./i18n.js";
 import { resolverRepetidos } from "./pacotes.js";
@@ -77,7 +77,7 @@ export function mountEnviar(box, { onDone } = {}) {
   };
 
   // navegador: um arquivo por pedido, com a barra do envio
-  const enviarArquivo = (file) => new Promise((resolve) => {
+  const enviarArquivo = (file, onde) => new Promise((resolve) => {
     const el = linha(file.name, file.size);
     if (!ok(file.name)) {
       marcar(el, "err", t("arquivo.recusado.formato", { nome: file.name }));
@@ -86,6 +86,7 @@ export function mountEnviar(box, { onDone } = {}) {
     const pacote = ePacote(file.name);
     const form = new FormData();
     form.append(pacote ? "pacote" : "arquivos", file, file.name);
+    if (onde && !pacote) form.append("onde", onde);
     const xhr = new XMLHttpRequest();
     xhr.open("POST", pacote ? "/api/pacotes/importar" : "/api/arquivos");
     xhr.setRequestHeader("X-Idioma", idioma()); // as mensagens do servidor no idioma da pagina
@@ -111,7 +112,10 @@ export function mountEnviar(box, { onDone } = {}) {
     xhr.send(form);
   });
   const enviarLista = async (files) => {
-    for (const f of files) await enviarArquivo(f); // um de cada vez: o PC nao engasga
+    // pacote nao separa: so pergunta onde separar se tiver musica para separar
+    const onde = files.some((f) => ok(f.name) && !ePacote(f.name)) ? await perguntarOnde("musica") : undefined;
+    if (onde === null) return;
+    for (const f of files) await enviarArquivo(f, onde); // um de cada vez: o PC nao engasga
   };
 
   // app: caminhos do disco (copia; o arquivo da pessoa fica onde estava)
@@ -130,12 +134,14 @@ export function mountEnviar(box, { onDone } = {}) {
     }
     const caminhos = todos.filter((c) => !ePacote(c));
     if (!caminhos.length) return;
+    const onde = await perguntarOnde("musica");
+    if (onde === null) return;
     const linhas = caminhos.map((c) => ({ nome: c.split(/[\\/]/).pop(), el: null }));
     linhas.forEach((l) => (l.el = linha(l.nome)));
     for (let i = 0; i < caminhos.length; i += 10) {
       const lote = caminhos.slice(i, i + 10);
       try {
-        resultado(await api("/api/arquivos/caminhos", { method: "POST", body: { caminhos: lote } }), linhas.slice(i, i + 10));
+        resultado(await api("/api/arquivos/caminhos", { method: "POST", body: { caminhos: lote, onde } }), linhas.slice(i, i + 10));
       } catch (err) {
         linhas.slice(i, i + 10).forEach((l) => marcar(l.el, "err", err.message));
       }

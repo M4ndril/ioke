@@ -206,8 +206,9 @@ export function mountNuvem(box) {
           : t("nuvem.estado.conectada", { conta: esc(c.conta || "Modal") });
     const placa = st.gpus.map((g) => `
       <button data-gpu="${g.gpu}" class="${c.gpu === g.gpu ? "on" : ""}" title="${t(`nuvem.gpu.${g.gpu}`)}">${g.gpu}</button>`).join("");
-    const onde = ["auto", "local", "nuvem"].map((v) => `
-      <option value="${v}"${st.separar_onde === v ? " selected" : ""}${leve && v !== "nuvem" ? " disabled" : ""}>${t(`nuvem.onde.${v}`)}</option>`).join("");
+    const opcoesOnde = (atual) => ["auto", "local", "nuvem"].map((v) => `
+      <option value="${v}"${atual === v ? " selected" : ""}${leve && v !== "nuvem" ? " disabled" : ""}>${t(`nuvem.onde.${v}`)}</option>`).join("");
+    const onde = opcoesOnde(st.separar_onde);
     box.innerHTML = `
       <section class="set-section">
         <h4>${icon("cloud")} ${t("nuvem.conta")}</h4>
@@ -248,7 +249,14 @@ export function mountNuvem(box) {
         <h4>${icon("call_split")} ${t("nuvem.onde.titulo")}</h4>
         <select class="input compact" data-onde${leve ? " disabled" : ""}>${onde}</select>
         <p class="small muted" style="margin:8px 0 0">${t(leve ? "nuvem.onde.leve" : "nuvem.onde.texto")}</p>
-      </section>`;
+      </section>
+      ${leve ? "" : `<section class="set-section">
+        <h4>${icon("lyrics")} ${t("nuvem.letra_onde.titulo")}</h4>
+        <select class="input compact" data-letra-onde>${opcoesOnde(st.letra_onde)}</select>
+        <p class="small muted" style="margin:8px 0 0">${t("nuvem.letra_onde.texto")}</p>
+        <label class="toggle-row small" style="margin-top:14px"><input type="checkbox" data-onde-auto${st.onde_automatico ? " checked" : ""}>
+          <span><b>${t("nuvem.onde_automatico")}</b><br><span class="muted">${t("nuvem.onde_automatico_texto")}</span></span></label>
+      </section>`}`;
     const on = (sel, fn) => box.querySelector(sel) && (box.querySelector(sel).onclick = fn);
     const put = async (body, msg) => {
       try {
@@ -298,6 +306,18 @@ export function mountNuvem(box) {
         put({ separar_onde: ondeSel.value }, t("nuvem.onde.salvo"));
       };
     }
+    const letraSel = box.querySelector("[data-letra-onde]");
+    if (letraSel) {
+      letraSel.onchange = async () => {
+        if (letraSel.value !== "local" && c.conectada && !c.aceitou_custos_em && !(await avisoCustos(c.teto_usd))) {
+          letraSel.value = st.letra_onde;
+          return;
+        }
+        put({ letra_onde: letraSel.value }, t("nuvem.onde.salvo"));
+      };
+    }
+    const autoBox = box.querySelector("[data-onde-auto]");
+    if (autoBox) autoBox.onchange = () => put({ onde_automatico: autoBox.checked }, t("nuvem.onde.salvo"));
     if (instalando) timer = setTimeout(render, 3000);
   };
   render();

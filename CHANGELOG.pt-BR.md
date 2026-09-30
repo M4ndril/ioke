@@ -23,6 +23,11 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ### Mudado
 
+- **Onde sincronizar a letra** tem configuração própria (Configurações → Nuvem), separada de onde separar. Refazer
+  voz/apoio segue o "onde separar".
+- **"Usar estas escolhas automaticamente"** (Configurações → Nuvem): desligado, com a nuvem conectada, o PC pergunta
+  "neste PC ou na nuvem?" a cada música nova, separar de novo, refazer voz/apoio e sincronizar letra.
+- Os pacotes exportados levam a capa em uso (também quando é a miniatura da fonte) e o vídeo de fundo, se tiver.
 - Botões do topo: a tela inicial ganha o de Configurações; os de piano e MIDI saem da página "Cantar" (ficam no
   player).
 - A sincronização da letra por IA segue o "onde separar": com **Nuvem** escolhida, ela roda na nuvem mesmo num PC com
@@ -41,6 +46,8 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ### Corrigido
 
+- Escolher "Vídeo" de fundo numa música sem vídeo dizia "música não encontrada"; agora diz que o vídeo não foi
+  encontrado.
 - Gastos da nuvem: o gasto real do mês nunca vinha depois do dia 7 (o Modal recusa relatório por hora com mais de 7
   dias); agora o relatório é pedido em pedaços.
 - Pacotes .karaoke importados aparecem na biblioteca na hora (antes, só reiniciando o app).

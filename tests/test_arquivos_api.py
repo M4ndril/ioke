@@ -11,7 +11,7 @@ class FakeLib:
     def __init__(self):
         self.added = []
 
-    def add_file(self, caminho, nome, client="", name="", account=None, mover=False):
+    def add_file(self, caminho, nome, client="", name="", account=None, mover=False, onde=None):
         if nome.startswith("drm"):
             raise midia.ArquivoRecusado("protegido", nome)
         self.added.append((str(caminho), nome, mover))

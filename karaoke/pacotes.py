@@ -5,7 +5,7 @@ levar para outro PC sem baixar nem separar de novo.
     instrumental.flac|.mp3|.opus, lead.flac|.mp3|.opus, backing.flac|.mp3|.opus
     letra.lrc | letra.txt  (se tiver)
     capa.jpg               (se tiver)
-    video.mp4|.webm        (opcional)
+    video.mp4|.webm        (o video de fundo, se tiver)
     melodia.json           (o pitch.json, se tiver)
     ia-ouvido.json         (se tiver: a IA nao precisa ouvir de novo)
     original.<ext>         (opcional)
@@ -108,6 +108,8 @@ def exportar(pasta_musica, meta, destino, formato="flac", video=False, original=
                            ("pitch.json", "melodia.json"), ("ia-ouvido.json", "ia-ouvido.json")):
             if (pasta_musica / nome).exists():
                 arquivos[dest.rsplit(".", 1)[0]] = (pasta_musica / nome, dest)
+        if "capa" not in arquivos and (pasta_musica / "thumb.jpg").exists():
+            arquivos["capa"] = (pasta_musica / "thumb.jpg", "capa.jpg")  # a capa em uso e a miniatura da fonte
         if video:
             v = (meta.get("video") or {}).get("file")
             if v and (pasta_musica / v).exists():

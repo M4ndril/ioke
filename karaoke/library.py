@@ -454,7 +454,7 @@ class Library:
             return self._bib[1], self._bib[2]
 
     # ------------------------------------------------------------------ acoes
-    def add_fonte(self, fonte, ref, info=None, client="", name="", account=None):
+    def add_fonte(self, fonte, ref, info=None, client="", name="", account=None, onde=None):
         """Uma musica de um complemento (fonte de musicas): o complemento entrega o arquivo no
         preparo (_obter_complemento). O id e sha1(chave)[:12]: uma fonte de videos pode usar o id do
         video como chave, e as musicas antigas dela mantem o mesmo id."""
@@ -494,6 +494,8 @@ class Library:
                 "settings": {},
                 "origem": {"tipo": "complemento", "complemento": fonte, "ref": ref, "chave": chave, "info": guardar},
             }
+            if onde in ("local", "nuvem"):
+                meta["separar_onde"] = onde
             self.dir(sid).mkdir(parents=True, exist_ok=True)
             self.songs[sid] = meta
             self._save(sid)
@@ -548,7 +550,7 @@ class Library:
         shutil.rmtree(work / "obter", ignore_errors=True)
         return original
 
-    def add_file(self, caminho, nome_original, client="", name="", account=None, mover=False):
+    def add_file(self, caminho, nome_original, client="", name="", account=None, mover=False, onde=None):
         """Acrescenta um arquivo de audio ou video da propria pessoa. Devolve (meta, nova).
         O id e o SHA-1 do conteudo: o mesmo arquivo de novo nao duplica. Recusa com
         midia.ArquivoRecusado (protegido contra copia, sem audio, formato desconhecido).
@@ -613,6 +615,8 @@ class Library:
             "origem": {"tipo": "arquivo", "nome": Path(nome_original).name, "tamanho": destino.stat().st_size,
                        "sha1": sha1, "video": bool(info.get("video"))},
         }
+        if onde in ("local", "nuvem"):
+            meta["separar_onde"] = onde
         with self.lock:
             if existing:  # estava com erro: recomeca com o arquivo novo
                 meta = {**existing, **{k: meta[k] for k in ("files", "origem", "status", "stage", "progress")},
@@ -887,7 +891,7 @@ class Library:
         nome = self.complementos.nome(cid) if self.complementos else None
         return i18n.t("complementos.ausente", nome=nome) if nome else i18n.t("complementos.origem_ausente")
 
-    def reprocess(self, sid):
+    def reprocess(self, sid, onde=None):
         """Separa de novo (com a qualidade atual) uma musica que ja estava pronta."""
         with self.lock:
             meta = self.songs.get(sid)
@@ -897,6 +901,8 @@ class Library:
                 meta_status = "queued"  # sem o original: o complemento de origem entrega de novo
             else:
                 meta_status = "waiting"
+            if onde in ("local", "nuvem"):
+                meta["separar_onde"] = onde  # escolhido na hora (o menu da fila tambem troca)
             self._set(sid, status=meta_status, stage="etapa.fila_separar_de_novo", progress=0.15,
                       error=None, save=True)
             return True
@@ -992,10 +998,11 @@ class Library:
         return info
 
     # ------------------------------------------------------ letra por IA
-    def align_lyrics(self, sid, mode="sync", reject=None, quiet=False):
+    def align_lyrics(self, sid, mode="sync", reject=None, quiet=False, onde=None):
         """Coloca a musica na fila da letra por IA.
         mode: "sync" (so os tempos; o texto nao muda) ou "adapt" (ajusta a letra a
-        esta versao: bis, linhas nao cantadas). reject: mudancas do "adapt" desfeitas."""
+        esta versao: bis, linhas nao cantadas). reject: mudancas do "adapt" desfeitas.
+        onde: "local" ou "nuvem" so neste pedido (a pessoa escolheu na hora); None: o das Configuracoes."""
         with self.lock:
             meta = self.songs.get(sid)
             if not meta or meta.get("status") != "ready" or not self.stem_path(sid, "lead"):
@@ -1007,7 +1014,8 @@ class Library:
                 return True
             meta["lyrics_ai"] = {**ai, "state": "queued", "mode": mode, "progress": 0.0, "stage": "etapa.na_fila",
                                  "error": None, "quiet": quiet}
-            self.ai_queue.append((sid, {"mode": mode, "reject": list(reject or [])}))
+            self.ai_queue.append((sid, {"mode": mode, "reject": list(reject or []),
+                                        "onde": onde if onde in ("local", "nuvem") else None}))
             self.cond.notify_all()
             return True
 
@@ -1089,7 +1097,7 @@ class Library:
             return True
 
     # ------------------------------------------------ refazer so voz x apoio
-    def resplit(self, sid, model=None):
+    def resplit(self, sid, model=None, onde=None):
         """Refaz so a separacao voz principal x vocal de apoio, em cima das vozes que
         ja estao separadas: o instrumental nao muda e nada e baixado de novo. A musica
         continua tocavel; as duas faixas trocam no fim. model: um de BACKING_MODELS
@@ -1104,11 +1112,12 @@ class Library:
             if (meta.get("resplit") or {}).get("state") in ("queued", "running"):
                 return True
             meta["resplit"] = {"state": "queued", "progress": 0.0, "stage": "etapa.na_fila", "model": model}
-            self.ai_queue.append((sid, {"kind": "resplit", "model": model}))
+            self.ai_queue.append((sid, {"kind": "resplit", "model": model,
+                                        "onde": onde if onde in ("local", "nuvem") else None}))
             self.cond.notify_all()
             return True
 
-    def _resplit_job(self, sid, model=None):
+    def _resplit_job(self, sid, model=None, onde=None):
         import soundfile as sf
 
         meta = self.get(sid)
@@ -1131,7 +1140,7 @@ class Library:
             vocals = work / f"{sid}_vocals.flac"
             sf.write(vocals, lead[:n] + back[:n], sr, subtype="PCM_24")
             del lead, back
-            na_nuvem = self._ia_na_nuvem()
+            na_nuvem = self._ia_na_nuvem(onde or self._onde(meta))  # e separacao: segue o "onde separar"
             if na_nuvem:
                 from .nuvem.separador_nuvem import gpu as gpu_nuvem
 
@@ -1324,7 +1333,7 @@ class Library:
                 sid, opts = self.ai_queue.pop(0)
                 self.ai_running = sid  # excluir esta musica agora espera o trabalho terminar
             try:
-                al = self._alinhador(aligner)
+                al = self._alinhador(aligner, opts.get("onde"))
                 self.ai_activity = {"sid": sid, "text": self._describe_ai_job(al, sid, opts), "at": time.time()}
                 self._ai_job(al, sid, opts)
             except Exception:  # noqa: BLE001 - um trabalho que quebra nao pode parar a fila
@@ -1335,9 +1344,10 @@ class Library:
                     self.ai_activity = None
                 self._finish_if_deleting(sid)
 
-    def _ia_na_nuvem(self):
-        """A letra por IA (e o refazer voz/apoio) vai para a nuvem quando nao roda aqui: na
-        instalacao leve, ou sem placa NVIDIA com a nuvem conectada (no "auto" ou "nuvem")."""
+    def _ia_na_nuvem(self, onde=None):
+        """A letra por IA (ou o refazer voz/apoio) vai para a nuvem? `onde`: "local"/"nuvem" escolhido para este
+        trabalho; sem ele, o "onde sincronizar a letra" das Configuracoes ("auto": a placa NVIDIA, se tiver;
+        senao a nuvem, se estiver conectada). Na instalacao leve, sempre a nuvem."""
         from .nuvem import conta
 
         c = conta.publico()
@@ -1346,17 +1356,19 @@ class Library:
             if not pronta:
                 raise RuntimeError(i18n.t("nuvem.espera.conectar" if not c["conectada"] else "nuvem.espera.aceitar"))
             return True
-        onde = CONFIG.get("separar_onde") or "auto"
-        if onde == "nuvem":  # escolheu a nuvem: vale tambem para a IA, mesmo com placa NVIDIA
+        onde = onde or CONFIG.get("letra_onde") or "auto"
+        if onde == "local":
+            return False
+        if onde == "nuvem":  # mesmo com placa NVIDIA
             return pronta
         if (self.device or {}).get("device") == "cuda":
             return False
-        return pronta and onde == "auto"
+        return pronta
 
-    def _alinhador(self, aligner):
+    def _alinhador(self, aligner, onde=None):
         """O aligner daqui ou o da nuvem (as mesmas funcoes)."""
         try:
-            if not self._ia_na_nuvem():
+            if not self._ia_na_nuvem(onde):
                 return aligner
         except RuntimeError:
             return aligner  # leve sem a nuvem: o trabalho falha com a mensagem (_trava)
@@ -1382,7 +1394,7 @@ class Library:
             self._choose_job(aligner, sid)
             return
         if opts.get("kind") == "resplit":
-            self._resplit_job(sid, opts.get("model"))
+            self._resplit_job(sid, opts.get("model"), opts.get("onde"))
             return
         meta = self.get(sid)
         if not meta:
@@ -1586,8 +1598,8 @@ class Library:
         if origem.get("tipo") in ("arquivo", "complemento"):
             self._video_from_file(sid, meta, origem)
             return
-        with self.lock:
-            meta["video"] = None
+        with self.lock:  # sem de onde tirar o video (ex.: pacote importado sem ele): avisa, em vez de sumir
+            meta["video"] = {"status": "error", "error": i18n.t("erro.sem_video")}
 
     def _video_from_file(self, sid, meta, origem):
         """O video que veio no proprio arquivo da pessoa (ou que o complemento entregou) vira o

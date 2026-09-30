@@ -23,6 +23,12 @@ app (Settings → Updates), in the user's language.
 
 ### Changed
 
+- **Where to sync the lyrics** has its own setting (Settings → Cloud), apart from where to separate. Redoing
+  lead/backing follows "where to separate".
+- **"Use these choices automatically"** (Settings → Cloud): turned off, with the cloud connected, the PC asks "on this
+  PC or in the cloud?" for each new song, separate again, redo lead/backing and lyrics sync.
+- Exported packages carry the cover in use (also when it is the source's thumbnail) and the background video, if
+  there is one.
 - The top buttons: the home screen gets Settings; the piano and MIDI buttons leave the "Sing" page (they are in
   the player).
 - AI lyrics sync follows "where to separate": with **Cloud** chosen, it runs in the cloud even on a PC with an NVIDIA
@@ -41,6 +47,8 @@ app (Settings → Updates), in the user's language.
 
 ### Fixed
 
+- Choosing "Video" as the background of a song without a video said "song not found"; it now says the video
+  wasn't found.
 - Cloud spending: the real month's spending never came after the 7th (Modal refuses hourly reports longer
   than 7 days); the report is now asked in pieces.
 - Imported .karaoke packages show up in the library right away (before, only after restarting the app).

@@ -112,6 +112,40 @@ export async function api(path, { method = "GET", body, timeout = 0 } = {}) {
   return data;
 }
 
+// ------------------------------------------------ onde fazer: nesta placa ou na nuvem
+let ondeInfo = null; // o que a aba Nuvem diz (guardado por 5 s)
+
+/** Com "usar estas escolhas automaticamente" desligado (Configuracoes -> Nuvem) e a nuvem pronta, pergunta
+ *  "neste PC ou na nuvem?". `tipo`: "musica" (musicas novas), "separar", "voz_apoio" ou "letra".
+ *  Devolve "local" | "nuvem" (escolhido), undefined (usar o configurado: nao perguntou) ou null (cancelou). */
+export async function perguntarOnde(tipo) {
+  if (document.body.classList.contains("mobile")) return undefined; // o celular usa o configurado
+  if (!ondeInfo || Date.now() - ondeInfo.em > 5000) {
+    try {
+      const st = await api("/api/nuvem");
+      const c = st.conta || {};
+      ondeInfo = { em: Date.now(), st, perguntar: !st.onde_automatico && c.conectada && !!c.aceitou_custos_em && st.perfil !== "leve" };
+    } catch {
+      return undefined; // sem a aba Nuvem (outro computador): o servidor decide
+    }
+  }
+  if (!ondeInfo.perguntar) return undefined;
+  const padrao = tipo === "letra" ? ondeInfo.st.letra_onde : ondeInfo.st.separar_onde;
+  return new Promise((resolve) => {
+    let feito = false;
+    const botao = (v, nome) => `<button class="btn ${v === "nuvem" ? "light" : "outline"}" data-onde="${v}"${padrao === v ? " data-nav-default" : ""}>${icon(v === "nuvem" ? "cloud" : "memory")} ${esc(t(nome))}</button>`;
+    const modal = openModal(t("onde.titulo"), `
+      <p style="margin-top:0">${esc(t(`onde.texto_${tipo}`))}</p>
+      <div class="row" style="gap:10px;justify-content:flex-end">${botao("local", "onde.local")}${botao("nuvem", "onde.nuvem")}</div>`);
+    modal.querySelectorAll("[data-onde]").forEach((b) => (b.onclick = () => {
+      feito = true;
+      modal.close();
+      resolve(b.dataset.onde);
+    }));
+    modal.addEventListener("closed", () => !feito && resolve(null));
+  });
+}
+
 // ------------------------------------------------------------- biblioteca
 // As musicas prontas (so o que as listas usam). A pagina guarda a lista e a versao: o servidor so
 // manda a lista de novo quando ela muda (com milhares de musicas, faz diferenca a cada 2-5 s).
@@ -886,8 +920,10 @@ export function editSong(song, { genres = [] } = {}) {
     });
     refreshResplit();
     resplitBtn.onclick = async () => {
+      const onde = await perguntarOnde("voz_apoio");
+      if (onde === null) return;
       try {
-        await api(`/api/songs/${song.id}/resplit`, { method: "POST", body: { model: pick.value } });
+        await api(`/api/songs/${song.id}/resplit`, { method: "POST", body: { model: pick.value, onde } });
         saved = true;
         delete pick.dataset.touched;
         toast(t("musica.resplit_iniciado"));
@@ -901,7 +937,9 @@ export function editSong(song, { genres = [] } = {}) {
     modal.querySelector("[data-reprocess]").onclick = async () => {
       if (!confirm(t("musica.separar_confirmar"))) return;
       try {
-        await api(`/api/songs/${song.id}/reprocess`, { method: "POST" });
+        const onde = await perguntarOnde("separar");
+        if (onde === null) return;
+        await api(`/api/songs/${song.id}/reprocess`, { method: "POST", body: { onde } });
         saved = true;
         toast(t("etapa.fila_separar_de_novo"));
         modal.close();

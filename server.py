@@ -380,7 +380,8 @@ def _add_from(body, name, account_id):
             raise ComplementoAusente(i18n.t("complementos.ausente", nome=cid))
         if not is_host() and not m.get("celular"):
             raise PermissionError(i18n.t("complementos.so_pc"))
-        return lib.add_fonte(cid, body.get("ref") or "", body.get("info") or {}, client_id(), name, account_id)
+        return lib.add_fonte(cid, body.get("ref") or "", body.get("info") or {}, client_id(), name, account_id,
+                             onde=body.get("onde") if is_host() else None)
     raise ValueError(i18n.t("complementos.escolha_fonte"))
 
 
@@ -434,7 +435,7 @@ def api_resplit(sid):
     if not can_edit(sid):
         return error("erro.sem_permissao", 403)
     body = request.get_json(silent=True) or {}
-    if not lib.resplit(sid, body.get("model") or None):
+    if not lib.resplit(sid, body.get("model") or None, onde=body.get("onde")):
         return error("erro.precisa_pronta")
     return jsonify({"ok": True})
 
@@ -453,7 +454,7 @@ def api_song_tracks(sid):
 def api_reprocess(sid):
     if not can_edit(sid):
         return error("erro.sem_permissao", 403)
-    return jsonify({"ok": lib.reprocess(sid)})
+    return jsonify({"ok": lib.reprocess(sid, onde=(request.get_json(silent=True) or {}).get("onde"))})
 
 
 @app.post("/api/songs/<sid>/acoes/<cid>/<acao>")
@@ -503,8 +504,10 @@ def api_video(sid):
 def api_fetch_video(sid):
     if not can_edit(sid):
         return error("erro.sem_permissao", 403)
+    if not lib.get(sid):
+        return error("erro.musica_nao_encontrada", 404)
     info = lib.ensure_video(sid)
-    return jsonify({"video": info}) if info is not None else error("erro.musica_nao_encontrada", 404)
+    return jsonify({"video": info}) if info is not None else error("erro.sem_video", 404)
 
 
 @app.post("/api/songs/<sid>/played")
@@ -591,7 +594,8 @@ def api_align(sid):
         return error("erro.sem_permissao", 403)
     body = request.get_json(silent=True) or {}
     mode = body.get("mode") if body.get("mode") in ("sync", "adapt") else "sync"
-    ok = lib.align_lyrics(sid, mode=mode, reject=[str(k) for k in (body.get("reject") or [])][:200])
+    ok = lib.align_lyrics(sid, mode=mode, reject=[str(k) for k in (body.get("reject") or [])][:200],
+                          onde=body.get("onde"))
     if not ok:
         return error("erro.precisa_pronta_letra")
     return jsonify(lib.full(sid, *viewer()))
