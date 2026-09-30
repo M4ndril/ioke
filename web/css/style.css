@@ -633,7 +633,8 @@ input[type=range].tv-focus, input[type=checkbox].tv-focus { outline: none !impor
 .spinner.lg { width: 30px; height: 30px; border-width: 3px; flex: none; }
 .reprocess.stack { flex-direction: column; align-items: stretch; gap: 12px; }
 .faixas-box { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
-.faixa-escolha { display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 10px; }
+.faixa-escolha { display: grid; grid-template-columns: 130px minmax(0, 1fr); align-items: center; gap: 10px; }
+.faixa-escolha select { width: 100%; min-width: 0; text-overflow: ellipsis; }
 @media (max-width: 560px) { .faixa-escolha { grid-template-columns: 1fr; gap: 4px; } }
 
 /* ----------------------------------------------------- fila de cantores */
