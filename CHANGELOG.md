@@ -19,6 +19,14 @@ app (Settings → Updates), in the user's language.
   change; a good sync could get worse).
 - Packages whose name got a ".zip" at the end (Google Drive does that) are accepted too.
 
+- **Updates take less space and time:** versions with the same dependencies now share one environment
+  (`ambientes\` in the program folder) instead of each having its own; an update that only changes the code
+  doesn't install anything again. Old environments are removed when no saved version uses them.
+- **The uninstaller can keep the downloaded files** (Python and dependencies, a few GB), so a clean reinstall in the
+  same folder doesn't download everything again.
+- The update package and the installer no longer carry what is only for development (GitHub automations, tests,
+  docs, build scripts).
+
 ### Fixed
 
 - Imported .karaoke packages show up in the library right away (before, only after restarting the app).

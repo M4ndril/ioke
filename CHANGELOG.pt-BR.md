@@ -19,6 +19,14 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
   sincronia boa podia piorar).
 - Pacotes cujo nome ganhou ".zip" no fim (o Google Drive faz isso) também são aceitos.
 
+- **Atualizações ocupam menos espaço e tempo:** versões com as mesmas dependências agora dividem um ambiente só
+  (`ambientes\` na pasta do programa), em vez de cada uma ter o seu; uma atualização que só muda o código não instala
+  nada de novo. Ambientes antigos saem quando nenhuma versão guardada usa mais.
+- **O desinstalador pode manter os arquivos baixados** (Python e dependências, alguns GB), para uma reinstalação
+  limpa na mesma pasta não baixar tudo de novo.
+- O pacote de atualização e o instalador não levam mais o que só serve para desenvolver (automações do GitHub,
+  testes, documentos, scripts de montagem).
+
 ### Corrigido
 
 - Pacotes .karaoke importados aparecem na biblioteca na hora (antes, só reiniciando o app).

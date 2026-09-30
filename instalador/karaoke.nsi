@@ -285,10 +285,15 @@ SectionEnd
 ; --------------------------------------------------------------- desinstalar
 ; So apaga o que e do programa, item por item (nunca a pasta de dados).
 Section "Uninstall"
-  RMDir /r "$INSTDIR\versoes"
+  ; Os arquivos baixados (o Python, as dependencias e os ambientes montados com elas: varios GB) podem
+  ; ficar, para uma reinstalacao na mesma pasta nao baixar tudo de novo. Sem perguntar (/S): apaga.
+  MessageBox MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2 "$(T_MANTER_BAIXADOS)" /SD IDNO IDYES manter_baixados
   RMDir /r "$INSTDIR\python"
-  RMDir /r "$INSTDIR\base"
   RMDir /r "$INSTDIR\cache"
+  RMDir /r "$INSTDIR\ambientes"
+  manter_baixados:
+  RMDir /r "$INSTDIR\versoes"
+  RMDir /r "$INSTDIR\base"
   RMDir /r "$INSTDIR\repo.git"
   RMDir /r "$INSTDIR\logs"
   RMDir /r "$INSTDIR\pacote"

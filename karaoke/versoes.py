@@ -15,7 +15,9 @@ Pasta do programa (KARAOKE_HOME), a UNICA onde este modulo escreve:
     base/                 Python do lancador (so a biblioteca padrao)
     python/               Pythons baixados pelo uv
     cache/                pacotes baixados pelo uv (as versoes reaproveitam, sem ocupar de novo)
-    versoes/<v>/          o codigo de cada versao + .venv com as dependencias travadas dela
+    versoes/<v>/          o codigo de cada versao (e o ambiente.json: qual ambiente ela usa)
+    ambientes/<chave>/    uma .venv com as dependencias travadas; a chave sai da lista de dependencias
+                          (e do perfil): versoes com as mesmas dependencias usam o mesmo ambiente
     atual.json            {"atual", "anterior", "pendente", "falhou"}
     dados.json            {"dados": pasta de dados}
     canal.json            {"canal"}: de onde vem as atualizacoes: canal "estavel" (so
@@ -241,14 +243,22 @@ class Home:
     def version_dir(self, v):
         return self.path("versoes", v)
 
+    def ambiente_de(self, v):
+        """Onde fica a .venv da versao `v`: ambientes/<chave>, dividido com as outras versoes com as mesmas
+        dependencias. Versoes preparadas antes dos ambientes tem a .venv dentro da propria pasta."""
+        chave = _read_json(self.version_dir(v) / "ambiente.json", {}).get("ambiente")
+        if chave and re.fullmatch(r"[0-9a-f]{16}", str(chave)):
+            return self.path("ambientes", chave)
+        return self.version_dir(v)
+
     def python_of(self, v, windowed=False):
-        venv = self.version_dir(v) / ".venv"
+        venv = self.ambiente_de(v) / ".venv"
         if WINDOWS:
             return venv / "Scripts" / ("pythonw.exe" if windowed else "python.exe")
         return venv / "bin" / "python"
 
     def scripts_of(self, v):
-        return self.version_dir(v) / ".venv" / ("Scripts" if WINDOWS else "bin")
+        return self.ambiente_de(v) / ".venv" / ("Scripts" if WINDOWS else "bin")
 
     def uv(self):
         exe = self.root / ("uv.exe" if WINDOWS else "uv")
@@ -381,18 +391,9 @@ class Home:
             if perfil == "leve":
                 raise RuntimeError(f"a versao {v} e de antes da instalacao leve (nao tem a {lock.name})")
             raise RuntimeError(f"a versao {v} nao tem a lista de dependencias ({lock.name})")
-        env = self.uv_env()
-        self.log({"nvidia": "Placa NVIDIA: dependencias com CUDA (a primeira vez baixa uns 3 GB).",
-                  "cpu": "Completa, no processador: dependencias para CPU (uns 2 GB).",
-                  "leve": "Leve: separa na nuvem, sem o PyTorch (uns 400 MB)."}[perfil])
-        self._run([self.uv(), "venv", tmp / ".venv", "--python", self.python_request, "--relocatable"], env=env)
-        venv_python = tmp / ".venv" / ("Scripts/python.exe" if WINDOWS else "bin/python")
-        extra = []
         wheels = tmp / "instalador" / "rodas"  # pacotes que o PyPI so tem como codigo-fonte, ja montados
-        if wheels.is_dir():
-            extra = ["--find-links", wheels]
-        self._run([self.uv(), "pip", "install", "--python", venv_python, "-r", lock, "--no-progress",
-                   "--index-strategy", "unsafe-best-match", *extra], env=env)  # PyTorch do indice dele, o resto do PyPI
+        chave = self._ambiente(lock, perfil, wheels if wheels.is_dir() else None)
+        _write_json(tmp / "ambiente.json", {"ambiente": chave, "perfil": perfil})
         (tmp / ".pronta").write_text(time.strftime("%Y-%m-%d %H:%M:%S"), encoding="utf-8")
         (tmp / "perfil.json").write_text(json.dumps({"perfil": perfil}), encoding="utf-8")  # o desta .venv
         if refazer and dest.exists():
@@ -415,6 +416,45 @@ class Home:
                 time.sleep(2)
         self.log(f"Versao {v} pronta.")
         return dest
+
+    def _ambiente(self, lock, perfil, wheels=None):
+        """Garante ambientes/<chave> com as dependencias da lista `lock` e devolve a chave. Se uma versao
+        guardada ja tem as mesmas dependencias, reaproveita (a atualizacao que so muda o codigo e rapida e
+        nao ocupa espaco). Montado numa pasta temporaria: um ambiente que falhou no meio nunca fica pronto."""
+        h = hashlib.sha256(Path(lock).read_bytes())
+        h.update(f"|{perfil}|{self.python_request}|".encode())
+        if wheels:
+            h.update("|".join(sorted(p.name for p in Path(wheels).iterdir())).encode())
+        chave = h.hexdigest()[:16]
+        base = self.path("ambientes")
+        dest = self.path("ambientes", chave)
+        if (dest / ".pronta").exists():
+            self.log("As dependencias sao as mesmas de uma versao guardada: reaproveitando.")
+            return chave
+        tmp = self.path("ambientes", chave + ".preparando")
+        for old in (tmp, dest):
+            if old.exists():
+                shutil.rmtree(inside(old, base))
+        tmp.mkdir(parents=True)
+        env = self.uv_env()
+        self.log({"nvidia": "Placa NVIDIA: dependencias com CUDA (a primeira vez baixa uns 3 GB).",
+                  "cpu": "Completa, no processador: dependencias para CPU (uns 2 GB).",
+                  "leve": "Leve: separa na nuvem, sem o PyTorch (uns 400 MB)."}[perfil])
+        self._run([self.uv(), "venv", tmp / ".venv", "--python", self.python_request, "--relocatable"], env=env)
+        venv_python = tmp / ".venv" / ("Scripts/python.exe" if WINDOWS else "bin/python")
+        extra = ["--find-links", wheels] if wheels else []
+        self._run([self.uv(), "pip", "install", "--python", venv_python, "-r", lock, "--no-progress",
+                   "--index-strategy", "unsafe-best-match", *extra], env=env)  # PyTorch do indice dele, o resto do PyPI
+        (tmp / ".pronta").write_text(time.strftime("%Y-%m-%d %H:%M:%S"), encoding="utf-8")
+        for attempt in range(10):  # no Windows, o antivirus pode segurar arquivos recem-criados por um instante
+            try:
+                tmp.rename(dest)
+                break
+            except PermissionError:
+                if attempt == 9:
+                    raise
+                time.sleep(2)
+        return chave
 
     def aplicar_troca(self):
         """Troca de perfil preparada (prepare com refazer): com o app fechado, a pasta nova
@@ -506,7 +546,26 @@ class Home:
         if base.is_dir():  # restos de preparacoes interrompidas
             for d in base.glob("*.preparando"):
                 shutil.rmtree(inside(d, base), ignore_errors=True)
+        self._limpar_ambientes()
         return removed
+
+    def _limpar_ambientes(self):
+        """Apaga os ambientes que nenhuma versao guardada usa mais (e restos de preparacoes). Os recentes
+        ficam: podem ser de uma preparacao em andamento, antes de a versao dela ficar pronta."""
+        amb = self.root / "ambientes"
+        if not amb.is_dir():
+            return
+        pastas = [p for p in (self.root / "versoes").glob("*") if p.is_dir()] if (self.root / "versoes").is_dir() else []
+        usados = {_read_json(p / "ambiente.json", {}).get("ambiente") for p in pastas}
+        for d in amb.iterdir():
+            if not d.is_dir() or d.name in usados:
+                continue
+            try:
+                recente = time.time() - d.stat().st_mtime < 3600
+            except OSError:
+                continue
+            if not recente:
+                shutil.rmtree(inside(d, amb), ignore_errors=True)
 
     # ---------------------------------------------------------------- ambiente
     def run_env(self, v):

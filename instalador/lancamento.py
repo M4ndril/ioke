@@ -27,13 +27,26 @@ def git(*args, binary=False):
     return out.stdout if binary else out.stdout.decode("utf-8", "replace")
 
 
+# fora do pacote que o app baixa para atualizar: o que so serve para desenvolver e lancar (automacoes do
+# GitHub, testes, scripts do modo de desenvolvimento, documentos e o que monta o instalador). Do instalador so
+# vao as rodas (pacotes ja montados que a preparacao da versao usa).
+FORA_DO_PACOTE = (".github/", "tests/", "dev/", "docs/", "instalador/")
+DENTRO_DO_PACOTE = ("instalador/rodas/",)
+
+
+def no_pacote(nome):
+    return nome.startswith(DENTRO_DO_PACOTE) or not nome.startswith(FORA_DO_PACOTE)
+
+
 def pacote(version, ref):
-    """O codigo daquele commit (git archive) + o arquivo VERSION, num zip."""
+    """O codigo daquele commit (git archive, sem o que so serve para desenvolver) + o arquivo VERSION, num zip."""
     DIST.mkdir(exist_ok=True)
     dest = DIST / PACKAGE.format(version=version)
     tar = tarfile.open(fileobj=io.BytesIO(git("archive", "--format=tar", ref, binary=True)))
     with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         for member in tar.getmembers():
+            if not no_pacote(member.name):
+                continue
             if member.isfile() and member.name != "VERSION":  # versoes antigas tinham o arquivo; vale o da tag
                 zf.writestr(zipfile.ZipInfo(member.name, date_time=(2020, 1, 1, 0, 0, 0)),
                             tar.extractfile(member).read(), zipfile.ZIP_DEFLATED)

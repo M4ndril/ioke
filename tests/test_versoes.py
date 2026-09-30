@@ -173,6 +173,20 @@ def test_confirm_and_keep_three_versions(home, data, tmp_path):
         home.confirm()
     assert home.installed() == ["0.4.0", "0.3.0", "0.2.0"]
     assert home.state()["anterior"] == "0.3.0" and not home.state()["pendente"]
+    # as mesmas dependencias: um ambiente so, dividido pelas versoes (nada de uma .venv por versao)
+    ambientes = {home.ambiente_de(v) for v in home.installed()}
+    assert len(ambientes) == 1 and next(iter(ambientes)).parent == home.root / "ambientes"
+    assert home.python_of("0.4.0").exists() and not (home.version_dir("0.4.0") / ".venv").exists()
+    # dependencias novas: outro ambiente; o antigo sai quando nenhuma versao guardada usa mais
+    home.prepare("0.5.0", code_dir=make_code(tmp_path / "p5", "0.5.0", lock="# outra lista\n"), gpu=False)
+    assert home.ambiente_de("0.5.0") not in ambientes
+    for d in (home.root / "ambientes").iterdir():  # "velhos" (a limpeza poupa os de menos de 1 hora)
+        os.utime(d, (1, 1))
+    home.prune(keep=1)
+    assert home.installed() == ["0.5.0", "0.4.0", "0.3.0"]  # a atual e a anterior ficam
+    home._save_state({"atual": "0.5.0", "anterior": None, "pendente": False, "falhou": None})
+    home.prune(keep=1)
+    assert [d.name for d in (home.root / "ambientes").iterdir()] == [home.ambiente_de("0.5.0").name]
 
 
 @needs_uv

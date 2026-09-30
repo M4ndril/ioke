@@ -65,5 +65,7 @@ LangString T_INSTALACAO_FALHOU ${LANG_PORTUGUESEBR} "A instalação não termino
 LangString T_INSTALACAO_FALHOU ${LANG_ENGLISH} "The installation didn't finish (code $0). What happened is in:$\r$\n$INSTDIR\logs\instalacao.log$\r$\n$\r$\nRunning the installer again continues where it stopped."
 LangString T_FIREWALL ${LANG_PORTUGUESEBR} "Liberando os celulares no firewall (o Windows pede permissão uma vez)..."
 LangString T_FIREWALL ${LANG_ENGLISH} "Allowing phones through the firewall (Windows asks for permission once)..."
+LangString T_MANTER_BAIXADOS ${LANG_PORTUGUESEBR} "Manter os arquivos baixados (Python e dependências, alguns GB)?$\r$\n$\r$\nSim: uma nova instalação nesta mesma pasta fica bem mais rápida, sem baixar tudo de novo.$\r$\nNão: apaga tudo e libera o espaço."
+LangString T_MANTER_BAIXADOS ${LANG_ENGLISH} "Keep the downloaded files (Python and dependencies, a few GB)?$\r$\n$\r$\nYes: a new install in this same folder is much faster, without downloading everything again.$\r$\nNo: deletes everything and frees the space."
 LangString T_REMOVIDO ${LANG_PORTUGUESEBR} "O IOkê foi removido. Suas músicas, contas e configurações continuam em:"
 LangString T_REMOVIDO ${LANG_ENGLISH} "IOkê was removed. Your songs, accounts and settings are still in:"

@@ -30,6 +30,10 @@ echo "Karaoke $VERSION (canal de atualizacoes: $CANAL)"
 [ -z "$(git status --porcelain)" ] || echo "AVISO: ha mudancas sem commit; o instalador usa o ultimo commit."
 rm -rf "$STAGE" && mkdir -p "$STAGE/codigo" dist build/uv
 git archive --format=tar HEAD | tar -x -C "$STAGE/codigo"
+# fora do app instalado o que so serve para desenvolver e lancar (o mesmo filtro do pacote de atualizacao,
+# instalador/lancamento.py): do instalador so ficam as rodas, que a preparacao da versao usa
+rm -rf "$STAGE/codigo/.github" "$STAGE/codigo/tests" "$STAGE/codigo/dev" "$STAGE/codigo/docs"
+find "$STAGE/codigo/instalador" -mindepth 1 -maxdepth 1 ! -name rodas -exec rm -rf {} +
 printf '%s\n' "$VERSION" > "$STAGE/codigo/VERSION"   # a versao vem da tag
 cp lancador.pyw web/img/karaoke.ico "$STAGE/"
 if [ ! -f "build/uv/uv-$UV_VERSION.exe" ]; then
