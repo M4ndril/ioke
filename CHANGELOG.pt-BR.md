@@ -29,6 +29,8 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ### Corrigido
 
+- Gastos da nuvem: o gasto real do mês nunca vinha depois do dia 7 (o Modal recusa relatório por hora com mais de 7
+  dias); agora o relatório é pedido em pedaços.
 - Pacotes .karaoke importados aparecem na biblioteca na hora (antes, só reiniciando o app).
 - As prateleiras por estilo (e por artista e álbum): a seta da direita não rolava e escondia o botão de excluir de um
   card.

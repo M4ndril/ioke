@@ -7,7 +7,7 @@ entram pela estimativa, ate a proxima leitura (a cada 3 h e depois de cada music
 import logging
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from ..config import DATA_DIR
 from ..util import read_json, write_json
@@ -69,13 +69,23 @@ def somar_relatorio(itens):
     return karaoke, conta
 
 
+RELATORIO_DIAS = 6  # o Modal recusa relatorio por hora com mais de 7 dias: o mes vai em pedacos
+
+
 def ler_relatorio(cli, agora=None):
-    """O relatorio de uso do mes (do dia 1, UTC, ate agora), por hora."""
+    """O relatorio de uso do mes (do dia 1, UTC, ate agora), por hora, pedido em pedacos de ate
+    RELATORIO_DIAS dias (depois do dia 7 um pedido so era recusado e o gasto real nunca vinha)."""
     import modal
 
     agora = agora or datetime.now(timezone.utc)
     inicio = agora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    return modal.Workspace.from_context(client=cli).billing.report(start=inicio, end=agora, resolution="h")
+    billing = modal.Workspace.from_context(client=cli).billing
+    itens = []
+    while inicio < agora:
+        fim = min(inicio + timedelta(days=RELATORIO_DIAS), agora)
+        itens.extend(billing.report(start=inicio, end=fim, resolution="h") or [])
+        inicio = fim
+    return itens
 
 
 def atualizar(cli, forcar=False):

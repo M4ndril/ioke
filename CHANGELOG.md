@@ -29,6 +29,8 @@ app (Settings → Updates), in the user's language.
 
 ### Fixed
 
+- Cloud spending: the real month's spending never came after the 7th (Modal refuses hourly reports longer
+  than 7 days); the report is now asked in pieces.
 - Imported .karaoke packages show up in the library right away (before, only after restarting the app).
 - The genre (and artist, album) shelves: the right arrow didn't scroll, and it hid the delete button of a card.
 - Add-ons turned on could start off after restarting the PC.

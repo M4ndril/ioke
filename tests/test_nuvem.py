@@ -104,6 +104,29 @@ def test_report_sums_karaoke_and_the_whole_account(nuvem):
     assert (round(k, 2), round(c, 2)) == (0.75, 3.75)
 
 
+def test_monthly_report_is_asked_in_pieces(monkeypatch):
+    """O Modal recusa relatorio por hora com mais de 7 dias: o mes vai em pedacos de ate 6 dias."""
+    import types
+    from datetime import datetime, timezone
+
+    pedidos = []
+
+    class Billing:
+        def report(self, start, end, resolution):
+            assert (end - start).days < 7 and resolution == "h"
+            pedidos.append((start, end))
+            return [types.SimpleNamespace(cost=1.0, description="karaoke-nuvem")]
+
+    ws = types.SimpleNamespace(billing=Billing())
+    fake = types.SimpleNamespace(Workspace=types.SimpleNamespace(from_context=lambda client: ws))
+    monkeypatch.setitem(sys.modules, "modal", fake)
+    agora = datetime(2026, 9, 30, 15, 0, tzinfo=timezone.utc)
+    itens = gastos.ler_relatorio(object(), agora)
+    assert len(pedidos) == 5 and pedidos[0][0] == datetime(2026, 9, 1, tzinfo=timezone.utc) and pedidos[-1][1] == agora
+    assert all(a[1] == b[0] for a, b in zip(pedidos, pedidos[1:]))  # sem buraco nem sobreposicao
+    assert gastos.somar_relatorio(itens) == (5.0, 5.0)
+
+
 def test_estimate_per_song():
     # L40S + 2 nucleos + 8 GB, por segundo (a tabela de setembro de 2026)
     assert gastos.estimar(64, "L40S") == pytest.approx(64 * (0.000542 + 2 * 0.0000131 + 8 * 0.00000222))
