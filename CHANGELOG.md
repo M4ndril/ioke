@@ -18,6 +18,9 @@ app (Settings → Updates), in the user's language.
   ones not shown yet. Ctrl + click and Shift + click also select (one song, or a range), as in Windows.
 - **Several cloud separations at the same time** (Settings → Cloud → Separations at the same time, up to 6): in a big
   queue, each song separates on its own GPU and the queue finishes sooner. The cost per song stays the same.
+- **Error reports (optional):** IOkê asks once whether it may send errors automatically, so they get fixed in the
+  next versions (Settings → Program). It sends the error, the version, Windows and the last lines of the log; never
+  your IP, your PC's name, your user name, your accounts or your keys.
 
 ### Changed
 

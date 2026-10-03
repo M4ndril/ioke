@@ -571,6 +571,10 @@ export async function openSettings({ onChange, tab } = {}) {
             t({ auto: "config.idioma.auto", "pt-BR": "config.idioma.pt", en: "config.idioma.en" }[v])}</option>`).join("")}
         </select>
       </div>
+      <label class="reprocess" style="cursor:pointer">
+        <div><b>${tr("relatos.titulo")}</b><div class="small muted">${tr("relatos.texto")}</div></div>
+        <input type="checkbox" data-relatos${s.enviar_erros ? " checked" : ""} style="flex:none;width:18px;height:18px">
+      </label>
       <section class="set-section">
         <h4>${icon("inventory_2")} ${tr("pacotes.titulo")}</h4>
         <p class="muted small" style="margin-top:0">${tr("pacotes.texto")}</p>
@@ -648,6 +652,8 @@ export async function openSettings({ onChange, tab } = {}) {
     const n = Number(e.target.value);
     save({ party_limit: n }, n ? tr("festa.limite_salvo", { n }) : tr("festa.sem_limite_salvo"));
   };
+  modal.querySelector("[data-relatos]").onchange = (e) =>
+    save({ enviar_erros: e.target.checked }, e.target.checked ? tr("relatos.ligado") : tr("relatos.desligado"));
   modal.querySelector("[data-ai-auto]").onchange = (e) =>
     save({ ai_lyrics_auto: e.target.checked }, e.target.checked ? tr("ia_config.auto_ligada") : tr("ia_config.auto_desligada"));
   modal.querySelector("[data-ai-all]").onclick = async (e) => {

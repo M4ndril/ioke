@@ -17,3 +17,5 @@ modal>=1.5
 # app instalado (Karaoke.exe): janela propria (WebView2) e um FFmpeg de reserva
 pywebview>=6.2; sys_platform == "win32"
 imageio-ffmpeg>=0.6
+# relatorios de erro (so com o consentimento da pessoa: Configuracoes > Programa)
+sentry-sdk>=2.30

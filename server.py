@@ -50,6 +50,7 @@ from karaoke.party import LimitError, Party  # noqa: E402
 from karaoke.separation import BACKING_MODELS, PRESETS, VOCAL_MODELS, current_quality  # noqa: E402
 from karaoke.network import Address  # noqa: E402
 from karaoke.util import read_json, write_json  # noqa: E402
+from karaoke import relatos  # noqa: E402
 import time  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s: %(message)s", datefmt="%H:%M:%S")
@@ -72,6 +73,7 @@ threading.excepthook = _thread_crash
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
 logging.getLogger("audio_separator").setLevel(logging.WARNING)
 log = logging.getLogger("karaoke")
+relatos.iniciar()  # relatorios de erro, so se a pessoa aceitou
 
 PORT = int(CONFIG["port"])
 address = Address(DATA_DIR / "rede.json", PORT)  # o que vai no QR (conferido de tempos em tempos)
@@ -718,6 +720,7 @@ def _settings_payload():
         "party_limit": party_limit(),
         "idioma": CONFIG.get("idioma") or "auto",
         "pacote_formato": CONFIG.get("pacote_formato") or "flac",
+        "enviar_erros": CONFIG.get("enviar_erros"),  # None: ainda nao perguntou
         "disk": lib.disk(),
         "is_host": can_manage(),
     }
@@ -766,6 +769,8 @@ def api_save_settings():
         CONFIG["pacote_formato"] = body["pacote_formato"]
     if "ai_lyrics_auto" in body:
         CONFIG["ai_lyrics_auto"] = bool(body["ai_lyrics_auto"])
+    if "enviar_erros" in body:
+        CONFIG["enviar_erros"] = bool(body["enviar_erros"])
     if "download_video" in body:
         CONFIG["download_video"] = bool(body["download_video"])
     if "video_max_height" in body:
@@ -778,6 +783,7 @@ def api_save_settings():
         except (TypeError, ValueError):
             return error("erro.limite")
     save_config()
+    relatos.iniciar()  # acabou de aceitar: liga agora
     return jsonify(_settings_payload())
 
 

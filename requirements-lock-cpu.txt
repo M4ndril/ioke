@@ -33,6 +33,7 @@ certifi==2026.7.22
     #   httpx
     #   modal
     #   requests
+    #   sentry-sdk
 cffi==2.1.1
     # via
     #   clr-loader
@@ -253,6 +254,8 @@ scipy==1.18.1
     #   scikit-learn
 segno==1.6.6
     # via -r ../requirements.txt
+sentry-sdk==2.71.0
+    # via -r ../requirements.txt
 setuptools==84.0.0
     # via torch
 six==1.17.0
@@ -311,7 +314,9 @@ typing-extensions==4.16.0
     #   synchronicity
     #   torch
 urllib3==2.8.0
-    # via requests
+    # via
+    #   requests
+    #   sentry-sdk
 waitress==3.0.2
     # via -r ../requirements.txt
 watchfiles==1.3.0

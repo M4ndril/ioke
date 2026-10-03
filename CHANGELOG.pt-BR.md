@@ -19,6 +19,9 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
   no Windows.
 - **Várias separações ao mesmo tempo na nuvem** (Configurações → Nuvem → Separações ao mesmo tempo, até 6): numa
   fila grande, cada música separa numa placa própria e a fila termina antes. O custo por música continua o mesmo.
+- **Relatórios de erro (opcionais):** o IOkê pergunta uma vez se pode mandar os erros automaticamente, para serem
+  corrigidos nas próximas versões (Configurações → Programa). Vai o erro, a versão, o Windows e as últimas linhas do
+  registro; nunca o seu IP, o nome do PC, o seu usuário, as suas contas nem as suas chaves.
 
 ### Mudado
 

@@ -1,5 +1,5 @@
 // Home: metade "Adicionar musicas" e metade "Cantar" com o carrossel de capas.
-import { $, api, biblioteca, esc, icon, store, toast } from "./common.js";
+import { $, api, biblioteca, esc, icon, perguntarRelatos, store, toast } from "./common.js";
 import { mountFabs } from "./floating.js";
 import "./tvnav.js";
 import "./stageopen.js";
@@ -8,6 +8,7 @@ import { initI18n, t } from "./i18n.js";
 await initI18n(); // os textos antes de desenhar a pagina
 
 mountFabs({ qr: true, settings: true, atividades: true });
+setTimeout(perguntarRelatos, 1500); // uma vez: mandar os relatorios de erro?
 
 const ROWS = 6;
 const MIN_TILES = 14; // por fileira, antes de duplicar para o loop infinito

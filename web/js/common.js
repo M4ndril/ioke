@@ -146,6 +146,36 @@ export async function perguntarOnde(tipo) {
   });
 }
 
+// ------------------------------------------------------- relatorios de erro
+/** Pergunta uma vez (no PC) se a pessoa quer mandar os relatorios de erro (karaoke/relatos.py). Fechar sem
+ *  responder pergunta de novo na proxima abertura. */
+export async function perguntarRelatos() {
+  if (document.body.classList.contains("mobile")) return;
+  let s;
+  try {
+    s = await api("/api/settings");
+  } catch {
+    return;
+  }
+  if (!s.is_host || s.enviar_erros !== null) return;
+  const modal = openModal(t("relatos.pergunta"), `
+    <p style="margin-top:0">${esc(t("relatos.pergunta_texto"))}</p>
+    <p class="small muted">${esc(t("relatos.pergunta_detalhe"))}</p>
+    <div class="row" style="gap:10px;justify-content:flex-end">
+      <button class="btn outline" data-r="0">${esc(t("relatos.nao"))}</button>
+      <button class="btn light" data-r="1" data-nav-default>${icon("check")} ${esc(t("relatos.sim"))}</button>
+    </div>`);
+  modal.querySelectorAll("[data-r]").forEach((b) => (b.onclick = async () => {
+    modal.close();
+    try {
+      await api("/api/settings", { method: "PUT", body: { enviar_erros: b.dataset.r === "1" } });
+      toast(t(b.dataset.r === "1" ? "relatos.ligado" : "relatos.depois"));
+    } catch (err) {
+      toast(err.message, { error: true });
+    }
+  }));
+}
+
 // ------------------------------------------------------------- biblioteca
 // As musicas prontas (so o que as listas usam). A pagina guarda a lista e a versao: o servidor so
 // manda a lista de novo quando ela muda (com milhares de musicas, faz diferenca a cada 2-5 s).
