@@ -11,6 +11,8 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+## [1.1.0-beta.2] - 2026-10-03
+
 ### Adicionado
 
 - **Selecionar músicas no "Cantar" e exportar como pacotes:** o botão **Selecionar** marca as músicas com um clique;
@@ -160,7 +162,8 @@ A primeira versão pública do IOkê: um app de karaokê para Windows que roda n
 - **Atualizações** por esta página, em segundo plano, com os canais Estável e Testes, e a volta sozinha para a versão
   anterior se uma nova não abrir.
 
-[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.1.0-beta.1...HEAD
+[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.1.0-beta.2...HEAD
+[1.1.0-beta.2]: https://github.com/M4ndril/ioke/compare/v1.1.0-beta.1...v1.1.0-beta.2
 [1.1.0-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.2...v1.1.0-beta.1
 [1.0.2]: https://github.com/M4ndril/ioke/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/M4ndril/ioke/compare/v1.0.0...v1.0.1
