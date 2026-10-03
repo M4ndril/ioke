@@ -15,7 +15,7 @@ app (Settings → Updates), in the user's language.
 
 - **Select songs in "Sing" and export them as packages:** the **Select** button marks songs with a click; the bar at
   the bottom exports the marked ones. **Select all** takes every song of the current search and filter, even the
-  ones not shown yet.
+  ones not shown yet. Ctrl + click and Shift + click also select (one song, or a range), as in Windows.
 
 ### Changed
 

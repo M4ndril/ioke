@@ -15,7 +15,8 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 - **Selecionar músicas no "Cantar" e exportar como pacotes:** o botão **Selecionar** marca as músicas com um clique;
   a barra de baixo exporta as marcadas. **Selecionar todas** pega todas as músicas da busca e do filtro atuais, mesmo
-  as que ainda não apareceram.
+  as que ainda não apareceram. Ctrl + clique e Shift + clique também selecionam (uma música, ou um intervalo), como
+  no Windows.
 
 ### Mudado
 

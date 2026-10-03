@@ -35,6 +35,8 @@ let aberto = null; // o que esta sendo criado aos poucos (grade ou prateleiras)
 let ultimaLista = []; // as musicas da busca/filtro atual (o "selecionar todas" usa)
 let selecionando = false; // modo de selecao: clicar marca a musica em vez de tocar
 const selecionadas = new Set();
+let ordemNaTela = []; // os ids na ordem em que aparecem (grade ou prateleiras): o Shift+clique seleciona o intervalo
+let ancora = null; // a ultima musica clicada na selecao (o comeco do intervalo do Shift)
 const LOTE = 60; // cards por vez na grade
 const LOTE_PRATELEIRA = 24;
 const LOTE_PRATELEIRAS = 8;
@@ -109,7 +111,7 @@ function metaLine(s) {
 // ------------------------------------------------------------------ cards
 function cardEl(s) {
   const el = h(`
-    <article class="scard${selecionadas.has(s.id) ? " sel" : ""}" tabindex="0" aria-label="${esc(nameOf(s))}">
+    <article class="scard${selecionadas.has(s.id) ? " sel" : ""}" data-id="${esc(s.id)}" tabindex="0" aria-label="${esc(nameOf(s))}">
       <div class="art">
         ${selecionando ? `<span class="sel-marca">${icon("check", "sm")}</span>` : ""}
         <img src="${esc(s.art_sm || coverOf(s))}" alt="" loading="lazy">
@@ -135,15 +137,16 @@ function cardEl(s) {
       </div>
     </article>`);
   const open = () => (palcoAberto ? addToQueue(s, { onDone: refreshParty }) : (location.href = `/player?id=${s.id}`));
+  // Ctrl ou Shift + clique selecionam (e entram no modo de selecao), como no Windows. Na captura, para os botoes do
+  // card (fila, previa...) nao agirem junto; o mousedown evita que o Shift+clique selecione o texto da pagina.
+  el.addEventListener("mousedown", (e) => e.shiftKey && e.preventDefault());
   el.addEventListener("click", (e) => {
-    if (selecionando) {
-      e.preventDefault();
-      if (selecionadas.has(s.id)) selecionadas.delete(s.id);
-      else selecionadas.add(s.id);
-      el.classList.toggle("sel", selecionadas.has(s.id));
-      atualizarSelecao();
-      return;
-    }
+    if (!(selecionando || e.ctrlKey || e.metaKey || e.shiftKey)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    clicarNaSelecao(s.id, e);
+  }, true);
+  el.addEventListener("click", (e) => {
     if (!e.target.closest("[data-queue],[data-prev],[data-lyr],[data-art],[data-edit],[data-del]")) open();
   });
   el.querySelector("[data-queue]").onclick = () => addToQueue(s, { onDone: refreshParty });
@@ -212,6 +215,7 @@ function render(force = false, { mudou = false } = {}) {
   libSig = sig;
   const list = sortSongs(filtrar(songs, q));
   ultimaLista = list;
+  ordemNaTela = list.map((s) => s.id);
   atualizarSelecao();
   if (aberto) aberto.parar();
   aberto = null;
@@ -250,6 +254,7 @@ function render(force = false, { mudou = false } = {}) {
   const keys = [...groups.keys()].sort(
     (a, b) => (a === g.label) - (b === g.label) || a.localeCompare(b, idioma(), { sensitivity: "base" }),
   );
+  ordemNaTela = keys.flatMap((k) => groups.get(k).map((s) => s.id));
   aberto = aosPoucos(lib, keys, (k) => shelfEl(k, groups.get(k)), { lote: LOTE_PRATELEIRAS, minimo: antes });
 }
 
@@ -268,14 +273,38 @@ function atualizarSelecao() {
 
 function modoSelecao(on) {
   selecionando = on;
-  if (!on) selecionadas.clear();
+  if (!on) {
+    selecionadas.clear();
+    ancora = null;
+  }
   render(true); // os cards ganham (ou perdem) a marca
+}
+
+/** Clique com a selecao: Shift marca o intervalo desde a ultima clicada; Ctrl (ou clique simples, no modo de
+ *  selecao) marca/desmarca so esta. Fora do modo, Ctrl/Shift + clique ja entram nele. */
+function clicarNaSelecao(id, e) {
+  const entrou = !selecionando;
+  selecionando = true;
+  const de = ancora ? ordemNaTela.indexOf(ancora) : -1;
+  const ate = ordemNaTela.indexOf(id);
+  if (e.shiftKey && de >= 0 && ate >= 0) {
+    if (!(e.ctrlKey || e.metaKey)) selecionadas.clear(); // Shift sozinho: so o intervalo; Ctrl+Shift: soma
+    ordemNaTela.slice(Math.min(de, ate), Math.max(de, ate) + 1).forEach((x) => selecionadas.add(x));
+  } else {
+    if (selecionadas.has(id)) selecionadas.delete(id);
+    else selecionadas.add(id);
+    ancora = id;
+  }
+  if (entrou) return render(true); // os cards ganham a marca
+  $$("#library .scard").forEach((c) => c.classList.toggle("sel", selecionadas.has(c.dataset.id)));
+  atualizarSelecao();
 }
 
 $("#selBtn").onclick = () => modoSelecao(!selecionando);
 $("#selSair").onclick = () => modoSelecao(false);
 $("#selLimpar").onclick = () => {
   selecionadas.clear();
+  ancora = null;
   $$("#library .scard.sel").forEach((c) => c.classList.remove("sel"));
   atualizarSelecao();
 };
