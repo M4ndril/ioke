@@ -1180,6 +1180,14 @@
  "sing.refazendo_apoio": "redoing lead/backing",
  "sing.refazer_falhou": "redoing lead/backing failed",
  "sing.resultados": "Results",
+ "sing.sel_conta": {
+  "one": "{n} selected",
+  "other": "{n} selected"
+ },
+ "sing.sel_limpar": "Clear",
+ "sing.sel_todas": "Select all ({n})",
+ "sing.selecionar": "Select",
+ "sing.selecionar_titulo": "Select songs to export",
  "sing.sem_album": "No album",
  "sing.sem_estilo": "No genre",
  "sing.sem_letra": "no lyrics",

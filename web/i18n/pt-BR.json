@@ -1180,6 +1180,14 @@
  "sing.refazendo_apoio": "refazendo voz/apoio",
  "sing.refazer_falhou": "refazer voz/apoio falhou",
  "sing.resultados": "Resultados",
+ "sing.sel_conta": {
+  "one": "{n} selecionada",
+  "other": "{n} selecionadas"
+ },
+ "sing.sel_limpar": "Limpar",
+ "sing.sel_todas": "Selecionar todas ({n})",
+ "sing.selecionar": "Selecionar",
+ "sing.selecionar_titulo": "Selecionar músicas para exportar",
  "sing.sem_album": "Sem álbum",
  "sing.sem_estilo": "Sem estilo definido",
  "sing.sem_letra": "sem letra",

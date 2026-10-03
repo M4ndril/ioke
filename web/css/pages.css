@@ -273,6 +273,13 @@
   scrollbar-width: none;
 }
 .shelf-track::-webkit-scrollbar { display: none; }
+/* modo de selecao (Cantar): marca nos cards e a barra de baixo */
+.sel-marca { position: absolute; top: 8px; left: 8px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 2px solid #fff; background: rgba(0, 0, 0, 0.45); color: transparent; }
+.scard.sel .sel-marca { background: var(--accent); border-color: var(--accent); color: #fff; }
+.scard.sel .art { box-shadow: 0 0 0 3px var(--accent); }
+body.selecionando .scard .art-hover, body.selecionando .scard .art-badges { display: none; }
+.sel-bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 70; display: flex; align-items: center; gap: 10px; width: min(760px, calc(100vw - 32px)); padding: 10px 14px; border-radius: 14px; background: rgba(20, 20, 22, 0.96); border: 1px solid var(--line-2); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); }
+body.selecionando .library { padding-bottom: 90px; }
 /* marcador do fim do que ja foi criado (aosPoucos): a rolagem chegando perto cria o proximo lote */
 .aos-poucos { grid-column: 1 / -1; height: 1px; }
 .shelf-track > .aos-poucos { flex: 0 0 1px; height: auto; align-self: stretch; }

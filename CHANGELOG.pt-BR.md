@@ -11,6 +11,12 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Selecionar músicas no "Cantar" e exportar como pacotes:** o botão **Selecionar** marca as músicas com um clique;
+  a barra de baixo exporta as marcadas. **Selecionar todas** pega todas as músicas da busca e do filtro atuais, mesmo
+  as que ainda não apareceram.
+
 ### Mudado
 
 - Separação na nuvem: cada música anota onde foi o tempo (envio, separação na placa, espera e volta, e os tamanhos),

@@ -64,10 +64,21 @@
       <button class="chip" data-group="artist" data-i18n="sing.artista">Artista</button>
       <button class="chip" data-group="album" data-i18n="sing.album">Álbum</button>
     </div>
+    <button class="chip" id="selBtn" title="Selecionar músicas para exportar" data-i18n-title="sing.selecionar_titulo"><span class="ms sm">check_box</span> <span data-i18n="sing.selecionar">Selecionar</span></button>
     <div class="tb-search">
       <span class="ms sm">search</span>
       <input id="filter" placeholder="Buscar na biblioteca" data-i18n-placeholder="fila.buscar_biblioteca" autocomplete="off">
     </div>
+  </div>
+
+  <!-- modo de selecao (sing.js): o que fazer com as musicas marcadas -->
+  <div class="sel-bar hidden" id="selBar">
+    <b id="selConta"></b>
+    <button class="btn ghost sm" id="selTodas"></button>
+    <button class="btn ghost sm" id="selLimpar" data-i18n="sing.sel_limpar">Limpar</button>
+    <span class="grow"></span>
+    <button class="btn light sm" id="selExportar"><span class="ms sm">inventory_2</span> <span data-i18n="pacotes.exportar">Exportar pacote</span></button>
+    <button class="btn outline sm" id="selSair" data-i18n="comum.cancelar">Cancelar</button>
   </div>
 
   <main class="library" id="library"><div class="empty" data-i18n="comum.carregando">Carregando...</div></main>

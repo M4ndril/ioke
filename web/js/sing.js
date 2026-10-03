@@ -32,6 +32,9 @@ let songs = [];
 let libSig = "";
 let busca = new Map(); // id -> texto da busca (sem acentos), feito uma vez por versao da lista
 let aberto = null; // o que esta sendo criado aos poucos (grade ou prateleiras)
+let ultimaLista = []; // as musicas da busca/filtro atual (o "selecionar todas" usa)
+let selecionando = false; // modo de selecao: clicar marca a musica em vez de tocar
+const selecionadas = new Set();
 const LOTE = 60; // cards por vez na grade
 const LOTE_PRATELEIRA = 24;
 const LOTE_PRATELEIRAS = 8;
@@ -106,8 +109,9 @@ function metaLine(s) {
 // ------------------------------------------------------------------ cards
 function cardEl(s) {
   const el = h(`
-    <article class="scard" tabindex="0" aria-label="${esc(nameOf(s))}">
+    <article class="scard${selecionadas.has(s.id) ? " sel" : ""}" tabindex="0" aria-label="${esc(nameOf(s))}">
       <div class="art">
+        ${selecionando ? `<span class="sel-marca">${icon("check", "sm")}</span>` : ""}
         <img src="${esc(s.art_sm || coverOf(s))}" alt="" loading="lazy">
         ${!s.lyrics ? `<div class="art-badges"><span class="badge warn">${esc(t("sing.sem_letra"))}</span></div>` : ""}
         <div class="art-hover">
@@ -131,7 +135,17 @@ function cardEl(s) {
       </div>
     </article>`);
   const open = () => (palcoAberto ? addToQueue(s, { onDone: refreshParty }) : (location.href = `/player?id=${s.id}`));
-  el.addEventListener("click", (e) => !e.target.closest("[data-queue],[data-prev],[data-lyr],[data-art],[data-edit],[data-del]") && open());
+  el.addEventListener("click", (e) => {
+    if (selecionando) {
+      e.preventDefault();
+      if (selecionadas.has(s.id)) selecionadas.delete(s.id);
+      else selecionadas.add(s.id);
+      el.classList.toggle("sel", selecionadas.has(s.id));
+      atualizarSelecao();
+      return;
+    }
+    if (!e.target.closest("[data-queue],[data-prev],[data-lyr],[data-art],[data-edit],[data-del]")) open();
+  });
   el.querySelector("[data-queue]").onclick = () => addToQueue(s, { onDone: refreshParty });
   el.addEventListener("keydown", (e) => e.key === "Enter" && e.target === el && open());
   const prev = el.querySelector("[data-prev]");
@@ -197,6 +211,8 @@ function render(force = false, { mudou = false } = {}) {
   const antes = mesmaVisao && aberto ? aberto.quantos() : 0;
   libSig = sig;
   const list = sortSongs(filtrar(songs, q));
+  ultimaLista = list;
+  atualizarSelecao();
   if (aberto) aberto.parar();
   aberto = null;
   stopPreview();
@@ -236,6 +252,48 @@ function render(force = false, { mudou = false } = {}) {
   );
   aberto = aosPoucos(lib, keys, (k) => shelfEl(k, groups.get(k)), { lote: LOTE_PRATELEIRAS, minimo: antes });
 }
+
+// ------------------------------------------------------- modo de selecao
+// "Selecionar" na barra: os cards ganham a marca e clicar marca a musica. A barra de baixo exporta as marcadas
+// como pacotes; "Selecionar todas" pega todas as da busca/filtro atual (mesmo as que ainda nao apareceram).
+function atualizarSelecao() {
+  $("#selBtn").classList.toggle("on", selecionando);
+  document.body.classList.toggle("selecionando", selecionando);
+  $("#selBar").classList.toggle("hidden", !selecionando);
+  if (!selecionando) return;
+  $("#selConta").textContent = t("sing.sel_conta", { n: selecionadas.size });
+  $("#selTodas").textContent = t("sing.sel_todas", { n: ultimaLista.length });
+  $("#selExportar").disabled = !selecionadas.size;
+}
+
+function modoSelecao(on) {
+  selecionando = on;
+  if (!on) selecionadas.clear();
+  render(true); // os cards ganham (ou perdem) a marca
+}
+
+$("#selBtn").onclick = () => modoSelecao(!selecionando);
+$("#selSair").onclick = () => modoSelecao(false);
+$("#selLimpar").onclick = () => {
+  selecionadas.clear();
+  $$("#library .scard.sel").forEach((c) => c.classList.remove("sel"));
+  atualizarSelecao();
+};
+$("#selTodas").onclick = () => {
+  ultimaLista.forEach((s) => selecionadas.add(s.id));
+  $$("#library .scard").forEach((c) => c.classList.add("sel"));
+  atualizarSelecao();
+};
+$("#selExportar").onclick = async () => {
+  const ids = [...selecionadas];
+  if (!ids.length) return;
+  const { exportarPacotes } = await import("./pacotes.js");
+  await exportarPacotes(ids);
+  modoSelecao(false);
+};
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && selecionando && !document.querySelector(".modal-backdrop")) modoSelecao(false);
+});
 
 // ------------------------------------------------------------------ destaque
 let heroList = [];

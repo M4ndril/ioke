@@ -11,6 +11,12 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+### Added
+
+- **Select songs in "Sing" and export them as packages:** the **Select** button marks songs with a click; the bar at
+  the bottom exports the marked ones. **Select all** takes every song of the current search and filter, even the
+  ones not shown yet.
+
 ### Changed
 
 - Cloud separation: each song records where its time went (upload, separation on the card, waiting and download,
