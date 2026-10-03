@@ -361,7 +361,8 @@ body.palco-aberto .scard .art, body.palco-aberto .scard .art img { transition: n
 .drop.over { border-color: var(--accent); background: rgba(229, 9, 20, 0.08); }
 .drop .drop-icon { font-size: 34px; color: var(--accent); }
 .drop .grow { min-width: 0; }
-.upload-list { display: grid; gap: 6px; margin-top: 10px; }
+/* muitos arquivos de uma vez: altura fixa com rolagem (os mais novos ficam em cima) */
+.upload-list { display: grid; gap: 6px; margin-top: 10px; max-height: min(320px, 40vh); overflow-y: auto; padding-right: 4px; }
 .up-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: var(--panel-2); font-size: 13px; }
 .up-row > .ms { font-size: 20px; color: var(--muted); }
 .up-row.ok > .ms { color: #5ee27a; }

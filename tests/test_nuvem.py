@@ -127,6 +127,17 @@ def test_monthly_report_is_asked_in_pieces(monkeypatch):
     assert gastos.somar_relatorio(itens) == (5.0, 5.0)
 
 
+def test_time_breakdown_of_a_cloud_song(monkeypatch):
+    """O total de uma musica na nuvem separado em envio, placa e o resto (maquina ligando, fila e volta)."""
+    from karaoke.nuvem import separador_nuvem
+
+    monkeypatch.setattr(separador_nuvem.time, "time", lambda: 200.0)
+    t = separador_nuvem._medir(100.0, {"enviado": 130.0}, {"tempos": {"total": 50.0, "primeira": True}},
+                               8_000_000, 90_000_000)
+    assert t == {"envio": 30.0, "nuvem": 50.0, "espera_volta": 20.0, "mb_envio": 8.0, "mb_volta": 90.0,
+                 "maquina_nova": True}
+
+
 def test_estimate_per_song():
     # L40S + 2 nucleos + 8 GB, por segundo (a tabela de setembro de 2026)
     assert gastos.estimar(64, "L40S") == pytest.approx(64 * (0.000542 + 2 * 0.0000131 + 8 * 0.00000222))

@@ -367,6 +367,7 @@ class Library:
             data["stem_gain"] = round(10 ** ((meta.get("headroom_db") or 0) / 20), 4)
             versoes, ativas = self._versoes_faixas(meta)
             data["faixas"], data["faixas_ativas"] = versoes, ativas
+            data["nuvem_tempos"] = (meta.get("separation") or {}).get("tempos")  # onde foi o tempo na nuvem
             if meta.get("lyrics_ai"):
                 data["lyrics_ai"] = {**self._ai_state(sid, meta), "report": meta["lyrics_ai"].get("report")}
             if meta.get("lyrics_rank"):
@@ -2036,7 +2037,7 @@ class Library:
         self._finish_separation(sid, r["arquivos"], {
             "preset": qualidade, "overlap": q["overlap"], "fp16": q["fp16"], "vocals": q["vocals"],
             "backing": q["backing"], "onde": "nuvem", "gpu": r["gpu"], "seconds": r["segundos"],
-            "custo_estimado": r["custo_estimado"]})
+            "custo_estimado": r["custo_estimado"], "tempos": r.get("tempos") or {}})
         # o gasto real (o relatorio do Modal) depois de cada musica, sem segurar a fila
         threading.Thread(target=lambda: gastos.atualizar(conta.cliente(), forcar=True), name="nuvem-gastos",
                          daemon=True).start()

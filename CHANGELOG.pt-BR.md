@@ -11,6 +11,15 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+### Mudado
+
+- Separação na nuvem: cada música anota onde foi o tempo (envio, separação na placa, espera e volta, e os tamanhos),
+  mostrado no Editar da música e no registro.
+
+### Corrigido
+
+- Adicionar muitos arquivos de uma vez: a lista embaixo da área de envio tem altura fixa e rolagem.
+
 ## [1.1.0-beta.1] - 2026-09-30
 
 ### Adicionado

@@ -711,6 +711,7 @@
  "musica.itunes_ok": "Info filled in — check and save",
  "musica.modelos_falhou": "Couldn't load the models ({erro})",
  "musica.nome": "Song name (used to search for lyrics)",
+ "musica.nuvem_tempos": "In the cloud: upload {envio} s ({mb} MB) · separation on the card {placa} s · wait and download {volta} s ({mbv} MB)",
  "musica.o_desta": "this song's",
  "musica.qualidade": "separated at {q} quality",
  "musica.qualidade_antiga": "separated before quality control",

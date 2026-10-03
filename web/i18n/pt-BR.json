@@ -711,6 +711,7 @@
  "musica.itunes_ok": "Dados preenchidos — confira e salve",
  "musica.modelos_falhou": "Não consegui carregar os modelos ({erro})",
  "musica.nome": "Nome da música (usado para buscar letra)",
+ "musica.nuvem_tempos": "Na nuvem: envio {envio} s ({mb} MB) · separação na placa {placa} s · espera e volta {volta} s ({mbv} MB)",
  "musica.o_desta": "o desta música",
  "musica.qualidade": "separada na qualidade {q}",
  "musica.qualidade_antiga": "separada antes do controle de qualidade",

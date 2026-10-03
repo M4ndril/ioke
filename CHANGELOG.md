@@ -11,6 +11,15 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+### Changed
+
+- Cloud separation: each song records where its time went (upload, separation on the card, waiting and download,
+  and the sizes), shown in the song's Edit window and in the log.
+
+### Fixed
+
+- Adding many files at once: the list under the upload area keeps a fixed height and scrolls.
+
 ## [1.1.0-beta.1] - 2026-09-30
 
 ### Added

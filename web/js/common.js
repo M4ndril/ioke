@@ -744,6 +744,9 @@ export function editSong(song, { genres = [] } = {}) {
             ${song.quality ? t("musica.qualidade", { q: `<b>${esc(song.quality)}</b>` }) : t("musica.qualidade_antiga")}<span data-bm>${song.backing_model ? `; ${t("musica.voz_apoio")} <b>${esc(song.backing_model)}</b>` : ""}</span>.
             <span data-rp-hint></span>
           </div>
+          ${song.nuvem_tempos ? `<div class="small muted" style="margin-top:4px">${icon("cloud", "sm")} ${esc(t("musica.nuvem_tempos", {
+            envio: Math.round(song.nuvem_tempos.envio), mb: song.nuvem_tempos.mb_envio, placa: Math.round(song.nuvem_tempos.nuvem),
+            volta: Math.round(song.nuvem_tempos.espera_volta), mbv: song.nuvem_tempos.mb_volta }))}</div>` : ""}
           ${song.troca_erro ? `<div class="small" style="color:var(--danger);margin-top:6px">${t("musica.trocar_audio_falhou")} ${esc(song.troca_erro)}</div>` : ""}
           <div class="small" data-acao-estado style="margin-top:6px" hidden></div>
         </div>
