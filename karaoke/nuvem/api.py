@@ -2,7 +2,7 @@
 sao da pessoa dona do PC. O segredo da chave nunca sai daqui.
 
 - GET    /api/nuvem                  estado, conta, gastos, teto, placa, onde separar
-- PUT    /api/nuvem                  {"gpu", "teto_usd", "separar_onde", "aceitou_custos"}
+- PUT    /api/nuvem                  {"gpu", "teto_usd", "paralelas", "separar_onde", "aceitou_custos"}
 - DELETE /api/nuvem?remover_da_conta=1   desconecta (e, se pedir, apaga o trabalho e os modelos da conta)
 - POST   /api/nuvem/conectar         comeca o login pelo navegador -> {"url", "codigo"}
 - GET    /api/nuvem/conectar         como esta o login
@@ -20,7 +20,7 @@ from flask import Blueprint, jsonify, request
 
 from .. import i18n
 from ..config import CONFIG, perfil, save_config
-from . import GPUS, conta, gastos, modal_instalado, separador_nuvem, versao_trabalho
+from . import GPUS, PARALELAS_MAX, conta, gastos, modal_instalado, separador_nuvem, versao_trabalho
 
 log = logging.getLogger("karaoke.nuvem")
 ONDE = ("auto", "local", "nuvem")
@@ -61,6 +61,7 @@ def make_blueprint(lib, is_host):
             "instalado": c["trabalho_instalado"] == versao_trabalho(),
             "gastos": gastos.resumo(c["teto_usd"]) if c["conectada"] else None,
             "gpus": [{"gpu": g, "por_minuto": round(gastos.preco_por_segundo(g) * 60, 4)} for g in GPUS],
+            "paralelas_max": PARALELAS_MAX,
             "na_fila": len(na_nuvem),
         }
 
@@ -84,6 +85,14 @@ def make_blueprint(lib, is_host):
             if not 0 < teto <= 1000:
                 return jsonify({"error": i18n.t("nuvem.teto_invalido")}), 400
             campos["teto_usd"] = teto
+        if "paralelas" in data:
+            try:
+                n = int(data["paralelas"])
+            except (TypeError, ValueError):
+                n = 0
+            if not 1 <= n <= PARALELAS_MAX:
+                return jsonify({"error": i18n.t("nuvem.paralelas_invalido", n=PARALELAS_MAX)}), 400
+            campos["paralelas"] = n
         if data.get("aceitou_custos"):
             campos["aceitou_custos_em"] = time.time()
         if campos:

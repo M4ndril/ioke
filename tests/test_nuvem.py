@@ -128,14 +128,27 @@ def test_monthly_report_is_asked_in_pieces(monkeypatch):
 
 
 def test_time_breakdown_of_a_cloud_song(monkeypatch):
-    """O total de uma musica na nuvem separado em envio, placa e o resto (maquina ligando, fila e volta)."""
-    from karaoke.nuvem import separador_nuvem
-
+    """O total de uma musica na nuvem: envio, esperando placa (ligando ou ocupada), separacao e volta."""
     monkeypatch.setattr(separador_nuvem.time, "time", lambda: 200.0)
-    t = separador_nuvem._medir(100.0, {"enviado": 130.0}, {"tempos": {"total": 50.0, "primeira": True}},
-                               8_000_000, 90_000_000)
-    assert t == {"envio": 30.0, "nuvem": 50.0, "espera_volta": 20.0, "mb_envio": 8.0, "mb_volta": 90.0,
-                 "maquina_nova": True}
+    remoto = {"total": 50.0, "primeira": True, "comecou": 135.0, "terminou": 185.0, "maquina": "ABC"}
+    t = separador_nuvem._medir(100.0, {"enviado": 130.0}, {"tempos": remoto}, 8_000_000, 90_000_000)
+    assert t == {"envio": 30.0, "fila": 5.0, "nuvem": 50.0, "volta": 15.0, "mb_envio": 8.0, "mb_volta": 90.0,
+                 "maquina_nova": True, "maquina": "ABC"}
+    # trabalho antigo (sem o relogio da nuvem): a espera entra toda na volta
+    t = separador_nuvem._medir(100.0, {"enviado": 130.0}, {"tempos": {"total": 50.0}}, 0, 0)
+    assert t["fila"] == 0.0 and t["volta"] == 20.0
+
+
+def test_parallel_limit_is_clamped(nuvem):
+    from karaoke.nuvem import PARALELAS_MAX
+
+    assert separador_nuvem.paralelas() == 1
+    conta.gravar(paralelas=3)
+    assert separador_nuvem.paralelas() == 3
+    conta.gravar(paralelas=99)
+    assert separador_nuvem.paralelas() == PARALELAS_MAX
+    conta.gravar(paralelas="x")
+    assert separador_nuvem.paralelas() == 1
 
 
 def test_estimate_per_song():
@@ -160,6 +173,14 @@ def test_limit_blocks(nuvem, monkeypatch):
     gastos.atualizar(object(), forcar=True)
     assert not gastos.cabe_no_teto(25.0, 240, "L40S")
     assert gastos.cabe_no_teto(30.0, 240, "L40S")
+
+
+def test_limit_counts_the_songs_already_separating(nuvem, monkeypatch):
+    """Com varias separacoes ao mesmo tempo, as que ainda nao entraram na conta tambem contam."""
+    monkeypatch.setattr(gastos, "ler_relatorio", lambda cli: [item("karaoke-nuvem", 24.90)])
+    gastos.atualizar(object(), forcar=True)
+    assert gastos.cabe_no_teto(25.0, 240, "L40S")
+    assert not gastos.cabe_no_teto(25.0, 240, "L40S", em_curso=[240, 240, 240])
 
 
 def test_report_failure_keeps_the_last_reading(nuvem, monkeypatch):
@@ -189,6 +210,7 @@ def lib(tmp_path, monkeypatch, nuvem):
     lib.acoes_rodando = {}
     lib._rev, lib._song_rev, lib._compactas, lib._bib, lib._inicio = 0, {}, {}, (-1, "", []), "t"
     lib._queue_cache = (0.0, {})
+    lib._nuvem_em_curso = {}
     lib.wanted = lambda: frozenset()
     lib.device = {"device": "cpu"}
     return lib
@@ -276,6 +298,39 @@ def test_cloud_failure_goes_back_to_waiting(lib):
     assert lib.retry("s1") and "nuvem_falhou" not in meta
 
 
+def test_cloud_lines_follow_the_parallel_limit(lib, monkeypatch):
+    """Trabalham o limite mais uma linha (a que espera na fila do Modal); as outras ficam paradas. A musica
+    pegada entra nas "em curso" (o teto conta com ela) e sai quando termina."""
+    class Parar(Exception):
+        pass
+
+    conta.gravar(paralelas=2)
+    pegou, em_curso = [], []
+
+    def take(*a, ao_pegar=None, **k):
+        if pegou:
+            raise Parar()
+        lib.songs["s1"] = {"id": "s1", "duration": 200}
+        ao_pegar("s1")
+        pegou.append("s1")
+        return "s1"
+
+    monkeypatch.setattr(lib, "_take", take)
+    monkeypatch.setattr(lib, "_separate_nuvem", lambda sid: em_curso.append(dict(lib._nuvem_em_curso)))
+    with pytest.raises(Parar):
+        lib._nuvem_loop(2)  # a terceira linha (limite 2 + 1) trabalha
+    assert em_curso == [{"s1": 200}] and lib._nuvem_em_curso == {}
+
+    def esperar(timeout=None):
+        raise Parar()
+
+    monkeypatch.setattr(lib.cond, "wait", esperar)
+    pegou.clear()
+    with pytest.raises(Parar):
+        lib._nuvem_loop(3)  # a quarta fica parada
+    assert not pegou
+
+
 def test_cancel_reaches_the_cloud_job(nuvem, monkeypatch):
     postos, cancelada = {}, []
 
@@ -306,7 +361,7 @@ def test_cancel_reaches_the_cloud_job(nuvem, monkeypatch):
     pedidos = iter([False, True])
     with pytest.raises(Canceled):
         separador_nuvem._chamar(metodo, (), {}, "tarefa1", lambda f, e: vistos.append((f, e)), lambda: next(pedidos))
-    assert cancelada and vistos == [(0.3, "voz")]
+    assert cancelada and vistos == [(0.0, "aguardando"), (0.3, "voz")]  # "aguardando" ate o trabalho comecar
 
 
 def test_cloud_errors_are_translated():

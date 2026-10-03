@@ -12,6 +12,8 @@ O Modal leva junto o pacote `karaoke` inteiro (e o pacote do arquivo); aqui dent
 importa o que roda la. Nasceu do teste de 2026-09-28 (separacao no Modal).
 """
 import logging
+import os
+import threading
 import time
 from pathlib import Path
 
@@ -61,36 +63,49 @@ class Cancelado(Exception):
 
 
 class _Andamento:
-    """Grava o andamento no Dict (no maximo uma vez por segundo) e confere se o app pediu para parar."""
+    """O andamento e o cancelamento pelo Dict. Quem trabalha so anota a fracao (na hora); uma linha de fundo
+    grava no Dict uma vez por segundo e confere se o app pediu para parar. A placa nunca espera o Dict: cada
+    ida e volta leva de 0,1 s a mais de 2 s, e esperar por ela a cada segundo deixava a separacao bem mais
+    lenta (medido em 2026-10-03)."""
 
     def __init__(self, tarefa, base=0.0, faixa=1.0):
         self.tarefa = tarefa
         self.dict = modal.Dict.from_name("karaoke-progresso", create_if_missing=True) if tarefa else None
         self.base, self.faixa = base, faixa
         self.etapa = ""
-        self._ultimo = 0.0
+        self.valor = 0.0
+        self.cancelado = False
+        self._fim = threading.Event()
+        if self.dict:
+            threading.Thread(target=self._gravar, daemon=True).start()
 
     def trecho(self, base, faixa, etapa):
         self.base, self.faixa, self.etapa = base, faixa, etapa
-        self(0.0, force=True)
+        self(0.0)
 
     def __call__(self, fracao, etapa=None, force=False):
         if etapa:
             self.etapa = etapa
-        if not self.dict or (not force and time.time() - self._ultimo < 1.0):
-            return
-        self._ultimo = time.time()
-        try:
-            atual = self.dict.get(self.tarefa) or {}
-        except Exception:  # noqa: BLE001 - o andamento nunca derruba o trabalho
-            atual = {}
-        if atual.get("cancelar"):
+        self.valor = round(self.base + self.faixa * max(0.0, min(1.0, fracao)), 4)
+        if self.cancelado:
             raise Cancelado()
-        valor = round(self.base + self.faixa * max(0.0, min(1.0, fracao)), 4)
-        try:
-            self.dict.put(self.tarefa, {"fracao": valor, "etapa": self.etapa, "em": time.time()})
-        except Exception:  # noqa: BLE001
-            pass
+
+    def fechar(self):
+        """Para a linha de fundo (sem gravar mais nada: o app apaga a chave quando recebe o resultado)."""
+        self._fim.set()
+
+    def _gravar(self):
+        gravado = None
+        while not self._fim.wait(1.0):
+            atual = (self.valor, self.etapa)
+            try:
+                if (self.dict.get(self.tarefa) or {}).get("cancelar"):
+                    self.cancelado = True
+                if atual != gravado and not self._fim.is_set():
+                    self.dict.put(self.tarefa, {"fracao": atual[0], "etapa": atual[1], "em": time.time()})
+                    gravado = atual
+            except Exception:  # noqa: BLE001 - o andamento nunca derruba o trabalho
+                pass
 
 
 # ------------------------------------------------------------------ separar
@@ -157,16 +172,23 @@ class Separador:
                 vocals: str = VOCALS, backing: str = BACKING, so_apoio: bool = False) -> dict:
         """audio: o original comprimido (ou, com so_apoio, as vozes juntas) -> as faixas em FLAC.
         so_apoio: refaz so voz principal x apoio (o "Refazer so voz/apoio" do PC)."""
+        q =QUALIDADES.get(qualidade) or QUALIDADES["equilibrada"]
+        inicio = time.time()
+        # "comecou" e "terminou" (relogio da nuvem): o app separa a espera na fila do Modal e a volta das faixas
+        t = {"primeira": self.primeira, "maquina": os.environ.get("MODAL_TASK_ID", "")[-8:], "comecou": inicio}
+        self.primeira = False
+        andamento = _Andamento(tarefa)
+        try:
+            return self._separar(audio, extensao, q, so_apoio, vocals, backing, t, inicio, andamento)
+        finally:
+            andamento.fechar()
+
+    def _separar(self, audio, extensao, q, so_apoio, vocals, backing, t, inicio, andamento):
         import shutil
         import subprocess
 
         import soundfile as sf
 
-        q = QUALIDADES.get(qualidade) or QUALIDADES["equilibrada"]
-        t = {"primeira": self.primeira}
-        self.primeira = False
-        inicio = time.time()
-        andamento = _Andamento(tarefa)
         andamento.trecho(0.0, 0.05, "wav")
         shutil.rmtree(SAIDA, ignore_errors=True)
         Path(SAIDA).mkdir(parents=True)
@@ -188,7 +210,7 @@ class Separador:
         lead, apoio = self._rodar(backing, voz, q, andamento)
         saida.update(lead=lead.read_bytes(), backing=apoio.read_bytes())
         t["total"] = round(time.time() - inicio, 1)
-        andamento(1.0, "pronta", force=True)
+        t["terminou"] = time.time()
         return {"gpu": self.gpu, "tempos": t, **saida}
 
 
@@ -213,10 +235,15 @@ class Letras:
         try:
             for nome, dados in faixas.items():  # lead.flac, backing.flac, ia-ouvido.json
                 (pasta / Path(nome).name).write_bytes(dados)
+            andamento = None
             if funcao == "run":
                 andamento = _Andamento(tarefa)
                 kwargs = {**kwargs, "progress": lambda f, msg: andamento(f, msg)}
-            resultado = getattr(aligner, funcao)(pasta, *args, **kwargs)
+            try:
+                resultado = getattr(aligner, funcao)(pasta, *args, **kwargs)
+            finally:
+                if andamento:
+                    andamento.fechar()
             ouvido = pasta / "ia-ouvido.json"
             extra = {"ia-ouvido.json": ouvido.read_bytes()} if ouvido.exists() else {}
         finally:

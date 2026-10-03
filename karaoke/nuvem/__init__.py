@@ -17,6 +17,11 @@ VOLUME = "karaoke-modelos"
 PROGRESSO = "karaoke-progresso"
 GPUS = ("L40S", "L4", "T4")
 GPU_PADRAO = "L40S"
+# separacoes ao mesmo tempo (uma placa cada). O plano gratis do Modal liga ate 10 placas juntas; a letra por IA
+# usa outra, e "Refazer so voz/apoio" mais uma: o maximo deixa folga para elas. Medido em 2026-10-03 (L40S,
+# Equilibrada): 2 -> 7,2 min de musica por minuto, 4 -> 13,8, 6 -> 17 (da 4a placa em diante o Modal demorou ~1 min
+# para entregar)
+PARALELAS_MAX = 6
 
 _PASTA = Path(__file__).resolve().parent.parent
 # o codigo que roda na nuvem: mudou algum, instala de novo na conta da pessoa

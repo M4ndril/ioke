@@ -17,10 +17,14 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
   a barra de baixo exporta as marcadas. **Selecionar todas** pega todas as músicas da busca e do filtro atuais, mesmo
   as que ainda não apareceram. Ctrl + clique e Shift + clique também selecionam (uma música, ou um intervalo), como
   no Windows.
+- **Várias separações ao mesmo tempo na nuvem** (Configurações → Nuvem → Separações ao mesmo tempo, até 6): numa
+  fila grande, cada música separa numa placa própria e a fila termina antes. O custo por música continua o mesmo.
 
 ### Mudado
 
-- Separação na nuvem: cada música anota onde foi o tempo (envio, separação na placa, espera e volta, e os tamanhos),
+- **Separação na nuvem mais rápida:** mostrar o andamento não pausa mais a placa, e a próxima música da fila já
+  espera na nuvem, então a máquina nunca fica parada (nem desliga) entre uma música e outra.
+- Separação na nuvem: cada música anota onde foi o tempo (envio, esperando placa, separação, volta e os tamanhos),
   mostrado no Editar da música e no registro.
 
 ### Corrigido

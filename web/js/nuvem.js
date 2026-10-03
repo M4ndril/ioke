@@ -244,6 +244,12 @@ export function mountNuvem(box) {
         <h4>${icon("memory")} ${t("nuvem.placa.titulo")}</h4>
         <div class="seg" data-placa>${placa}</div>
         <p class="small muted" style="margin:8px 0 0">${t(`nuvem.gpu.${c.gpu}`)} · ${dinheiro((st.gpus.find((g) => g.gpu === c.gpu) || {}).por_minuto)} ${t("nuvem.por_minuto")}</p>
+      </section>
+      <section class="set-section">
+        <h4>${icon("stacks")} ${t("nuvem.paralelas.titulo")}</h4>
+        <div class="seg" data-paralelas>${Array.from({ length: st.paralelas_max || 1 }, (_, i) => i + 1).map((n) => `
+          <button data-paralelas-n="${n}" class="${c.paralelas === n ? "on" : ""}">${n}</button>`).join("")}</div>
+        <p class="small muted" style="margin:8px 0 0">${t("nuvem.paralelas.texto")}</p>
       </section>` : ""}
       <section class="set-section">
         <h4>${icon("call_split")} ${t("nuvem.onde.titulo")}</h4>
@@ -296,6 +302,7 @@ export function mountNuvem(box) {
     });
     on("[data-teto-salvar]", () => put({ teto_usd: box.querySelector("[data-teto]").value }, t("nuvem.teto.salvo")));
     $$("[data-gpu]", box).forEach((b) => (b.onclick = () => put({ gpu: b.dataset.gpu })));
+    $$("[data-paralelas-n]", box).forEach((b) => (b.onclick = () => put({ paralelas: Number(b.dataset.paralelasN) })));
     const ondeSel = box.querySelector("[data-onde]");
     if (ondeSel) {
       ondeSel.onchange = async () => {

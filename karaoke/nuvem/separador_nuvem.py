@@ -10,9 +10,10 @@ import time
 import uuid
 from pathlib import Path
 
-from . import APP, GPU_PADRAO, GPUS, PROGRESSO, VOLUME, conta, gastos, versao_trabalho
+from . import APP, GPU_PADRAO, GPUS, PARALELAS_MAX, PROGRESSO, VOLUME, conta, gastos, versao_trabalho
 
 log = logging.getLogger("karaoke.nuvem")
+MAQUINA_LIGANDO = 30  # s: uma maquina nova (imagem e modelos) antes da primeira musica, cobrados
 
 _instalar_lock = threading.Lock()
 _instalacao = {"estado": "parado", "etapa": "", "erro": None}
@@ -91,12 +92,26 @@ def gpu():
     return g if g in GPUS else GPU_PADRAO
 
 
-def _objeto(classe):
+def paralelas():
+    """Quantas separacoes ao mesmo tempo (Configuracoes > Nuvem): de 1 a PARALELAS_MAX."""
+    try:
+        return max(1, min(PARALELAS_MAX, int(conta.ler().get("paralelas") or 1)))
+    except (TypeError, ValueError):
+        return 1
+
+
+def _objeto(classe, maquinas=None):
+    """maquinas: quantas maquinas (placas) a classe pode ligar ao mesmo tempo (o padrao do trabalho e 1)."""
     import modal
 
     cls = modal.Cls.from_name(APP, classe, client=conta.cliente())
+    opcoes = {}
     g = gpu()
-    return (cls if g == GPU_PADRAO else cls.with_options(gpu=g))()
+    if g != GPU_PADRAO:
+        opcoes["gpu"] = g
+    if maquinas and maquinas > 1:
+        opcoes["max_containers"] = int(maquinas)
+    return (cls.with_options(**opcoes) if opcoes else cls)()
 
 
 def _traduzir(exc):
@@ -119,7 +134,8 @@ def _traduzir(exc):
 
 def _chamar(metodo, args, kwargs, tarefa, progresso, cancelado, marcas=None):
     """Chama um metodo na nuvem acompanhando o andamento (Dict) e o cancelamento. `marcas` (dict): recebe
-    "enviado" (quando o pedido, com o arquivo, terminou de subir)."""
+    "enviado" (quando o pedido, com o arquivo, terminou de subir). Ate o trabalho comecar (a maquina ligando,
+    ou todas ocupadas com outras musicas), o andamento diz "aguardando"."""
     import modal
     from modal.exception import OutputExpiredError, TimeoutError as ModalTimeout
 
@@ -127,6 +143,7 @@ def _chamar(metodo, args, kwargs, tarefa, progresso, cancelado, marcas=None):
     chamada = metodo.spawn(*args, **kwargs)
     if marcas is not None:
         marcas["enviado"] = time.time()
+    progresso(0.0, "aguardando")
     visto = None
     try:
         while True:
@@ -159,9 +176,10 @@ def _chamar(metodo, args, kwargs, tarefa, progresso, cancelado, marcas=None):
 
 
 def separar(original, qualidade, destino, progresso=lambda f, etapa: None, cancelado=lambda: False,
-            vocals=None, backing=None, so_apoio=False):
+            vocals=None, backing=None, so_apoio=False, maquinas=None):
     """Manda o original comprimido e grava instrumental/lead/backing (FLAC) em `destino`
-    (uma pasta de trabalho: quem chama troca as faixas juntas). -> info da separacao."""
+    (uma pasta de trabalho: quem chama troca as faixas juntas). -> info da separacao.
+    maquinas: o limite de separacoes ao mesmo tempo na conta (a fila manda uma a mais, que espera no Modal)."""
     from ..util import Canceled
 
     try:
@@ -179,7 +197,7 @@ def separar(original, qualidade, destino, progresso=lambda f, etapa: None, cance
         dados = original.read_bytes()
         marcas = {}
         inicio = time.time()
-        r = _chamar(_objeto("Separador").separar, (dados, original.suffix.lower()), kwargs, tarefa,
+        r = _chamar(_objeto("Separador", maquinas).separar, (dados, original.suffix.lower()), kwargs, tarefa,
                     progresso, cancelado, marcas)
     except Canceled:
         raise
@@ -194,28 +212,39 @@ def separar(original, qualidade, destino, progresso=lambda f, etapa: None, cance
             p = destino / f"{faixa}.flac"
             p.write_bytes(r[faixa])
             arquivos[faixa] = p
-    custo = gastos.estimar(segundos, g)
-    gastos.anotar(custo, segundos, g)
     tempos = _medir(inicio, marcas, r, len(dados), sum(p.stat().st_size for p in arquivos.values()))
-    log.info("nuvem: envio %.0fs (%.1f MB), separacao %.0fs, espera e volta %.0fs (%.1f MB)%s",
-             tempos["envio"], tempos["mb_envio"], tempos["nuvem"], tempos["espera_volta"], tempos["mb_volta"],
-             ", maquina ligando" if tempos["maquina_nova"] else "")
-    return {"arquivos": arquivos, "gpu": g, "segundos": round(segundos), "custo_estimado": round(custo, 4),
+    # o que a maquina ficou ligada por esta musica: a separacao (mais a maquina ligando, se foi a primeira). O
+    # tempo esperando na fila do Modal (outra musica na maquina) nao e cobrado.
+    cobrado = tempos["nuvem"] + (MAQUINA_LIGANDO if tempos["maquina_nova"] else 0) if tempos["nuvem"] else segundos
+    custo = gastos.estimar(cobrado, g)
+    gastos.anotar(custo, cobrado, g)
+    log.info("nuvem: envio %.0fs (%.1f MB), esperando maquina %.0fs, separacao %.0fs, volta %.0fs (%.1f MB)%s",
+             tempos["envio"], tempos["mb_envio"], tempos["fila"], tempos["nuvem"], tempos["volta"],
+             tempos["mb_volta"], ", maquina ligando" if tempos["maquina_nova"] else "")
+    # sem a espera na fila do Modal (outra musica na maquina): o tempo desta musica, para as estimativas
+    proprios = segundos - tempos["fila"] + (MAQUINA_LIGANDO if tempos["maquina_nova"] else 0)
+    return {"arquivos": arquivos, "gpu": g, "segundos": round(proprios), "custo_estimado": round(custo, 4),
             "tempos": tempos}
 
 
 def _medir(inicio, marcas, r, bytes_envio, bytes_volta):
-    """Onde foi o tempo de uma musica na nuvem: envio do arquivo, separacao na placa (o que a nuvem mediu) e o
-    resto (a maquina ligando, a fila do Modal e a volta das faixas). Com fila, a internet dividida com os
-    downloads das proximas musicas pesa no envio e na volta (nao na placa)."""
+    """Onde foi o tempo de uma musica na nuvem: envio do arquivo, esperando maquina (ligando, ou ocupada com
+    outra musica), separacao na placa (o que a nuvem mediu) e a volta das faixas. "comecou"/"terminou" vem do
+    relogio da nuvem; sem eles (trabalho antigo), a espera entra toda na volta."""
     fim = time.time()
     remoto = r.get("tempos") or {}
-    envio = max(0.0, (marcas.get("enviado") or inicio) - inicio)
+    enviado = marcas.get("enviado") or inicio
+    envio = max(0.0, enviado - inicio)
     nuvem = float(remoto.get("total") or 0.0)
-    return {"envio": round(envio, 1), "nuvem": round(nuvem, 1),
-            "espera_volta": round(max(0.0, fim - inicio - envio - nuvem), 1),
+    resto = max(0.0, fim - inicio - envio - nuvem)
+    if remoto.get("comecou") and remoto.get("terminou"):
+        fila = min(resto, max(0.0, remoto["comecou"] - enviado))
+        volta = resto - fila
+    else:
+        fila, volta = 0.0, resto
+    return {"envio": round(envio, 1), "fila": round(fila, 1), "nuvem": round(nuvem, 1), "volta": round(volta, 1),
             "mb_envio": round(bytes_envio / 1e6, 1), "mb_volta": round(bytes_volta / 1e6, 1),
-            "maquina_nova": bool(remoto.get("primeira"))}
+            "maquina_nova": bool(remoto.get("primeira")), "maquina": remoto.get("maquina") or ""}
 
 
 class AlinhadorNuvem:

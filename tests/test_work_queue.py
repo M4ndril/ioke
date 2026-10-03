@@ -37,6 +37,17 @@ def test_eta_follows_the_gpu_order():
 SEP_HALF = library.SEP_START + (library.SEP_END - library.SEP_START) / 2
 
 
+def test_eta_with_several_cloud_gpus():
+    """Duas placas: cada musica vai para a que fica livre primeiro."""
+    songs = [job("run", "separating", 1, 100, progress=SEP_HALF), job("w1", "waiting", 2, 100),
+             job("w2", "waiting", 3, 100), job("w3", "waiting", 4, 100)]
+    info = queue_eta(songs, frozenset(), ratio=2.0, lanes=2)
+    assert info["run"]["eta"] == 100
+    assert info["w1"]["eta"] == 200  # a segunda placa estava livre
+    assert info["w2"]["eta"] == 300  # depois da "run"
+    assert info["w3"]["eta"] == 400
+
+
 def test_someone_waiting_to_sing_goes_first():
     songs = [job("lib1", "waiting", 1), job("lib2", "waiting", 2), job("sing", "waiting", 3)]
     info = queue_eta(songs, frozenset({"sing"}), ratio=1.0)

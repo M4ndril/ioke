@@ -139,8 +139,8 @@ def resumo(teto_usd, dados=None):
     }
 
 
-def cabe_no_teto(teto_usd, duracao_s, gpu, razao=0.25):
-    """Antes de mandar uma musica: gasto do mes + a estimativa dela <= teto.
-    razao: segundos de nuvem por segundo de musica (L40S ~0,25 na Equilibrada)."""
-    estimativa = estimar((duracao_s or 240) * razao + 20, gpu)
+def cabe_no_teto(teto_usd, duracao_s, gpu, razao=0.25, em_curso=()):
+    """Antes de mandar uma musica: gasto do mes + a estimativa dela (e das que ja estao separando, que ainda
+    nao entraram na conta) <= teto. razao: segundos de nuvem por segundo de musica (L40S ~0,25 na Equilibrada)."""
+    estimativa = sum(estimar((d or 240) * razao + 20, gpu) for d in (duracao_s, *em_curso))
     return resumo(teto_usd)["mes"] + estimativa <= teto_usd

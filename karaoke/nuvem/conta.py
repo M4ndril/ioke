@@ -69,6 +69,7 @@ def publico():
         "conectado_em": d.get("conectado_em"),
         "gpu": d.get("gpu") or GPU_PADRAO,
         "teto_usd": float(d.get("teto_usd") if d.get("teto_usd") is not None else TETO_PADRAO),
+        "paralelas": int(d.get("paralelas") or 1),
         "aceitou_custos_em": d.get("aceitou_custos_em"),
         "trabalho_instalado": d.get("trabalho_instalado"),
         "sem_protecao": bool(d.get("sem_protecao")),

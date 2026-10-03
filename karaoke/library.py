@@ -101,13 +101,17 @@ class Library:
         self._queue_cache = (0.0, {})
         self._size_cache = (0.0, 0)
         self._space_warned = False
+        self._nuvem_em_curso = {}  # sid -> duracao: as musicas indo para a nuvem agora (o teto conta com elas)
         self.separator = StemSeparator()
         self.device = {"device": "?", "name": "detectando..."}
         self.complementos = None  # o Servico de karaoke/complementos (o servidor poe)
         self._load()
         threading.Thread(target=self._download_loop, name="download", daemon=True).start()
         threading.Thread(target=self._gpu_loop, name="gpu", daemon=True).start()
-        threading.Thread(target=self._nuvem_loop, name="nuvem", daemon=True).start()
+        from .nuvem import PARALELAS_MAX
+
+        for i in range(PARALELAS_MAX + 1):  # quantas trabalham: o limite das Configuracoes, mais uma (_nuvem_loop)
+            threading.Thread(target=self._nuvem_loop, args=(i,), name=f"nuvem-{i}", daemon=True).start()
         threading.Thread(target=self._ai_loop, name="letra-ia", daemon=True).start()
         threading.Thread(target=self._video_loop, name="video", daemon=True).start()
         threading.Thread(target=self._backfill_metadata, name="metadata", daemon=True).start()
@@ -1668,16 +1672,24 @@ class Library:
                 mine = [m for m in songs if onde.get(m["id"], linha) == linha]
                 done = [m for m in songs if ((m.get("separation") or {}).get("onde") or "local") == linha]
                 key = self._quality_key() if linha == "local" else separation_key({**current_quality(), "onde": "nuvem"})
-                info.update(queue_eta(mine, self.wanted(), separation_ratio(done, key)))
+                lanes = 1
+                if linha == "nuvem":
+                    from .nuvem import separador_nuvem
+
+                    lanes = separador_nuvem.paralelas()
+                info.update(queue_eta(mine, self.wanted(), separation_ratio(done, key), lanes))
         self._queue_cache = (time.time(), info)
         return info
 
-    def _take(self, status, new_status, stage, filtro=None):
+    def _take(self, status, new_status, stage, filtro=None, ao_pegar=None):
+        """ao_pegar(sid): roda ainda com o lock, junto com a troca de status (ninguem ve a musica pela metade)."""
         with self.cond:
             while True:
                 sid = self._next(status, filtro)
                 if sid and self._space_ok(status):
                     self._set(sid, status=new_status, stage=stage, error=None, stalled=False)
+                    if ao_pegar:
+                        ao_pegar(sid)
                     return sid
                 self.cond.wait(timeout=5 if not sid else 30)
 
@@ -1978,7 +1990,8 @@ class Library:
             motivo = "aceitar"
         elif (meta.get("nuvem_falhou") or {}).get("em", 0) > time.time() - NUVEM_PAUSA:
             return False  # a fila ja mostra o erro da nuvem
-        elif not gastos.cabe_no_teto(c["teto_usd"], meta.get("duration"), c["gpu"]):
+        elif not gastos.cabe_no_teto(c["teto_usd"], meta.get("duration"), c["gpu"],
+                                     em_curso=list(self._nuvem_em_curso.values())):
             motivo = "teto"
         if motivo:
             if meta.get("nuvem_espera") != motivo:
@@ -1988,15 +2001,30 @@ class Library:
         meta.pop("nuvem_espera", None)
         return True
 
-    def _nuvem_loop(self):
+    def _nuvem_loop(self, linha):
+        """Uma linha de trabalho da nuvem. Trabalham o limite das Configuracoes (separacoes ao mesmo tempo) mais
+        uma: essa manda a musica dela, que espera na fila do Modal e comeca assim que uma maquina termina. Assim
+        a maquina nunca fica parada entre uma musica e outra (e nao desliga no meio da fila) e a volta das faixas
+        de uma acontece enquanto a proxima ja separa."""
+        from .nuvem import separador_nuvem
+
+        def pegar(sid):
+            self._nuvem_em_curso[sid] = self.songs[sid].get("duration")
+
         while True:
-            sid = self._take("waiting", "separating", "nuvem.fila.enviando", filtro=self._pode_nuvem)
+            if linha > separador_nuvem.paralelas():
+                with self.cond:
+                    self.cond.wait(timeout=30)
+                continue
+            sid = self._take("waiting", "separating", "nuvem.fila.enviando", filtro=self._pode_nuvem, ao_pegar=pegar)
             try:
                 self._separate_nuvem(sid)
             except Canceled:
                 self._finish_canceled(sid)
             except Exception as exc:  # noqa: BLE001
                 self._fail_nuvem(sid, exc)
+            finally:
+                self._nuvem_em_curso.pop(sid, None)
 
     def _fail_nuvem(self, sid, exc):
         """A nuvem falhou: a musica volta a esperar, com o motivo (e pode ir para a placa pelo menu)."""
@@ -2025,15 +2053,16 @@ class Library:
         stage = ("nuvem.fila.separando", {"gpu": g})
         self._set_etapa(sid, stage, progress=0.15, nuvem_falhou=None)
         tick = self._tick(sid, 0.15, 0.83)
+        especiais = {"instalar": ("nuvem.fila.instalando", None), "aguardando": ("nuvem.fila.aguardando", None)}
 
         def progresso(frac, etapa):
             tick(frac)
             meta = self.songs.get(sid)
             if meta:
-                meta["stage"], meta["stage_p"] = ("nuvem.fila.instalando", None) if etapa == "instalar" else stage
+                meta["stage"], meta["stage_p"] = especiais.get(etapa) or stage
 
         r = separador_nuvem.separar(original, qualidade, work / "nuvem", progresso, lambda: sid in self.cancel,
-                                    vocals=q["vocals"], backing=q["backing"])
+                                    vocals=q["vocals"], backing=q["backing"], maquinas=separador_nuvem.paralelas())
         self._finish_separation(sid, r["arquivos"], {
             "preset": qualidade, "overlap": q["overlap"], "fp16": q["fp16"], "vocals": q["vocals"],
             "backing": q["backing"], "onde": "nuvem", "gpu": r["gpu"], "seconds": r["segundos"],
@@ -2146,23 +2175,29 @@ def separation_ratio(songs, key, last=10):
     return float(statistics.median(ratios)) if ratios else 1.0
 
 
-def queue_eta(songs, wanted, ratio):
+def queue_eta(songs, wanted, ratio, lanes=1):
     """Quantas musicas na frente e em quanto tempo (s) cada uma da fila fica pronta. A placa
-    de video e o gargalo: separa uma de cada vez, na ordem da fila (_next)."""
+    de video e o gargalo: separa uma de cada vez, na ordem da fila (_next). lanes: quantas separam
+    ao mesmo tempo (a nuvem pode ter varias maquinas): cada musica vai para a que fica livre primeiro."""
     def estimate(m):
         return (m.get("duration") or 240) * ratio
 
-    running = [m for m in songs if m.get("status") == "separating"]
+    running = sorted((m for m in songs if m.get("status") == "separating"), key=lambda m: -(m.get("progress") or 0))
     pending = sorted((m for m in songs if m.get("status") in ("queued", "downloading", "waiting")),
                      key=lambda m: (m["id"] not in wanted, m.get("created_at") or 0))
-    out, t = {}, 0.0
+    out, livre = {}, [0.0] * max(1, int(lanes or 1))  # quando cada uma fica livre
+
+    def entrar(segundos):
+        i = livre.index(min(livre))
+        livre[i] += segundos
+        return livre[i]
+
     for m in running:
         done = max(0.0, ((m.get("progress") or 0) - SEP_START) / (SEP_END - SEP_START))
-        t += estimate(m) * max(0.05, 1 - done)
-        out[m["id"]] = {"ahead": 0, "eta": round(t)}
+        out[m["id"]] = {"ahead": 0, "eta": round(entrar(estimate(m) * max(0.05, 1 - done)))}
     for k, m in enumerate(pending):
-        t += estimate(m)
-        eta = t + (DOWNLOAD_GUESS if m["status"] in ("queued", "downloading") and not k and not running else 0)
+        eta = entrar(estimate(m))
+        eta += DOWNLOAD_GUESS if m["status"] in ("queued", "downloading") and not k and not running else 0
         out[m["id"]] = {"ahead": len(running) + k, "eta": round(eta)}
     return out
 

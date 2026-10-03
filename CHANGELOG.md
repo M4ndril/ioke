@@ -16,11 +16,15 @@ app (Settings → Updates), in the user's language.
 - **Select songs in "Sing" and export them as packages:** the **Select** button marks songs with a click; the bar at
   the bottom exports the marked ones. **Select all** takes every song of the current search and filter, even the
   ones not shown yet. Ctrl + click and Shift + click also select (one song, or a range), as in Windows.
+- **Several cloud separations at the same time** (Settings → Cloud → Separations at the same time, up to 6): in a big
+  queue, each song separates on its own GPU and the queue finishes sooner. The cost per song stays the same.
 
 ### Changed
 
-- Cloud separation: each song records where its time went (upload, separation on the card, waiting and download,
-  and the sizes), shown in the song's Edit window and in the log.
+- **Faster cloud separation:** reporting progress no longer pauses the GPU, and the next song in the queue is
+  already waiting in the cloud, so the machine never sits idle (or shuts down) between songs.
+- Cloud separation: each song records where its time went (upload, waiting for a GPU, separation, download, and
+  the sizes), shown in the song's Edit window and in the log.
 
 ### Fixed
 
