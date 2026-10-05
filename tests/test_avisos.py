@@ -1,5 +1,5 @@
 """Nenhum aviso do navegador (alert/confirm/prompt): eles mostram o endereco do PC (o IP) no topo e destoam do app.
-Os avisos sao os do proprio app: confirmar, pedirTexto e mostrarTexto (web/js/common.js)."""
+Os avisos sao os do proprio app: confirmar e mostrarTexto (web/js/common.js); escolher pasta: explorar.js."""
 import re
 from pathlib import Path
 
@@ -13,4 +13,4 @@ def test_no_browser_dialogs():
         for n, linha in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
             if NATIVO.search(linha):
                 achados.append(f"{f.relative_to(WEB)}:{n}: {linha.strip()}")
-    assert not achados, "use confirmar/pedirTexto/mostrarTexto (common.js):\n" + "\n".join(achados)
+    assert not achados, "use confirmar/mostrarTexto (common.js) ou explorar.js:\n" + "\n".join(achados)

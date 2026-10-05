@@ -860,3 +860,19 @@ select.input.sm-select { width: auto; flex: none; min-width: 130px; margin-left:
 .modal.modal-aviso { width: min(480px, 100%); }
 .aviso-texto { margin: 0 0 14px; line-height: 1.5; white-space: pre-line; }
 .aviso-botoes { gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; }
+
+/* ------------------------------------------------ explorador de pastas do app (explorar.js) */
+.modal.modal-explorar { width: min(620px, 100%); height: min(640px, 100%); }
+.modal-explorar .modal-body { display: flex; flex-direction: column; overflow: hidden; }
+.exp-topo { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.exp-caminho { min-width: 0; padding: 8px 12px; border-radius: 8px; background: var(--panel-2); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; }
+.exp-lista { flex: 1 1 auto; min-height: 0; overflow: auto; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 2px; }
+.exp-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; border: 0; background: none; color: var(--text); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.exp-item:hover, .exp-item:focus-visible { background: var(--panel-2); outline: none; }
+.exp-item .ms { color: var(--muted); font-size: 22px; }
+.exp-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exp-grupo { margin: 10px 4px 4px; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.exp-grupo:first-child { margin-top: 0; }
+.exp-rodape { gap: 10px; align-items: center; padding-top: 12px; margin-top: 8px; border-top: 1px solid var(--line); }
+.exp-item.off { cursor: default; color: var(--muted); }
+.exp-item.off:hover { background: none; }

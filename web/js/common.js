@@ -393,6 +393,7 @@ export function openModal(title, bodyHtml, { fixo = false } = {}) {
 
 // ------------------------------------------------------- avisos do proprio app
 // Nunca os do navegador (alert/confirm/prompt): eles mostram o endereco (o IP do PC) no topo e destoam do app.
+// Para escolher uma pasta ou um arquivo do PC: explorar.js.
 
 /** "Tem certeza?" Resolve com true (confirmou) ou false (cancelou, fechou ou apertou Esc). */
 export function confirmar(mensagem, { titulo, sim, nao, perigo = false } = {}) {
@@ -413,32 +414,6 @@ export function confirmar(mensagem, { titulo, sim, nao, perigo = false } = {}) {
     modal.querySelector("[data-nao]").onclick = () => fim(false);
     modal.addEventListener("closed", () => resolve(resposta));
     modal.querySelector("[data-sim]").focus();
-  });
-}
-
-/** Pede um texto. Resolve com o texto (sem espacos nas pontas) ou null (cancelou). */
-export function pedirTexto(mensagem, { titulo, valor = "", placeholder = "", ok } = {}) {
-  return new Promise((resolve) => {
-    let resposta = null;
-    const modal = openModal(titulo || t("comum.confirmar_titulo"), `
-      <p class="aviso-texto">${esc(mensagem)}</p>
-      <input class="input" data-txt value="${esc(valor)}" placeholder="${esc(placeholder)}" style="width:100%">
-      <div class="row aviso-botoes">
-        <button class="btn outline" data-nao>${esc(t("comum.cancelar"))}</button>
-        <button class="btn light" data-sim data-nav-default>${esc(ok || t("comum.ok"))}</button>
-      </div>`);
-    modal.querySelector(".modal").classList.add("modal-aviso");
-    const campo = modal.querySelector("[data-txt]");
-    const fim = (v) => {
-      resposta = v;
-      modal.close();
-    };
-    modal.querySelector("[data-sim]").onclick = () => fim(campo.value.trim() || null);
-    modal.querySelector("[data-nao]").onclick = () => fim(null);
-    campo.addEventListener("keydown", (e) => e.key === "Enter" && fim(campo.value.trim() || null));
-    modal.addEventListener("closed", () => resolve(resposta));
-    campo.focus();
-    campo.select();
   });
 }
 

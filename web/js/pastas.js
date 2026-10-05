@@ -1,16 +1,17 @@
 // Pastas vigiadas (Configuracoes -> Musicas novas): as pastas que o IOkê olha de tempos em tempos. Musica nova que
 // aparece numa delas vai para a revisao (o cartao no Adicionar) ou entra sozinha (karaoke/pastas.py).
-import { api, confirmar, esc, h, icon, pedirTexto, toast } from "./common.js";
+import { api, confirmar, esc, h, icon, toast } from "./common.js";
+import { escolherPasta } from "./explorar.js";
 import { appApi } from "./appwin.js";
 import { t } from "./i18n.js";
 import { abrirRevisao } from "./revisao.js";
 
 /* icons: folder create_new_folder delete fact_check cloud_off */
 
-/** Pede a pasta (a janela do Windows no app; no navegador, digitando o caminho) e passa a vigiar. */
+/** Pede a pasta (a janela do Windows no app; no navegador, o explorador do proprio app) e passa a vigiar. */
 export async function vigiarPasta() {
   const app = await appApi();
-  const caminho = app && app.escolher_pasta_musicas ? await app.escolher_pasta_musicas() : await pedirTexto(t("pastas.digite"), { titulo: t("pastas.vigiar") });
+  const caminho = app && app.escolher_pasta_musicas ? await app.escolher_pasta_musicas() : await escolherPasta({ titulo: t("pastas.vigiar") });
   if (!caminho) return null;
   try {
     const r = await api("/api/pastas", { method: "POST", body: { caminho, subpastas: true, modo: "perguntar" } });

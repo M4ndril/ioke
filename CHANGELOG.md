@@ -45,6 +45,9 @@ app (Settings → Updates), in the user's language.
 - **Every notice and question is now IOkê's own** (on the PC, the player and the phones): "are you sure?", typing
   a path and copying the admin link open a window in the app's look, instead of the browser's box, which showed the
   PC's address at the top. The buttons say what they'll do ("Delete", "Skip", "New party"), and Esc cancels.
+- **Choosing a folder with IOkê open in the browser:** instead of a field to paste the path, the app's own folder
+  explorer (the usual places, the drives, the subfolders and each folder's songs). It's used for watched folders
+  and to find the iTunes library file. The installed app still uses the Windows window.
 
 ## [1.1.0-beta.2] - 2026-10-03
 

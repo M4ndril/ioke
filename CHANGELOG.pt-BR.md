@@ -46,6 +46,9 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
   digitar um caminho e copiar o link do administrador abrem uma janela no visual do app, em vez da caixa do
   navegador, que mostrava o endereço do PC no topo. Os botões dizem o que vão fazer ("Excluir", "Pular", "Nova
   festa"), e o Esc cancela.
+- **Escolher uma pasta com o IOkê aberto no navegador:** em vez de um campo para colar o caminho, um explorador
+  de pastas do próprio app (os lugares de sempre, os discos, as subpastas e as músicas de cada pasta). Vale para
+  as pastas vigiadas e para achar o arquivo da biblioteca do iTunes. No app instalado continua a janela do Windows.
 
 ## [1.1.0-beta.2] - 2026-10-03
 
