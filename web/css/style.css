@@ -785,3 +785,39 @@ select.input.sm-select { width: auto; flex: none; min-width: 130px; margin-left:
 .comp-info.erro { color: var(--danger); }
 .comp-opcoes { margin-top: 10px; }
 .comp-botoes { gap: 8px; margin-top: 10px; align-items: center; }
+
+/* ------------------------------------------------ revisao antes de importar (revisao.js) */
+.modal.modal-wide { width: min(1100px, 100%); }
+.rev-modal { min-height: min(420px, 100%); }
+.rev-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.rev-busca { position: relative; flex: 1 1 240px; }
+.rev-busca .ms { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--muted); pointer-events: none; }
+.rev-busca .input { width: 100%; padding-left: 34px; }
+.rev-lendo:empty { display: none; }
+.rev-lendo, .rev-aviso { margin: 4px 2px 8px; }
+.rev-aviso { color: var(--warn); }
+.rev-lista { display: grid; gap: 10px; }
+.rev-grupo { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); overflow: hidden; }
+.rev-cab { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--panel-2); }
+.rev-cab input[type=checkbox], .rev-linha input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.rev-capa { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; flex: none; background: rgba(255, 255, 255, 0.05); display: grid; place-items: center; font-size: 26px; color: var(--muted); }
+.rev-cab-txt { min-width: 0; }
+.rev-cab-txt b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rev-album, .rev-campo { width: 100%; min-width: 0; background: transparent; border: 1px solid transparent; border-radius: 6px; color: var(--text); font: inherit; padding: 4px 6px; }
+.rev-album { font-weight: 800; font-size: 15px; }
+.rev-album:hover, .rev-campo:hover { border-color: var(--line-2); }
+.rev-album:focus, .rev-campo:focus { outline: none; border-color: rgba(255, 255, 255, 0.45); background: #18181b; }
+.rev-grupo.fechado .rev-faixas { display: none; }
+.rev-faixas { display: grid; padding: 4px 0; }
+.rev-linha { display: grid; grid-template-columns: 18px 26px minmax(0, 1.4fr) minmax(0, 1fr) 150px 40px 32px; align-items: center; gap: 8px; padding: 2px 12px; font-size: 13px; }
+.rev-linha:hover { background: rgba(255, 255, 255, 0.03); }
+.rev-linha.off .rev-campo { color: var(--muted); }
+.rev-num { text-align: right; }
+.rev-badges { display: flex; gap: 4px; justify-content: flex-end; }
+.rev-badges .badge { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.rev-dur { text-align: right; font-variant-numeric: tabular-nums; }
+.rev-foot { position: sticky; bottom: -1px; display: flex; align-items: center; gap: 10px; padding: 12px 0 2px; background: #181818; margin-top: 10px; }
+@media (max-width: 760px) {
+  .rev-linha { grid-template-columns: 18px minmax(0, 1fr) 32px; }
+  .rev-num, .rev-linha [data-c=artista], .rev-badges, .rev-dur { display: none; }
+}

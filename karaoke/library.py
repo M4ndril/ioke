@@ -105,6 +105,7 @@ class Library:
         self.separator = StemSeparator()
         self.device = {"device": "?", "name": "detectando..."}
         self.complementos = None  # o Servico de karaoke/complementos (o servidor poe)
+        self.atividades_extras = []  # () -> [itens da central "Em andamento"] de fora da biblioteca (importacoes)
         self._load()
         threading.Thread(target=self._download_loop, name="download", daemon=True).start()
         threading.Thread(target=self._gpu_loop, name="gpu", daemon=True).start()
@@ -315,6 +316,8 @@ class Library:
             "album": meta.get("album"),
             "genre": meta.get("genre"),
             "year": meta.get("year"),
+            "track_no": meta.get("track_no"),
+            "disc_no": meta.get("disc_no"),
             "last_played_at": meta.get("last_played_at"),
             "play_count": meta.get("play_count") or 0,
             "video": self._video_info(meta),
@@ -431,6 +434,11 @@ class Library:
                 outras.append({"id": sid, "titulo": m.get("track") or m.get("title") or sid, "artista": m.get("artist") or "",
                                "tipo": "acao", "estado": "running" if a.get("estado") == "rodando" else a.get("estado"),
                                "progresso": a.get("progresso") or 0, "etapa": a.get("rotulo") or "", "erro": a.get("erro")})
+        for extra in getattr(self, "atividades_extras", ()):
+            try:
+                outras.extend(extra())
+            except Exception:  # noqa: BLE001 - a central nunca cai por causa de um deles
+                log.exception("atividades extras")
         jobs.sort(key=lambda i: i["created_at"] or 0)
         return {"jobs": jobs, "outras": outras}
 
@@ -555,11 +563,15 @@ class Library:
         shutil.rmtree(work / "obter", ignore_errors=True)
         return original
 
-    def add_file(self, caminho, nome_original, client="", name="", account=None, mover=False, onde=None):
+    def add_file(self, caminho, nome_original, client="", name="", account=None, mover=False, onde=None, dados=None):
         """Acrescenta um arquivo de audio ou video da propria pessoa. Devolve (meta, nova).
         O id e o SHA-1 do conteudo: o mesmo arquivo de novo nao duplica. Recusa com
         midia.ArquivoRecusado (protegido contra copia, sem audio, formato desconhecido).
-        `mover`: o arquivo e uma copia temporaria do envio (senao copia e deixa o original)."""
+        `mover`: o arquivo e uma copia temporaria do envio (senao copia e deixa o original).
+        `dados`: o que a pessoa conferiu na revisao (vale mais que as etiquetas e o nome do arquivo):
+        titulo, artista, album, ano, genero, faixa, disco; "letra" (o texto de uma letra enviada junto);
+        "origem" (o que mais guardar sobre de onde veio, como {"biblioteca": "itunes"})."""
+        dados = dados or {}
         caminho = Path(caminho)
         ext = Path(nome_original).suffix.lower() or caminho.suffix.lower()
         if ext in midia.PROTEGIDAS:
@@ -582,9 +594,15 @@ class Library:
         midia.conferir(info, nome_original)
         tags = info["etiquetas"]
         pelo_nome = nomes.nome_para_musica(nome_original)
-        track = tags.get("title") or pelo_nome["track"]
-        artist = tags.get("artist") or tags.get("album_artist") or pelo_nome["artist"]
-        year = re.match(r"\d{4}", tags.get("date") or "")
+
+        def campo(chave, *etiquetas):  # o da revisao (mesmo vazio, se veio), senao o das etiquetas
+            if chave in dados:
+                return str(dados[chave] or "").strip()[:200] or None
+            return next((tags[e] for e in etiquetas if tags.get(e)), None)
+
+        track = campo("titulo", "title") or pelo_nome["track"]
+        artist = campo("artista", "artist", "album_artist") or pelo_nome["artist"]
+        year = re.match(r"\d{4}", campo("ano", "date") or "")
         d = self.dir(sid)
         d.mkdir(parents=True, exist_ok=True)
         destino = d / f"original{ext}"
@@ -601,9 +619,13 @@ class Library:
             "duration": info.get("duracao") or None,
             "artist": artist or "",
             "track": track,
-            "album": tags.get("album") or None,
+            "album": campo("album", "album"),
             "year": year.group(0) if year else None,
-            "genre": tags.get("genre") or None,
+            "genre": campo("genero", "genre"),
+            "track_no": midia.numero(dados["faixa"]) if "faixa" in dados
+            else midia.numero(tags.get("track")) or nomes.numero_da_faixa(nome_original),
+            "disc_no": midia.numero(dados["disco"] if "disco" in dados else tags.get("disc")),
+            "isrc": (tags.get("isrc") or "").replace("-", "").upper()[:12] or None,
             "status": "queued",
             "stage": "etapa.na_fila",
             "progress": 0.0,
@@ -617,8 +639,8 @@ class Library:
             "cover": None,
             "settings": {},
             "audio": {"codec": (a.get("codec") or "").upper(), "kbps": a.get("kbps")} if a.get("kbps") else None,
-            "origem": {"tipo": "arquivo", "nome": Path(nome_original).name, "tamanho": destino.stat().st_size,
-                       "sha1": sha1, "video": bool(info.get("video"))},
+            "origem": {**(dados.get("origem") or {}), "tipo": "arquivo", "nome": Path(nome_original).name,
+                       "tamanho": destino.stat().st_size, "sha1": sha1, "video": bool(info.get("video"))},
         }
         if onde in ("local", "nuvem"):
             meta["separar_onde"] = onde
@@ -628,15 +650,30 @@ class Library:
                         "error": None}
             self.songs[sid] = meta
             self._save(sid)
-        if info.get("capa_embutida") and not meta.get("cover"):
+        # a capa e a letra que vieram com o arquivo: as da pessoa valem mais que as buscadas na internet
+        if not meta.get("cover"):
             capa = d / "_capa.jpg"
             try:
-                if midia.extrair_capa(destino, capa):
+                if info.get("capa_embutida") and midia.extrair_capa(destino, capa):
                     self.set_cover_file(sid, capa.read_bytes())
+                elif not mover and (da_pasta := midia.capa_da_pasta(caminho)):
+                    self.set_cover_file(sid, da_pasta.read_bytes())
             except Exception as exc:  # noqa: BLE001
-                log.info("capa embutida de %s: %s", nome_original, exc)
+                log.info("capa de %s: %s", nome_original, exc)
             finally:
                 capa.unlink(missing_ok=True)
+        if CONFIG.get("usar_letra_do_arquivo", True) and not meta.get("lyrics"):
+            texto, de_onde = midia.texto_da_letra(dados.get("letra")), dados.get("letra_nome") or "arquivo"
+            if not texto and not mover:
+                texto, de_onde = midia.letra_ao_lado(caminho)
+            if not texto:
+                texto, de_onde = midia.texto_da_letra(tags.get("lyrics")), "etiquetas"
+            if texto:
+                try:
+                    self.set_lyrics(sid, texto, "arquivo", meta.get("track") or "", meta.get("artist") or "",
+                                    extra_info={"arquivo": de_onde})
+                except Exception as exc:  # noqa: BLE001
+                    log.info("letra que veio com %s: %s", nome_original, exc)
         with self.cond:
             self.cond.notify_all()
         return meta, True
@@ -936,6 +973,9 @@ class Library:
                 if field in patch:
                     value = str(patch[field] or "").strip()[:200]
                     meta[field] = value or None
+            for field in ("track_no", "disc_no"):  # numero da faixa e do disco no album (vazio: sem)
+                if field in patch:
+                    meta[field] = midia.numero(patch[field])
             settings = meta.setdefault("settings", {})
             for key, value in (patch.get("settings") or {}).items():
                 clean = _clean_setting(key, value)
@@ -2139,7 +2179,8 @@ class Library:
 
 BACKUP_STEM = "original-antigo"
 # o que a lista da biblioteca leva de cada musica (Library.biblioteca): o resto vem de /api/songs/<id>
-CAMPOS_LISTA = ("id", "title", "track", "artist", "channel", "album", "genre", "year", "duration", "added_by",
+CAMPOS_LISTA = ("id", "title", "track", "artist", "channel", "album", "genre", "year", "track_no", "disc_no",
+                "duration", "added_by",
                 "created_at", "ready_at", "last_played_at", "play_count", "cover", "thumb", "art_sm", "lyrics",
                 "key", "video", "audio", "quality", "status")
 

@@ -11,6 +11,18 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Revisar antes de importar uma pasta:** escolher uma pasta no app abre uma janela com as músicas agrupadas por
+  álbum (capa, artista, ano e faixas na ordem). Dá para desmarcar o que não quer, corrigir nomes, renomear o álbum,
+  colar a lista de faixas de um encarte e ouvir um trecho de cada uma. A importação roda em segundo plano e aparece
+  em "Em andamento", com cancelar; os arquivos recusados ficam listados lá.
+- **A letra e a capa que vêm com o arquivo:** um `.lrc` ou `.txt` com o mesmo nome da música, a letra guardada
+  dentro do arquivo e a capa da pasta (`cover.jpg`, `folder.jpg`, `front.jpg`...) entram junto, no lugar das
+  buscadas na internet. A escolha automática nunca troca essa letra (Configurações: `usar_letra_do_arquivo`).
+- **Número da faixa e do disco** no Editar da música (vêm das etiquetas ou do nome do arquivo); a prateleira de
+  cada álbum no "Cantar" segue a ordem das faixas.
+
 ## [1.1.0-beta.2] - 2026-10-03
 
 ### Adicionado

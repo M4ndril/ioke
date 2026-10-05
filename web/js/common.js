@@ -749,13 +749,13 @@ export function chooseCover(song) {
 }
 
 // ------------------------------------------------- editar informacoes
-/** Modal para corrigir titulo/artista/album/estilo. Resolve true se salvou. */
+/** Modal para corrigir titulo/artista/album/estilo/faixa. Resolve true se salvou. */
 export function editSong(song, { genres = [] } = {}) {
   return new Promise((resolve) => {
     let saved = false;
     const podeTrocar = ["ready", "error"].includes(song.status) && !document.body.classList.contains("mobile");
-    const field = (name, label, value, extra = "") =>
-      `<label class="${extra}"><span class="label">${label}</span><input class="input" data-f="${name}" value="${esc(value || "")}"${name === "genre" ? ' list="genreList"' : ""}></label>`;
+    const field = (name, label, value, extra = "", attrs = "") =>
+      `<label class="${extra}"><span class="label">${label}</span><input class="input" data-f="${name}" value="${esc(value || "")}"${name === "genre" ? ' list="genreList"' : ""} ${attrs}></label>`;
     const modal = openModal(t("musica.editar"), `
       <div class="form-grid">
         ${field("title", t("musica.titulo"), song.title, "full")}
@@ -764,6 +764,8 @@ export function editSong(song, { genres = [] } = {}) {
         ${field("album", t("musica.album"), song.album)}
         ${field("genre", t("musica.estilo"), song.genre)}
         ${field("year", t("musica.ano"), song.year)}
+        ${field("track_no", t("musica.faixa_no"), song.track_no, "", 'inputmode="numeric"')}
+        ${field("disc_no", t("musica.disco_no"), song.disc_no, "", 'inputmode="numeric"')}
       </div>
       <datalist id="genreList">${genres.map((g) => `<option value="${esc(g)}">`).join("")}</datalist>
       <div class="reprocess stack">
@@ -1000,7 +1002,7 @@ export function editSong(song, { genres = [] } = {}) {
     };
     modal.querySelector("[data-save]").onclick = async () => {
       const body = {};
-      for (const f of ["title", "artist", "track", "album", "genre", "year"]) body[f] = get(f).value;
+      for (const f of ["title", "artist", "track", "album", "genre", "year", "track_no", "disc_no"]) body[f] = get(f).value;
       try {
         await api(`/api/songs/${song.id}`, { method: "PATCH", body });
         saved = true;

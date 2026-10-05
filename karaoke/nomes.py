@@ -76,6 +76,12 @@ def clean_channel(channel):
 _TRACK_NO = re.compile(r"^\s*\d{1,3}\s*[-.)]\s*(?=\S)")  # "01 - ", "01. ", "1-" (nao "99 Luftballons")
 
 
+def numero_da_faixa(nome):
+    """O numero da faixa no comeco do nome do arquivo ("03 - Musica.mp3" -> 3). None se nao tem."""
+    m = _TRACK_NO.match(Path(str(nome or "")).stem)
+    return int(re.sub(r"\D", "", m.group(0))) or None if m else None
+
+
 def nome_para_musica(nome):
     """Artista e musica pelo nome do arquivo: "01 - Artista - Musica (Clipe).mp3" ->
     {"artist": "Artista", "track": "Musica"}. Sem separador, so a musica."""

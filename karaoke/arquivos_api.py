@@ -4,11 +4,9 @@ o celular nunca envia arquivos (decisao do usuario).
 - POST /api/arquivos           multipart (campo "arquivos", varios): do navegador
 - POST /api/arquivos/caminhos  {"caminhos": [...]}: do app, que escolhe pela janela do Windows
                                (copia do disco; o arquivo da pessoa nunca e apagado)
-- POST /api/arquivos/pasta     {"pasta": "..."}: lista o que da para enviar (para confirmar)
 - POST /api/arquivos/trocar/<id>  multipart ("arquivo") ou {"caminho"}: troca o audio de uma musica
                                (mantem letra, capa, tom e ajustes; separa de novo)
 """
-import os
 import uuid
 from pathlib import Path
 
@@ -16,9 +14,6 @@ from flask import Blueprint, jsonify, request
 
 from . import i18n, midia
 from .config import CACHE_DIR, CONFIG
-
-MAX_PASTA = 500
-
 
 def _recusa(nome, motivo):
     return {"nome": nome, "motivo": i18n.t(f"arquivo.recusado.{motivo}", nome=nome)}
@@ -123,23 +118,5 @@ def make_blueprint(lib, is_host, quem):
         if not ok:
             return jsonify({"error": i18n.t("musica.trocar_audio_agora_nao")}), 409
         return jsonify({"ok": True})
-
-    @bp.post("/api/arquivos/pasta")
-    def pasta():
-        bloqueado = so_pc()
-        if bloqueado:
-            return bloqueado
-        raiz = Path(str((request.get_json(silent=True) or {}).get("pasta") or ""))
-        if not raiz.is_dir():
-            return jsonify({"error": i18n.t("arquivo.pasta_invalida")}), 400
-        achados = []
-        for base, _dirs, files in os.walk(raiz):
-            for f in sorted(files):
-                if Path(f).suffix.lower() in midia.ACEITAS:
-                    p = Path(base) / f
-                    achados.append({"caminho": str(p), "nome": f, "tamanho": p.stat().st_size})
-                    if len(achados) >= MAX_PASTA:
-                        return jsonify({"arquivos": achados, "cortado": True})
-        return jsonify({"arquivos": achados, "cortado": False})
 
     return bp

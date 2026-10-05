@@ -39,6 +39,7 @@ from karaoke.remote import Hub  # noqa: E402
 from karaoke.updates_api import Updates, make_blueprint as update_routes  # noqa: E402
 from karaoke.look import make_blueprint as look_routes  # noqa: E402
 from karaoke.arquivos_api import make_blueprint as arquivos_routes  # noqa: E402
+from karaoke.importacoes import Importacoes, make_blueprint as importar_routes  # noqa: E402
 from karaoke.pacotes_api import make_blueprint as pacotes_routes  # noqa: E402
 from karaoke.nuvem import conta as nuvem_conta  # noqa: E402
 from karaoke.nuvem.api import make_blueprint as nuvem_routes  # noqa: E402
@@ -192,6 +193,8 @@ def _quem_envia():
 
 
 app.register_blueprint(arquivos_routes(lib, is_host=lambda: is_host(), quem=_quem_envia))  # enviar arquivos (so o PC)
+importacoes = Importacoes(lib)
+app.register_blueprint(importar_routes(importacoes, is_host=lambda: is_host(), quem=_quem_envia))  # importar com revisao (so o PC)
 app.register_blueprint(nuvem_routes(lib, is_host=lambda: is_host()))  # separar na nuvem (so o PC)
 app.register_blueprint(pacotes_routes(lib, is_host=lambda: is_host(), quem=_quem_envia,
                                       versao_app=app_version()))  # pacotes .karaoke (so o PC)

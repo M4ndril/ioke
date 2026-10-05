@@ -1,10 +1,11 @@
 // Enviar os proprios arquivos (so no PC). No app instalado, a janela do Windows
 // escolhe e o servidor copia do disco (o arquivo da pessoa fica onde estava); no
 // navegador, cada arquivo vai por HTTP, com a barra do envio.
-import { $, $$, api, esc, h, icon, openModal, perguntarOnde, toast } from "./common.js";
+import { api, esc, h, icon, perguntarOnde, toast } from "./common.js";
 import { appApi } from "./appwin.js";
 import { idioma, t } from "./i18n.js";
 import { resolverRepetidos } from "./pacotes.js";
+import { abrirRevisao } from "./revisao.js";
 
 /* icons: upload_file audio_file folder_open check_circle error content_copy */
 export const ACEITAS = [".mp3", ".m4a", ".aac", ".flac", ".wav", ".ogg", ".opus", ".wma", ".aiff", ".aif",
@@ -162,24 +163,13 @@ export function mountEnviar(box, { onDone } = {}) {
     if (!pasta) return;
     let r;
     try {
-      r = await api("/api/arquivos/pasta", { method: "POST", body: { pasta } });
+      r = await api("/api/importar/pasta", { method: "POST", body: { pasta } });
     } catch (err) {
       return toast(err.message, { error: true });
     }
-    if (!r.arquivos.length) return toast(t("enviar.pasta_vazia"));
-    const modal = openModal(t("enviar.pasta_titulo"), `
-      <p style="margin-top:0">${t("enviar.pasta_achou", { n: r.arquivos.length })}${r.cortado ? ` ${t("enviar.pasta_cortado")}` : ""}</p>
-      <div class="upload-list" style="max-height:40vh;overflow:auto">${r.arquivos.map((a) =>
-        `<div class="up-row"><span class="ms">audio_file</span><div class="grow up-name">${esc(a.nome)}</div><span class="small muted">${mb(a.tamanho)}</span></div>`).join("")}</div>
-      <div class="row" style="gap:10px;justify-content:flex-end;margin-top:12px">
-        <button class="btn outline" data-no>${t("comum.cancelar")}</button>
-        <button class="btn light" data-yes data-nav-default>${icon("upload_file")} ${t("enviar.enviar_todos")}</button>
-      </div>`);
-    $("[data-no]", modal).onclick = () => modal.close();
-    $("[data-yes]", modal).onclick = () => {
-      modal.close();
-      enviarCaminhos(r.arquivos.map((a) => a.caminho));
-    };
+    if (!r.itens.length) return toast(t("enviar.pasta_vazia"));
+    // a revisao: agrupada por album, com os nomes para corrigir; importa em segundo plano
+    if (await abrirRevisao({ titulo: r.nome, itens: r.itens, tipo: "pasta", cortado: r.cortado })) onDone && onDone();
   };
   box.querySelector("[data-input]").onchange = (e) => enviarLista([...e.target.files]).then(() => (e.target.value = ""));
   box.querySelector("[data-input-folder]").onchange = (e) =>

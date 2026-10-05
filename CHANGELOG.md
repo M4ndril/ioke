@@ -11,6 +11,18 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+### Added
+
+- **Review before importing a folder:** choosing a folder in the app opens a window with the songs grouped by album
+  (cover, artist, year and tracks in order). You can uncheck what you don't want, fix names, rename the album, paste
+  the track list from a booklet and hear a preview of each one. The import runs in the background and shows in
+  "In progress", with cancel; the refused files are listed there.
+- **The lyrics and cover that come with the file:** a `.lrc` or `.txt` with the same name as the song, the lyrics
+  stored inside the file and the folder's cover (`cover.jpg`, `folder.jpg`, `front.jpg`...) come along, instead of
+  the ones found online. The automatic choice never replaces these lyrics (setting: `usar_letra_do_arquivo`).
+- **Track and disc number** in the song's Edit window (from the tags or the file name); each album's shelf in
+  "Sing" follows the track order.
+
 ## [1.1.0-beta.2] - 2026-10-03
 
 ### Added

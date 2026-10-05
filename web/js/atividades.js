@@ -6,8 +6,8 @@ import { api, esc, h, icon } from "./common.js";
 import { jobEl, signature } from "./ui.js";
 import { t } from "./i18n.js";
 
-/* icons: auto_awesome record_voice_over movie extension pending pending_actions error */
-const ICONES = { letra: "auto_awesome", voz_apoio: "record_voice_over", video: "movie", acao: "extension" };
+/* icons: auto_awesome record_voice_over movie extension pending pending_actions error library_add close */
+const ICONES = { letra: "auto_awesome", voz_apoio: "record_voice_over", video: "movie", acao: "extension", importacao: "library_add" };
 const comErro = (a) => a.estado === "error" || a.estado === "erro";
 
 /** Poe a pilula no comeco de `box` (os botoes flutuantes) e cria a gaveta. */
@@ -62,7 +62,7 @@ export function mountAtividades(box) {
     const fila = a.estado === "queued";
     const texto = erro ? a.erro || ""
       : [t(`atividades.${a.tipo}`), a.etapa, fila ? "" : `${pct}%`].filter(Boolean).join(" · ");
-    return h(`
+    const el = h(`
       <div class="song job ativ">
         <div class="song-main">
           <span class="job-art ms">${ICONES[a.tipo] || "pending"}</span>
@@ -70,10 +70,23 @@ export function mountAtividades(box) {
             <div class="title">${esc(a.titulo)}</div>
             <div class="meta"><span>${esc(a.artista || "")}</span></div>
             <div class="stage ${erro ? "err" : ""}">${esc(texto)}</div>
+            ${erro && a.detalhes ? `<details class="small muted"><summary>${esc(t("atividades.detalhes"))}</summary>${a.detalhes.map((d) => `<div>${esc(d)}</div>`).join("")}</details>` : ""}
             ${erro ? "" : `<div class="progress ${fila ? "indeterminate" : ""}"><i style="width:${pct}%"></i></div>`}
           </div>
+          ${a.cancelar ? `<button class="icon-btn plain sm" data-cancelar title="${esc(t(erro ? "atividades.dispensar" : "comum.cancelar"))}">${icon("close")}</button>` : ""}
         </div>
       </div>`);
+    const cancelar = el.querySelector("[data-cancelar]");
+    if (cancelar) cancelar.onclick = async () => {
+      cancelar.disabled = true;
+      try {
+        await api(a.cancelar, { method: "DELETE" });
+      } catch {
+        /* a proxima atualizacao mostra como ficou */
+      }
+      refresh();
+    };
+    return el;
   }
 
   function render() {

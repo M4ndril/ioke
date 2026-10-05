@@ -254,6 +254,11 @@ function render(force = false, { mudou = false } = {}) {
   const keys = [...groups.keys()].sort(
     (a, b) => (a === g.label) - (b === g.label) || a.localeCompare(b, idioma(), { sensitivity: "base" }),
   );
+  if (view.group === "album") { // um album na ordem das faixas (disco, faixa); sem numero, na ordem escolhida
+    const pos = new Map(list.map((s, i) => [s.id, i]));
+    const ordem = (s) => (s.track_no ? (s.disc_no || 1) * 1000 + s.track_no : 1e6 + pos.get(s.id));
+    for (const [k, v] of groups) if (k !== g.label) v.sort((a, b) => ordem(a) - ordem(b));
+  }
   ordemNaTela = keys.flatMap((k) => groups.get(k).map((s) => s.id));
   aberto = aosPoucos(lib, keys, (k) => shelfEl(k, groups.get(k)), { lote: LOTE_PRATELEIRAS, minimo: antes });
 }
