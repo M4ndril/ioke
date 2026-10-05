@@ -19,6 +19,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
 from karaoke.disco.toc import AMOSTRAS_SETOR, PREGAP, SETORES_S, Toc  # noqa: E402
+from karaoke.util import require_ffmpeg  # noqa: E402
 
 UA = {"User-Agent": "IOke-dev/1.0 ( https://github.com/M4ndril/ioke )"}
 PINK_FLOYD = [
@@ -66,7 +67,7 @@ def montar(rel, pasta_saida):
             filtros.append(f"[{k}:a]atrim=end_sample={n},volume=0.25,aformat=channel_layouts=stereo[a{k}]")
         k = len(filtros)
         grafo = ";".join(filtros) + ";" + "".join(f"[a{i}]" for i in range(k)) + f"concat=n={k}:v=0:a=1[s]"
-        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", *fontes, "-filter_complex", grafo,
+        subprocess.run([require_ffmpeg(), "-hide_banner", "-loglevel", "error", "-y", *fontes, "-filter_complex", grafo,
                         "-map", "[s]", "-c:a", "flac", "-sample_fmt", "s16", str(flac)], check=True)
         linhas = [f'FILE "{flac.name}" WAVE']
         for i, inicio in enumerate(toc.inicios, toc.primeira):
