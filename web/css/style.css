@@ -796,7 +796,7 @@ select.input.sm-select { width: auto; flex: none; min-width: 130px; margin-left:
 .rev-lendo:empty { display: none; }
 .rev-lendo, .rev-aviso { margin: 4px 2px 8px; }
 .rev-aviso { color: var(--warn); }
-.rev-lista { display: grid; gap: 10px; }
+.rev-lista { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
 .rev-grupo { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); overflow: hidden; }
 .rev-cab { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--panel-2); }
 .rev-cab input[type=checkbox], .rev-linha input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
@@ -821,3 +821,23 @@ select.input.sm-select { width: auto; flex: none; min-width: 130px; margin-left:
   .rev-linha { grid-template-columns: 18px minmax(0, 1fr) 32px; }
   .rev-num, .rev-linha [data-c=artista], .rev-badges, .rev-dur { display: none; }
 }
+
+/* ------------------------------------------------ de onde vem as musicas (midias.js, pastas.js) */
+.fontes-midia { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin: -6px 0 18px; }
+.fontes-midia:not(:has(.fonte-card:not(.hidden))) { display: none; }
+.fonte-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.fonte-card:hover { border-color: var(--line-2); background: var(--panel-3); }
+.fonte-card:disabled { opacity: 0.7; cursor: progress; }
+.fonte-card .grow { display: grid; gap: 2px; min-width: 0; }
+.fonte-card .fonte-ic { font-size: 26px; color: var(--accent); }
+.fonte-card > .ms:last-child { color: var(--muted); }
+.pl-lista { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; max-height: 60vh; overflow: auto; }
+.pl-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 0; background: var(--panel-2); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.pl-row:hover { background: var(--panel-3); }
+.pl-row .ms { color: var(--muted); }
+.pastas-lista { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.pasta-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-radius: 10px; background: var(--panel-2); }
+.pasta-row > .ms { font-size: 24px; color: var(--muted); }
+.pasta-nome { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pasta-caminho { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 2px 0 8px; }
+.pasta-opcoes { gap: 14px; align-items: center; }

@@ -379,6 +379,12 @@ class MainApi:
         chosen = self._app.window.create_file_dialog(self._app.webview.FileDialog.FOLDER)
         return chosen[0] if chosen else None
 
+    def escolher_xml_itunes(self):
+        """Janela do Windows para achar o XML da biblioteca do iTunes. None se cancelar."""
+        chosen = self._app.window.create_file_dialog(self._app.webview.FileDialog.OPEN,
+                                                     file_types=("iTunes (*.xml)", "Todos (*.*)"))
+        return chosen[0] if chosen else None
+
     def choose_folder(self, start=""):
         """Seletor de pasta do Windows (Configuracoes -> Pasta dos dados). None se cancelar."""
         chosen = self._app.window.create_file_dialog(self._app.webview.FileDialog.FOLDER, directory=start or "")

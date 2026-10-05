@@ -40,6 +40,8 @@ from karaoke.updates_api import Updates, make_blueprint as update_routes  # noqa
 from karaoke.look import make_blueprint as look_routes  # noqa: E402
 from karaoke.arquivos_api import make_blueprint as arquivos_routes  # noqa: E402
 from karaoke.importacoes import Importacoes, make_blueprint as importar_routes  # noqa: E402
+from karaoke.pastas import Pastas, make_blueprint as pastas_routes  # noqa: E402
+from karaoke.bibliotecas.itunes import make_blueprint as itunes_routes  # noqa: E402
 from karaoke.pacotes_api import make_blueprint as pacotes_routes  # noqa: E402
 from karaoke.nuvem import conta as nuvem_conta  # noqa: E402
 from karaoke.nuvem.api import make_blueprint as nuvem_routes  # noqa: E402
@@ -195,6 +197,9 @@ def _quem_envia():
 app.register_blueprint(arquivos_routes(lib, is_host=lambda: is_host(), quem=_quem_envia))  # enviar arquivos (so o PC)
 importacoes = Importacoes(lib)
 app.register_blueprint(importar_routes(importacoes, is_host=lambda: is_host(), quem=_quem_envia))  # importar com revisao (so o PC)
+pastas_vigiadas = Pastas(importacoes)
+app.register_blueprint(pastas_routes(pastas_vigiadas, is_host=lambda: is_host()))  # pastas vigiadas (so o PC)
+app.register_blueprint(itunes_routes(importacoes, is_host=lambda: is_host()))  # biblioteca do iTunes (so o PC)
 app.register_blueprint(nuvem_routes(lib, is_host=lambda: is_host()))  # separar na nuvem (so o PC)
 app.register_blueprint(pacotes_routes(lib, is_host=lambda: is_host(), quem=_quem_envia,
                                       versao_app=app_version()))  # pacotes .karaoke (so o PC)
@@ -720,6 +725,7 @@ def _settings_payload():
         "download_video": bool(CONFIG.get("download_video")),
         "video_max_height": int(CONFIG.get("video_max_height") or 720),
         "ai_lyrics_auto": bool(CONFIG.get("ai_lyrics_auto", True)),
+        "usar_letra_do_arquivo": bool(CONFIG.get("usar_letra_do_arquivo", True)),
         "party_limit": party_limit(),
         "idioma": CONFIG.get("idioma") or "auto",
         "pacote_formato": CONFIG.get("pacote_formato") or "flac",
@@ -772,6 +778,8 @@ def api_save_settings():
         CONFIG["pacote_formato"] = body["pacote_formato"]
     if "ai_lyrics_auto" in body:
         CONFIG["ai_lyrics_auto"] = bool(body["ai_lyrics_auto"])
+    if "usar_letra_do_arquivo" in body:
+        CONFIG["usar_letra_do_arquivo"] = bool(body["usar_letra_do_arquivo"])
     if "enviar_erros" in body:
         CONFIG["enviar_erros"] = bool(body["enviar_erros"])
     if "download_video" in body:
@@ -1156,6 +1164,7 @@ def main():
         updates.check_later()  # procura atualizacoes e so avisa
     address.watch()  # o roteador pode dar outro IP ao PC no meio da festa
     complementos.iniciar()  # liga os complementos ligados (em segundo plano)
+    pastas_vigiadas.iniciar()  # olha as pastas vigiadas de tempos em tempos
     atexit.register(complementos.encerrar)
     try:
         from waitress import serve

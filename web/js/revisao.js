@@ -71,7 +71,7 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
       return out;
     }
     const visivel = (it) => !filtro || semAcento(`${valor(it, "titulo")} ${valor(it, "artista")} ${valor(it, "album")} ${it.nome}`).includes(filtro);
-    const pode = (it) => !(it.tags && (it.tags.protegido || it.tags.sem_audio || it.tags.erro));
+    const pode = (it) => !(it.tags && (it.tags.protegido || it.tags.sem_audio || it.tags.erro || it.tags.motivo));
 
     function render() {
       if (lista.contains(document.activeElement) && document.activeElement.tagName === "INPUT") {
@@ -106,6 +106,8 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
             </header>
             <div class="rev-faixas"></div>
           </section>`);
+        const img = $("img.rev-capa", el);
+        if (img) img.onerror = () => img.replaceWith(h(`<span class="rev-capa ms">${g.album ? "album" : "folder"}</span>`));
         const marcaG = $("[data-g]", el);
         marcaG.indeterminate = marcados > 0 && marcados < g.itens.length;
         marcaG.onchange = () => {
@@ -141,6 +143,7 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
         tg.protegido ? `<span class="badge warn" title="${esc(t("revisao.protegido_ajuda"))}">${icon("lock", "sm")} ${esc(t("revisao.protegido"))}</span>` : "",
         tg.sem_audio ? `<span class="badge warn">${esc(t("revisao.sem_audio"))}</span>` : "",
         tg.erro ? `<span class="badge warn" title="${esc(tg.erro)}">${esc(t("revisao.erro"))}</span>` : "",
+        tg.motivo ? `<span class="badge warn" title="${esc(tg.motivo)}">${esc(t("revisao.indisponivel"))}</span>` : "",
       ].join("");
       const el = h(`
         <div class="rev-linha${pode(it) ? "" : " off"}">
@@ -263,7 +266,8 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
       botao.disabled = true;
       try {
         const r = await api("/api/importar", { method: "POST", body: {
-          titulo, tipo, onde, itens: escolhidos.map((it) => ({ ref: it.ref, dados: it.editado })) } });
+          titulo, tipo, onde, itens: escolhidos.map((it) => ({ ref: it.ref, dados: dadosDe(it) })),
+          revisados: estado.map((it) => it.ref) } });
         resultado = r.id;
         toast(t("revisao.comecou", { n: r.total }));
         document.dispatchEvent(new CustomEvent("karaoke:refresh"));
@@ -292,6 +296,15 @@ function valor(it, campo) {
   return it[campo] ?? "";
 }
 
+// o que vai para o servidor: o que a pessoa mudou; quando os nomes vieram da fonte (o iTunes), eles tambem (o servidor
+// so le as etiquetas do arquivo, que podem estar diferentes do que a pessoa organizou la)
+const CAMPOS = ["titulo", "artista", "album", "ano", "genero", "faixa", "disco"];
+function dadosDe(it) {
+  if (!it.etiquetas) return it.editado;
+  const daFonte = Object.fromEntries(CAMPOS.filter((c) => it.etiquetas[c]).map((c) => [c, it.etiquetas[c]]));
+  return { ...daFonte, ...it.editado };
+}
+
 function editar(it, campo, v) {
   if (String(valor(it, campo) ?? "") === String(v)) return;
   it.editado[campo] = v;
@@ -299,7 +312,7 @@ function editar(it, campo, v) {
 
 function aplicarTags(it) {
   const tg = it.tags || {};
-  if (tg.protegido || tg.sem_audio) it.marcado = false;
+  if (tg.protegido || tg.sem_audio || tg.motivo) it.marcado = false;
 }
 
 /** "03 - Artista - Musica (3:45)" -> {titulo: "Musica", artista: "Artista"} (a lista colada de um encarte). */

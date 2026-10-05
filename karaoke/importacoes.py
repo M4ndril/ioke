@@ -59,6 +59,7 @@ class Importacoes:
         self.jobs = {}  # id -> importacao (ver comecar)
         self.fila = []
         self._trabalhando = False
+        self.ao_importar = []  # (caminhos revisados) -> None: quem quer saber (as pastas vigiadas)
         lib.atividades_extras.append(self.atividades)
 
     # ------------------------------------------------------------ referencias
@@ -212,8 +213,9 @@ class Importacoes:
         return destino
 
     # ------------------------------------------------------------ importar
-    def comecar(self, itens, titulo, tipo="pasta", onde=None, quem=("", "", None)):
-        """Poe uma importacao na fila. `itens`: [{"ref", "dados"}]. -> o id."""
+    def comecar(self, itens, titulo, tipo="pasta", onde=None, quem=("", "", None), revisados=()):
+        """Poe uma importacao na fila. `itens`: [{"ref", "dados"}]; `revisados`: as refs que a pessoa viu na
+        revisao (as importadas e as que ela desmarcou). -> o id."""
         jid = secrets.token_hex(6)
         job = {"id": jid, "tipo": tipo, "titulo": str(titulo or "")[:120], "itens": list(itens), "onde": onde,
                "quem": quem, "estado": "queued", "feitos": 0, "novas": [], "repetidas": 0, "recusados": [],
@@ -224,6 +226,12 @@ class Importacoes:
             if not self._trabalhando:
                 self._trabalhando = True
                 threading.Thread(target=self._trabalhar, name="importar", daemon=True).start()
+        vistos = [c for c in map(self.caminho, [it.get("ref") for it in itens] + list(revisados)) if c]
+        for ouvinte in self.ao_importar:
+            try:
+                ouvinte(vistos)
+            except Exception:  # noqa: BLE001
+                log.exception("ao importar")
         return jid
 
     def cancelar(self, jid):
@@ -283,8 +291,9 @@ class Importacoes:
             try:
                 if not caminho or not caminho.is_file():
                     raise FileNotFoundError(i18n.t("arquivo.nao_encontrado", nome=nome))
+                dados = {**_dados(it.get("dados")), "origem": {"de": job["tipo"]}}  # pasta, itunes, vigiada...
                 meta, nova = self.lib.add_file(caminho, caminho.name, client, name, account, onde=job["onde"],
-                                               dados=_dados(it.get("dados")))
+                                               dados=dados)
                 if nova:
                     job["novas"].append(meta["id"])
                 else:
@@ -314,7 +323,7 @@ class Importacoes:
                                 "etapa": i18n.t("importar.etapa", feitos=job["feitos"], n=total)})
                 elif job["recusados"] and not job.get("dispensado"):
                     nomes_ = ", ".join(r["nome"] for r in job["recusados"][:3])
-                    out.append({**base, "estado": "erro", "progresso": 1, "etapa": "", "dispensar": True,
+                    out.append({**base, "estado": "erro", "progresso": 1, "etapa": "",
                                 "erro": i18n.t("importar.recusados", n=len(job["recusados"]), nomes=nomes_),
                                 "detalhes": [r["motivo"] for r in job["recusados"][:50]]})
         return out
@@ -385,7 +394,8 @@ def make_blueprint(imp, is_host, quem):
         if not itens:
             return jsonify({"error": i18n.t("importar.nada")}), 400
         onde = body.get("onde") if body.get("onde") in ("local", "nuvem") else None
-        jid = imp.comecar(itens, body.get("titulo"), str(body.get("tipo") or "pasta")[:20], onde, quem())
+        revisados = [str(r) for r in body.get("revisados") or []][:100_000]
+        jid = imp.comecar(itens, body.get("titulo"), str(body.get("tipo") or "pasta")[:20], onde, quem(), revisados)
         return jsonify({"id": jid, "total": len(itens)})
 
     @bp.get("/api/importar/<jid>")

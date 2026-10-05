@@ -99,6 +99,10 @@ DEFAULTS = {
         },
     },
     "auto_lyrics": True,
+    # A letra que vem com o arquivo (um .lrc/.txt com o mesmo nome, ou dentro das etiquetas) vale mais que a buscada
+    "usar_letra_do_arquivo": True,
+    # Pastas que o IOkê olha de tempos em tempos (karaoke/pastas.py; Configuracoes -> Musicas novas)
+    "pastas_vigiadas": [],
     "auto_cover": True,
     # Pede tambem o video (sem audio) as fontes que tem video, para usar de fundo no player.
     "download_video": True,

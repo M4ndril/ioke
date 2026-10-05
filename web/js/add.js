@@ -7,6 +7,7 @@ import { openSettings, qualityLabel } from "./settings.js";
 import { bindNav, jobEl, setupSearch, signature } from "./ui.js";
 import { initI18n, t } from "./i18n.js";
 import { mountEnviar } from "./enviar.js";
+import { mountMidias } from "./midias.js";
 import { avisoCustos } from "./nuvem.js";
 
 await initI18n(); // os textos antes de desenhar a pagina
@@ -14,6 +15,7 @@ await initI18n(); // os textos antes de desenhar a pagina
 bindNav();
 mountFabs({ qr: true, settings: true, atividades: true });
 mountEnviar($("#upload"), { onDone: () => document.dispatchEvent(new CustomEvent("karaoke:refresh")) });
+mountMidias($("#midias"), { onDone: () => document.dispatchEvent(new CustomEvent("karaoke:refresh")) });
 // "Buscar em:": as fontes de musicas dos complementos ligados (sem nenhuma, a busca some)
 let fonte = store("karaoke.fonte") || "";
 async function mostrarFontes() {

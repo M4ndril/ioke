@@ -11,10 +11,11 @@ class FakeLib:
     def __init__(self):
         self.added = []
 
-    def add_file(self, caminho, nome, client="", name="", account=None, mover=False, onde=None):
+    def add_file(self, caminho, nome, client="", name="", account=None, mover=False, onde=None, dados=None):
         if nome.startswith("drm"):
             raise midia.ArquivoRecusado("protegido", nome)
         self.added.append((str(caminho), nome, mover))
+        self.dados = getattr(self, "dados", {}) | {nome: dados}
         return {"id": nome}, not nome.startswith("repetida")
 
     def summary(self, meta, client=None, account=None):
@@ -58,3 +59,14 @@ def test_paths_copy_and_never_delete(setup, tmp_path):
                                                             str(tmp_path)]}).get_json()
     assert [m["id"] for m in r["musicas"]] == ["minha.mp3"] and len(r["recusados"]) == 2
     assert lib.added == [(str(f), "minha.mp3", False)] and f.exists()
+
+
+def test_upload_takes_the_lyrics_with_the_same_name(setup):
+    c, lib, _ = setup
+    letra = "[00:01.00]Não\n[00:02.00]dois"
+    c.post("/api/arquivos", data={"arquivos": [(io.BytesIO(b"1"), "Cais.mp3"), (io.BytesIO(b"2"), "Outra.mp3")],
+                                  "letras": [(io.BytesIO(letra.encode("cp1252")), "cais.LRC"),
+                                             (io.BytesIO(b"x"), "Outra.txt")]},
+           content_type="multipart/form-data")
+    assert lib.dados["Cais.mp3"] == {"letra": letra, "letra_nome": "cais.LRC"}
+    assert lib.dados["Outra.mp3"] is None  # uma linha so: nao e letra

@@ -4,6 +4,7 @@ import { timeAgo } from "./ui.js";
 import { idioma, t, t as tr } from "./i18n.js"; // tr: onde "t" ja e outra coisa (TABS.map((t) => ...))
 import { mountNuvem } from "./nuvem.js";
 import { mountComplementos } from "./complementos.js";
+import { mountPastas } from "./pastas.js";
 import { appApi } from "./appwin.js";
 import { quitApp } from "./floating.js";
 import { applyLook, loadGlobalLook, mountLookControls, saveGlobalLook } from "./look.js";
@@ -517,6 +518,16 @@ export async function openSettings({ onChange, tab } = {}) {
         </details>
       </section>
       <section class="set-section">
+        <h4>${icon("folder_open")} ${tr("pastas.titulo")}</h4>
+        <p class="muted small" style="margin-top:0">${tr("pastas.texto")}</p>
+        <div data-pastas></div>
+      </section>
+      <section class="set-section">
+        <h4>${icon("lyrics")} ${tr("letra_arquivo.titulo")}</h4>
+        <label class="toggle-row small"><input type="checkbox" data-letra-arquivo${s.usar_letra_do_arquivo ? " checked" : ""}>
+          ${tr("letra_arquivo.texto")}</label>
+      </section>
+      <section class="set-section">
         <h4>${icon("movie")} ${tr("config.video.titulo")}</h4>
         <label class="toggle-row small"><input type="checkbox" data-video${s.download_video ? " checked" : ""}>
           ${tr("config.video.texto")}</label>
@@ -691,6 +702,9 @@ export async function openSettings({ onChange, tab } = {}) {
   mountLook(modal.querySelector("[data-look]"));
   mountNuvem(modal.querySelector("[data-nuvem]"));
   mountComplementos(modal.querySelector("[data-complementos]"));
+  mountPastas(modal.querySelector("[data-pastas]"));
+  modal.querySelector("[data-letra-arquivo]").onchange = (e) =>
+    save({ usar_letra_do_arquivo: e.target.checked }, tr(e.target.checked ? "letra_arquivo.ligada" : "letra_arquivo.desligada"));
   mountAdmin(modal.querySelector("[data-admin]"));
   mountPeople(modal.querySelector("[data-people]"));
   modal.querySelector("[data-video]").onchange = (e) =>

@@ -174,7 +174,7 @@ def test_import_runs_in_the_background(imp, tmp_path):
     e = _esperar(imp, jid)
     assert (e["estado"], e["total"], e["feitos"], e["novas"], e["repetidas"]) == ("done", 4, 4, 1, 1)
     assert [r["nome"] for r in e["recusados"]] == ["drm.mp3", "sumiu.mp3"]
-    assert imp.lib.added[0] == ("a.mp3", "nuvem", {"titulo": "Novo"})  # so o que a revisao pode mudar
+    assert imp.lib.added[0] == ("a.mp3", "nuvem", {"titulo": "Novo", "origem": {"de": "pasta"}})  # so o que a revisao muda
     ativ = imp.atividades()
     assert len(ativ) == 1 and ativ[0]["estado"] == "erro" and "drm.mp3" in ativ[0]["erro"]
     imp.cancelar(jid)  # dispensa o resultado

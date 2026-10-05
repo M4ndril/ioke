@@ -112,21 +112,24 @@ def texto_da_letra(texto):
     return texto if len(linhas) >= 2 else None
 
 
+def decodificar(dados):
+    """O texto de um .lrc ou .txt: UTF-8, UTF-16 ou o padrao antigo do Windows (cp1252)."""
+    if dados[:2] in (b"\xff\xfe", b"\xfe\xff"):
+        return dados.decode("utf-16", errors="replace")
+    try:
+        return dados.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return dados.decode("cp1252", errors="replace")
+
+
 def ler_letra(caminho):
-    """Um .lrc ou .txt (UTF-8, UTF-16 ou o padrao antigo do Windows)."""
+    """A letra de um .lrc ou .txt. None se nao parece letra."""
     try:
         if Path(caminho).stat().st_size > LETRA_MAX * 4:
             return None
-        dados = Path(caminho).read_bytes()
+        return texto_da_letra(decodificar(Path(caminho).read_bytes()))
     except OSError:
         return None
-    codigos = ("utf-16",) if dados[:2] in (b"\xff\xfe", b"\xfe\xff") else ("utf-8-sig", "cp1252")
-    for cod in codigos:
-        try:
-            return texto_da_letra(dados.decode(cod))
-        except UnicodeDecodeError:
-            continue
-    return None
 
 
 def letra_ao_lado(caminho):

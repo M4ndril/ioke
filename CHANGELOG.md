@@ -19,7 +19,15 @@ app (Settings → Updates), in the user's language.
   "In progress", with cancel; the refused files are listed there.
 - **The lyrics and cover that come with the file:** a `.lrc` or `.txt` with the same name as the song, the lyrics
   stored inside the file and the folder's cover (`cover.jpg`, `folder.jpg`, `front.jpg`...) come along, instead of
-  the ones found online. The automatic choice never replaces these lyrics (setting: `usar_letra_do_arquivo`).
+  the ones found online, also when uploading from the browser (send the lyrics along with the song). The automatic
+  choice never replaces these lyrics (Settings → New songs → Lyrics that come with the file).
+- **Watched folders** (Settings → New songs): IOkê checks the chosen folders every minute. New songs that show up
+  in them go to the review (the "Watched folders" card on Add shows how many) or come in by themselves. What was
+  already in the folder only comes in through "Review"; a file still being copied waits until it's done; an
+  unplugged USB drive shows as "offline" and comes back by itself; nothing is deleted from the library.
+- **Import from iTunes / Apple Music:** the card on Add reads the iTunes library (all of it or one playlist) with
+  the names and albums organized there. Songs with copy protection, Apple Music (subscription) songs and the ones
+  only in the cloud show up unchecked, with the reason. Without the library file, it uses the iTunes music folder.
 - **Track and disc number** in the song's Edit window (from the tags or the file name); each album's shelf in
   "Sing" follows the track order.
 

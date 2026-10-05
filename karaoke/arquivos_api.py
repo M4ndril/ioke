@@ -1,7 +1,8 @@
 """Enviar os proprios arquivos (audio e video) para a biblioteca. So o PC do karaoke:
 o celular nunca envia arquivos (decisao do usuario).
 
-- POST /api/arquivos           multipart (campo "arquivos", varios): do navegador
+- POST /api/arquivos           multipart (campo "arquivos", varios): do navegador; "letras" (.lrc/.txt com o
+                               mesmo nome de uma musica) vao junto com ela
 - POST /api/arquivos/caminhos  {"caminhos": [...]}: do app, que escolhe pela janela do Windows
                                (copia do disco; o arquivo da pessoa nunca e apagado)
 - POST /api/arquivos/trocar/<id>  multipart ("arquivo") ou {"caminho"}: troca o audio de uma musica
@@ -29,10 +30,10 @@ def make_blueprint(lib, is_host, quem):
             return jsonify({"error": i18n.t("arquivo.so_pc")}), 403
         return None
 
-    def adicionar(caminho, nome, mover, resp, onde=None):
+    def adicionar(caminho, nome, mover, resp, onde=None, dados=None):
         client, name, account = quem()
         try:
-            meta, nova = lib.add_file(caminho, nome, client, name, account, mover=mover, onde=onde)
+            meta, nova = lib.add_file(caminho, nome, client, name, account, mover=mover, onde=onde, dados=dados)
         except midia.ArquivoRecusado as exc:
             resp["recusados"].append(_recusa(nome, exc.motivo))
             if mover:
@@ -53,6 +54,13 @@ def make_blueprint(lib, is_host, quem):
         limite = int(CONFIG.get("envio_max_mb") or 4096) * 1024 * 1024
         resp = {"musicas": [], "repetidas": [], "recusados": []}
         envios.mkdir(parents=True, exist_ok=True)
+        letras = {}  # o nome sem extensao -> (texto, nome do arquivo da letra)
+        for arquivo in request.files.getlist("letras"):
+            nome = Path(arquivo.filename or "").name
+            if Path(nome).suffix.lower() in midia.LETRAS:
+                texto = midia.texto_da_letra(midia.decodificar(arquivo.read(midia.LETRA_MAX * 4 + 1)))
+                if texto and (Path(nome).stem.lower() not in letras or nome.lower().endswith(".lrc")):
+                    letras[Path(nome).stem.lower()] = (texto, nome)
         for arquivo in request.files.getlist("arquivos"):
             nome = Path(arquivo.filename or "arquivo").name
             if Path(nome).suffix.lower() not in midia.ACEITAS + midia.PROTEGIDAS:
@@ -65,7 +73,9 @@ def make_blueprint(lib, is_host, quem):
                 resp["recusados"].append({"nome": nome, "motivo": i18n.t("arquivo.recusado.grande", nome=nome,
                                                                             mb=limite // 1024 // 1024)})
                 continue
-            adicionar(tmp, nome, True, resp, request.form.get("onde"))
+            letra = letras.get(Path(nome).stem.lower())
+            adicionar(tmp, nome, True, resp, request.form.get("onde"),
+                      {"letra": letra[0], "letra_nome": letra[1]} if letra else None)
         return jsonify(resp)
 
     @bp.post("/api/arquivos/caminhos")

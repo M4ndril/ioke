@@ -13,6 +13,9 @@ export const ACEITAS = [".mp3", ".m4a", ".aac", ".flac", ".wav", ".ogg", ".opus"
 // pacote .karaoke de outro PC; o Google Drive (e outros) as vezes acrescenta ".zip" no nome: vale tambem
 const ePacote = (nome) => /\.(karaoke|zip)$/i.test(nome);
 const ok = (nome) => ACEITAS.some((ext) => nome.toLowerCase().endsWith(ext)) || nome.toLowerCase().endsWith(".m4p") || ePacote(nome);
+// a letra com o mesmo nome de uma musica (musica.lrc, musica.txt) vai junto com ela
+const eLetra = (nome) => /\.(lrc|txt)$/i.test(nome);
+const semExt = (nome) => nome.replace(/\.[^.]+$/, "").toLowerCase();
 const mb = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : `${Math.max(0.1, n / 1e6).toFixed(1)} MB`);
 
 export function mountEnviar(box, { onDone } = {}) {
@@ -25,7 +28,7 @@ export function mountEnviar(box, { onDone } = {}) {
         <button class="btn outline sm" data-folder>${icon("folder_open")} ${t("enviar.escolher_pasta")}</button>
       </div>
     </div>
-    <input type="file" data-input multiple hidden accept="${[...ACEITAS, ".karaoke", ".zip"].join(",")}">
+    <input type="file" data-input multiple hidden accept="${[...ACEITAS, ".karaoke", ".zip", ".lrc", ".txt"].join(",")}">
     <input type="file" data-input-folder multiple hidden webkitdirectory>
     <div class="upload-list" data-list></div>
     <p class="small muted upload-formats">${t("enviar.formatos", { formatos: ACEITAS.join(" ") })}</p>`;
@@ -78,7 +81,7 @@ export function mountEnviar(box, { onDone } = {}) {
   };
 
   // navegador: um arquivo por pedido, com a barra do envio
-  const enviarArquivo = (file, onde) => new Promise((resolve) => {
+  const enviarArquivo = (file, onde, letras = []) => new Promise((resolve) => {
     const el = linha(file.name, file.size);
     if (!ok(file.name)) {
       marcar(el, "err", t("arquivo.recusado.formato", { nome: file.name }));
@@ -87,6 +90,7 @@ export function mountEnviar(box, { onDone } = {}) {
     const pacote = ePacote(file.name);
     const form = new FormData();
     form.append(pacote ? "pacote" : "arquivos", file, file.name);
+    if (!pacote) for (const l of letras.filter((x) => semExt(x.name) === semExt(file.name))) form.append("letras", l, l.name);
     if (onde && !pacote) form.append("onde", onde);
     const xhr = new XMLHttpRequest();
     xhr.open("POST", pacote ? "/api/pacotes/importar" : "/api/arquivos");
@@ -112,11 +116,14 @@ export function mountEnviar(box, { onDone } = {}) {
     xhr.onerror = () => (marcar(el, "err", t("enviar.falhou")), resolve());
     xhr.send(form);
   });
-  const enviarLista = async (files) => {
+  const enviarLista = async (todos) => {
+    const letras = todos.filter((f) => eLetra(f.name));
+    const musicas = todos.filter((f) => !eLetra(f.name));
+    const files = musicas.length ? musicas : todos; // so letras, sem musica: aparecem como recusadas
     // pacote nao separa: so pergunta onde separar se tiver musica para separar
     const onde = files.some((f) => ok(f.name) && !ePacote(f.name)) ? await perguntarOnde("musica") : undefined;
     if (onde === null) return;
-    for (const f of files) await enviarArquivo(f, onde); // um de cada vez: o PC nao engasga
+    for (const f of files) await enviarArquivo(f, onde, letras); // um de cada vez: o PC nao engasga
   };
 
   // app: caminhos do disco (copia; o arquivo da pessoa fica onde estava)
@@ -173,7 +180,7 @@ export function mountEnviar(box, { onDone } = {}) {
   };
   box.querySelector("[data-input]").onchange = (e) => enviarLista([...e.target.files]).then(() => (e.target.value = ""));
   box.querySelector("[data-input-folder]").onchange = (e) =>
-    enviarLista([...e.target.files].filter((f) => ok(f.name))).then(() => (e.target.value = ""));
+    enviarLista([...e.target.files].filter((f) => ok(f.name) || eLetra(f.name))).then(() => (e.target.value = ""));
 
   // arrastar e soltar: na area ou em qualquer lugar da pagina
   const temArquivos = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
