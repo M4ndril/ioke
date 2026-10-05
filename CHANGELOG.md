@@ -29,6 +29,14 @@ app (Settings → Updates), in the user's language.
   added to iTunes (the whole library or one playlist), with the names and albums organized there. Apple Music
   subscription songs are left out (they're rented); purchased songs with copy protection and the ones not
   downloaded show up unchecked, with the reason. Without the library file, it uses the iTunes music folder.
+- **Albums ripped from CD as one file with a `.cue`** (the EAC way, and how many older collections are kept): in a
+  folder's review (and in watched folders), the album shows up track by track, with the names from the `.cue`, and
+  each track comes in as a song. It also works when the `.cue` names a `.wav` that later became a `.flac`, with
+  one file per track and with `.bin` images.
+- **Recognize the disc on MusicBrainz:** when the `.cue` has no names, IOkê computes the disc ID from the track
+  layout and looks up the album, the track names, the original year and the cover. When the same disc came out in
+  several editions, a window asks which one is yours (country, label, catalog number), and the choice is
+  remembered. Multi-disc albums become one album, with the tracks in order.
 - **Track and disc number** in the song's Edit window (from the tags or the file name); each album's shelf in
   "Sing" follows the track order.
 

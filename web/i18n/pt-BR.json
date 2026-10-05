@@ -323,11 +323,42 @@
  "controle.voltar": "Voltar",
  "controle.voltar_t": "Voltar",
  "controle.volume": "Volume",
+ "disco.aviso": "CD no leitor",
+ "disco.cartao": "CD",
+ "disco.cd": "CD",
+ "disco.desconhecido": {
+  "one": "Disco desconhecido · 1 faixa",
+  "other": "Disco desconhecido · {n} faixas"
+ },
+ "disco.desconhecido_texto": "O MusicBrainz não conhece este disco. Os nomes das faixas podem ser corrigidos na revisão (ou colados de um encarte).",
+ "disco.disco_de": "disco {n} de {de}",
+ "disco.edicoes": {
+  "one": "1 edição encontrada",
+  "other": "{n} edições encontradas: escolha a sua"
+ },
+ "disco.escolher_texto": {
+  "one": "1 edição tem este disco. Confira o país, o selo e o número de catálogo na capa ou na lateral do CD.",
+  "other": "{n} edições têm este disco. Confira o país, o selo e o número de catálogo na capa ou na lateral do CD."
+ },
+ "disco.escolher_titulo": "Qual é a sua edição?",
+ "disco.faixa_n": "Faixa {n}",
+ "disco.importar": "Importar",
  "disco.livres": "{tamanho} livres",
  "disco.minimo": "Com menos de {tamanho} livres, músicas novas esperam (não começam para falhar no meio). Para liberar espaço, apague músicas que ninguém canta.",
+ "disco.nao_encontrado": "Esse disco não está mais disponível.",
+ "disco.nenhuma": "Nenhuma destas",
  "disco.ocupa": "A biblioteca ocupa {tamanho} ({musicas}, ~{cada} MB cada) · {livres} no disco.",
  "disco.pouco": "Pouco espaço no disco do IOkê: {livre} livres. Abaixo de {minimo}, músicas novas ficam esperando — apague músicas ou libere espaço.",
+ "disco.reconhecendo": "Reconhecendo o disco...",
+ "disco.reconhecer": "Reconhecer o disco",
+ "disco.reconhecer_ajuda": "Buscar o álbum, os nomes das faixas e a capa no MusicBrainz",
+ "disco.sem_internet": "Sem conexão com o MusicBrainz para reconhecer o disco. Tente de novo mais tarde.",
+ "disco.sem_internet_cartao": {
+  "one": "Sem internet para reconhecer · 1 faixa",
+  "other": "Sem internet para reconhecer · {n} faixas"
+ },
  "disco.titulo": "Espaço em disco",
+ "disco.vazio": "Nenhum disco em {leitor}",
  "editor.cole_aqui": "Cole a letra aqui...",
  "editor.cole_primeiro": "Cole a letra primeiro",
  "editor.desfazer": "Desfazer (Backspace)",
@@ -588,6 +619,7 @@
  "ia_config.titulo": "Letras com IA (palavra a palavra)",
  "ia_config.todas": "Sincronizar a biblioteca inteira",
  "ia_config.todas_confirmar": "Sincronizar com IA todas as músicas que têm letra? Leva uns 15–40 s por música, uma de cada vez, na placa de vídeo.",
+ "importar.corte_falhou": "Não deu para separar esta faixa do arquivo do álbum.",
  "importar.etapa": "{feitos} de {n}",
  "importar.nada": "Nenhuma música para importar.",
  "importar.recusados": {

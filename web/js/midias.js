@@ -1,4 +1,4 @@
-// Os cartoes "de onde vem as musicas" do Adicionar (so no PC): a biblioteca do iTunes / Apple Music e as pastas
+// Os cartoes "de onde vem as musicas" do Adicionar (so no PC): o CD no leitor, a biblioteca do iTunes e as pastas
 // vigiadas. Cada um abre a revisao (revisao.js) antes de importar.
 import { $, api, esc, icon, openModal, toast } from "./common.js";
 import { appApi } from "./appwin.js";
@@ -6,12 +6,20 @@ import { t } from "./i18n.js";
 import { abrirRevisao } from "./revisao.js";
 import { revisarNovas, vigiarPasta } from "./pastas.js";
 import { openSettings } from "./settings.js";
+import { importarDisco } from "./disco.js";
 
-/* icons: library_music queue_music folder_special chevron_right */
+/* icons: library_music queue_music folder_special chevron_right album */
 const POLL = 30000;
+const POLL_DISCO = 4000; // com leitor: o disco entrando e saindo
+const POLL_SEM_LEITOR = 60000;
 
 export function mountMidias(box, { onDone } = {}) {
   box.innerHTML = `
+    <button class="fonte-card hidden" data-disco>
+      <span class="fonte-ic-box" data-ic data-capa=""><span class="ms fonte-ic">album</span></span>
+      <span class="grow"><b data-tit>${esc(t("disco.cartao"))}</b><span class="small muted" data-sub></span></span>
+      <span class="ms">chevron_right</span>
+    </button>
     <button class="fonte-card hidden" data-itunes>
       <span class="ms fonte-ic">library_music</span>
       <span class="grow"><b>${esc(t("itunes.titulo"))}</b><span class="small muted" data-sub></span></span>
@@ -23,9 +31,12 @@ export function mountMidias(box, { onDone } = {}) {
       <span class="badge ok hidden" data-n></span>
       <span class="ms">chevron_right</span>
     </button>`;
+  const disco = $("[data-disco]", box);
   const itunes = $("[data-itunes]", box);
   const pastas = $("[data-pastas]", box);
   let infoItunes = null;
+  let noLeitor = null; // o disco que esta no leitor (o resumo do servidor)
+  let abrirDisco = location.hash === "#disco"; // veio do aviso de "disco no leitor"
   let infoPastas = null;
   const feito = (id) => id && onDone && onDone();
 
@@ -55,6 +66,46 @@ export function mountMidias(box, { onDone } = {}) {
     badge.textContent = infoPastas.novas;
     badge.classList.toggle("hidden", !infoPastas.novas);
   }
+
+  // ------------------------------------------------------------ o CD no leitor
+  async function olharDisco() {
+    let r;
+    try {
+      r = await api("/api/disco");
+    } catch {
+      return setTimeout(olharDisco, POLL_SEM_LEITOR);
+    }
+    const leitor = r.leitores.find((l) => l.disco) || r.leitores[0];
+    disco.classList.toggle("hidden", !leitor);
+    if (!leitor) return setTimeout(olharDisco, POLL_SEM_LEITOR); // este PC nao tem leitor: o cartao nem aparece
+    noLeitor = leitor.disco;
+    const d = noLeitor || {};
+    const e = d.escolhida;
+    $("[data-tit]", disco).textContent = e ? e.titulo : d.palpite ? `${d.palpite.titulo} · ${d.palpite.artista}` : t("disco.cartao");
+    $("[data-sub]", disco).textContent = !noLeitor ? t("disco.vazio", { leitor: leitor.nome })
+      : e ? [e.artista, e.ano, t("comum.musicas", { n: d.faixas })].filter(Boolean).join(" · ")
+      : d.estado === "pronto" ? t("disco.edicoes", { n: d.edicoes })
+      : d.estado === "desconhecido" ? t("disco.desconhecido", { n: d.faixas })
+      : d.estado === "sem_internet" ? t("disco.sem_internet_cartao", { n: d.faixas })
+      : t("disco.reconhecendo");
+    const ic = $("[data-ic]", disco);
+    const capa = (e && e.capa) || "";
+    if (ic.dataset.capa !== capa) {
+      ic.dataset.capa = capa;
+      ic.innerHTML = capa ? `<img class="fonte-capa" src="${esc(capa)}" alt="">` : `<span class="ms fonte-ic">album</span>`;
+    }
+    disco.disabled = !noLeitor || d.estado === "identificando" || d.estado === "novo";
+    if (abrirDisco && noLeitor && !disco.disabled) {
+      abrirDisco = false;
+      disco.click();
+    }
+    setTimeout(olharDisco, POLL_DISCO);
+  }
+
+  disco.onclick = async () => {
+    if (!noLeitor) return;
+    feito(await importarDisco(noLeitor));
+  };
 
   itunes.onclick = async () => {
     if (!infoItunes) return;
@@ -132,6 +183,7 @@ export function mountMidias(box, { onDone } = {}) {
     olharPastas();
   };
 
+  olharDisco();
   olharItunes();
   olharPastas();
   setInterval(olharPastas, POLL);

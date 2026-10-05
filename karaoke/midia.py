@@ -96,6 +96,46 @@ def conferir(info, nome=""):
         raise ArquivoRecusado("sem_audio" if info.get("duracao") or info.get("video") else "formato", nome)
 
 
+def amostras(caminho, bruto=False):
+    """(amostras, taxa) exatas do audio: o tamanho de um CD copiado, ao setor (1/75 s). FLAC e WAV pelo cabecalho;
+    `bruto`: audio de CD sem cabecalho (.bin: 16 bits, estereo, 44,1 kHz); o resto, decodificando com o FFmpeg."""
+    caminho = Path(caminho)
+    if bruto:
+        return caminho.stat().st_size // 4, 44100
+    with open(caminho, "rb") as f:
+        cab = f.read(64 * 1024)
+    if cab[:3] == b"ID3":  # FLAC com etiqueta ID3 na frente
+        tam = (cab[6] << 21) | (cab[7] << 14) | (cab[8] << 7) | cab[9]
+        with open(caminho, "rb") as f:
+            f.seek(10 + tam)
+            cab = f.read(64)
+    if cab[:4] == b"fLaC" and len(cab) >= 26:
+        info = int.from_bytes(cab[18:26], "big")  # STREAMINFO: taxa (20 bits), canais, bits, amostras (36 bits)
+        taxa, total = info >> 44, info & 0xFFFFFFFFF
+        if total and taxa:
+            return total, taxa
+    if cab[:4] == b"RIFF" and cab[8:12] == b"WAVE":
+        pos, alinhamento, taxa = 12, 0, 0
+        while pos + 8 <= len(cab):
+            nome, tam = cab[pos:pos + 4], int.from_bytes(cab[pos + 4:pos + 8], "little")
+            if nome == b"fmt ":
+                taxa = int.from_bytes(cab[pos + 12:pos + 16], "little")
+                alinhamento = int.from_bytes(cab[pos + 20:pos + 22], "little")
+            elif nome == b"data" and alinhamento and taxa:
+                tam = min(tam, caminho.stat().st_size - pos - 8)
+                return tam // alinhamento, taxa
+            pos += 8 + tam + (tam & 1)
+    # os outros formatos: decodifica e conta (alguns segundos para um album inteiro)
+    proc = subprocess.Popen([require_ffmpeg(), "-hide_banner", "-loglevel", "error", "-i", str(caminho), "-vn",
+                             "-f", "s16le", "-ac", "2", "-ar", "44100", "-"], stdout=subprocess.PIPE,
+                            creationflags=NO_WINDOW)
+    total = 0
+    for bloco in iter(lambda: proc.stdout.read(1 << 20), b""):
+        total += len(bloco)
+    proc.wait(timeout=60)
+    return total // 4, 44100
+
+
 def numero(valor):
     """O numero da faixa ou do disco nas etiquetas ("2", "02/12") -> 2. None se nao tem."""
     m = re.match(r"\s*0*(\d{1,3})(?:\s*/\s*\d+)?\s*$", str(valor or ""))

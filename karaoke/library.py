@@ -570,7 +570,8 @@ class Library:
         `mover`: o arquivo e uma copia temporaria do envio (senao copia e deixa o original).
         `dados`: o que a pessoa conferiu na revisao (vale mais que as etiquetas e o nome do arquivo):
         titulo, artista, album, ano, genero, faixa, disco; "letra" (o texto de uma letra enviada junto);
-        "origem" (o que mais guardar sobre de onde veio, como {"biblioteca": "itunes"})."""
+        "origem" (o que mais guardar sobre de onde veio, como {"de": "cd", "musicbrainz": ...}); "capa" e "isrc" (o
+        caminho da capa e o codigo da gravacao que a fonte deu, como as do CD reconhecido)."""
         dados = dados or {}
         caminho = Path(caminho)
         ext = Path(nome_original).suffix.lower() or caminho.suffix.lower()
@@ -625,7 +626,7 @@ class Library:
             "track_no": midia.numero(dados["faixa"]) if "faixa" in dados
             else midia.numero(tags.get("track")) or nomes.numero_da_faixa(nome_original),
             "disc_no": midia.numero(dados["disco"] if "disco" in dados else tags.get("disc")),
-            "isrc": (tags.get("isrc") or "").replace("-", "").upper()[:12] or None,
+            "isrc": (tags.get("isrc") or dados.get("isrc") or "").replace("-", "").upper()[:12] or None,
             "status": "queued",
             "stage": "etapa.na_fila",
             "progress": 0.0,
@@ -656,6 +657,8 @@ class Library:
             try:
                 if info.get("capa_embutida") and midia.extrair_capa(destino, capa):
                     self.set_cover_file(sid, capa.read_bytes())
+                elif dados.get("capa") and Path(dados["capa"]).is_file():  # a da fonte (a do CD reconhecido)
+                    self.set_cover_file(sid, Path(dados["capa"]).read_bytes())
                 elif not mover and (da_pasta := midia.capa_da_pasta(caminho)):
                     self.set_cover_file(sid, da_pasta.read_bytes())
             except Exception as exc:  # noqa: BLE001

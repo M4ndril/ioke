@@ -42,6 +42,7 @@ from karaoke.arquivos_api import make_blueprint as arquivos_routes  # noqa: E402
 from karaoke.importacoes import Importacoes, make_blueprint as importar_routes  # noqa: E402
 from karaoke.pastas import Pastas, make_blueprint as pastas_routes  # noqa: E402
 from karaoke.bibliotecas.itunes import make_blueprint as itunes_routes  # noqa: E402
+from karaoke.disco.servico import Discos, make_blueprint as disco_routes  # noqa: E402
 from karaoke.pacotes_api import make_blueprint as pacotes_routes  # noqa: E402
 from karaoke.nuvem import conta as nuvem_conta  # noqa: E402
 from karaoke.nuvem.api import make_blueprint as nuvem_routes  # noqa: E402
@@ -197,6 +198,8 @@ def _quem_envia():
 app.register_blueprint(arquivos_routes(lib, is_host=lambda: is_host(), quem=_quem_envia))  # enviar arquivos (so o PC)
 importacoes = Importacoes(lib)
 app.register_blueprint(importar_routes(importacoes, is_host=lambda: is_host(), quem=_quem_envia))  # importar com revisao (so o PC)
+discos = Discos(importacoes)  # albuns com .cue e o CD no leitor
+app.register_blueprint(disco_routes(discos, is_host=lambda: is_host()))  # CDs (so o PC)
 pastas_vigiadas = Pastas(importacoes)
 app.register_blueprint(pastas_routes(pastas_vigiadas, is_host=lambda: is_host()))  # pastas vigiadas (so o PC)
 app.register_blueprint(itunes_routes(importacoes, is_host=lambda: is_host()))  # biblioteca do iTunes (so o PC)
@@ -1165,6 +1168,7 @@ def main():
     address.watch()  # o roteador pode dar outro IP ao PC no meio da festa
     complementos.iniciar()  # liga os complementos ligados (em segundo plano)
     pastas_vigiadas.iniciar()  # olha as pastas vigiadas de tempos em tempos
+    discos.iniciar()  # olha os leitores de CD (quando tem)
     atexit.register(complementos.encerrar)
     try:
         from waitress import serve

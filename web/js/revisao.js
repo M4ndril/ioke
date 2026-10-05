@@ -3,12 +3,13 @@
 // O servidor guarda os caminhos: a pagina so conhece as referencias (karaoke/importacoes.py).
 import { $, $$, api, esc, h, icon, openModal, perguntarOnde, toast } from "./common.js";
 import { t } from "./i18n.js";
+import { reconhecerDisco } from "./disco.js";
 
 /* icons: album folder lyrics movie lock play_arrow stop expand_more chevron_right content_paste search check_box check_box_outline_blank library_add */
 const LOTE = 40; // etiquetas por pedido
 const MUITAS = 150; // acima disso, os grupos comecam fechados (o primeiro aberto)
 const tempo = (s) => (s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}` : "");
-const semAcento = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const semAcento = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 /**
  * Abre a revisao. `itens`: [{ref, nome, pasta, titulo, artista, faixa, video, etiquetas?}] (o que o servidor
@@ -66,7 +67,11 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
         const comTags = g.itens.find((it) => it.tags) || g.itens[0];
         g.artista = comTags.tags?.artista_album || valor(comTags, "artista") || "";
         g.ano = valor(comTags, "ano") || "";
-        g.capa = (g.itens.find((it) => it.tags?.capa) || {}).ref;
+        const comCapa = g.itens.find((it) => it.tags?.capa) || {};
+        g.capa = comCapa.ref;
+        g.capaV = comCapa.capaV || 0;
+        g.disco = (g.itens.find((it) => it.disco) || {}).disco; // um album com .cue (ou o CD): da para reconhecer
+        g.variosDiscos = new Set(g.itens.map((it) => valor(it, "disco") || 1)).size > 1; // faixa "2-3": disco 2
       }
       return out;
     }
@@ -94,13 +99,14 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
           <section class="rev-grupo${fechado ? " fechado" : ""}">
             <header class="rev-cab">
               <input type="checkbox" data-g ${marcados === g.itens.length ? "checked" : ""} title="${esc(t("revisao.marcar_grupo"))}">
-              ${g.capa ? `<img class="rev-capa" src="/api/importar/capa/${encodeURIComponent(g.capa)}" alt="" loading="lazy">`
+              ${g.capa ? `<img class="rev-capa" src="/api/importar/capa/${encodeURIComponent(g.capa)}?v=${g.capaV}" alt="" loading="lazy">`
                 : `<span class="rev-capa ms">${g.album ? "album" : "folder"}</span>`}
               <div class="grow rev-cab-txt">
                 ${g.album ? `<input class="rev-album" data-album value="${esc(g.album)}" title="${esc(t("revisao.album"))}">`
                   : `<b>${esc(nome)}</b>`}
                 <div class="small muted">${esc([g.artista, g.ano, t("comum.musicas", { n: g.itens.length })].filter(Boolean).join(" · "))}</div>
               </div>
+              ${g.disco ? `<button class="btn ghost xs" data-reconhecer title="${esc(t("disco.reconhecer_ajuda"))}">${icon("album")} ${esc(t("disco.reconhecer"))}</button>` : ""}
               <button class="btn ghost xs" data-colar title="${esc(t("revisao.colar_ajuda"))}">${icon("content_paste")} ${esc(t("revisao.colar"))}</button>
               <button class="icon-btn plain" data-abrir title="${esc(t(fechado ? "revisao.abrir" : "revisao.fechar"))}">${icon(fechado ? "chevron_right" : "expand_more")}</button>
             </header>
@@ -119,6 +125,8 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
           render();
         };
         $("[data-colar]", el).onclick = () => colarNomes(g.itens.filter(visivel));
+        const rec = $("[data-reconhecer]", el);
+        if (rec) rec.onclick = () => reconhecer(g.disco, true);
         const alb = $("[data-album]", el);
         if (alb) alb.onchange = () => {
           g.itens.forEach((it) => editar(it, "album", alb.value.trim()));
@@ -126,7 +134,7 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
         };
         if (!fechado) {
           const corpo = $(".rev-faixas", el);
-          for (const it of vis) corpo.append(linha(it));
+          for (const it of vis) corpo.append(linha(it, g.variosDiscos));
         }
         lista.append(el);
       }
@@ -135,7 +143,8 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
       contar();
     }
 
-    function linha(it) {
+    function linha(it, variosDiscos) {
+      const num = valor(it, "faixa") ? `${variosDiscos ? `${valor(it, "disco") || 1}-` : ""}${valor(it, "faixa")}` : "";
       const tg = it.tags || {};
       const badges = [
         tg.letra ? `<span class="badge ok" title="${esc(t(`revisao.letra_${tg.letra}`))}">${icon("lyrics", "sm")} ${esc(t("revisao.tem_letra"))}</span>` : "",
@@ -148,7 +157,7 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
       const el = h(`
         <div class="rev-linha${pode(it) ? "" : " off"}">
           <input type="checkbox" data-m ${it.marcado ? "checked" : ""} ${pode(it) ? "" : "disabled"}>
-          <span class="rev-num small muted">${valor(it, "faixa") || ""}</span>
+          <span class="rev-num small muted">${num}</span>
           <input class="rev-campo" data-c="titulo" value="${esc(valor(it, "titulo"))}" placeholder="${esc(t("revisao.titulo_musica"))}" title="${esc(it.nome)}">
           <input class="rev-campo" data-c="artista" value="${esc(valor(it, "artista"))}" placeholder="${esc(t("revisao.artista"))}">
           <span class="rev-badges">${badges}</span>
@@ -226,6 +235,19 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
       };
     }
 
+    // ------------------------------------------------------------ reconhecer um disco (album com .cue, CD)
+    async function reconhecer(did, perguntarSempre) {
+      const novas = await reconhecerDisco(did, { perguntarSempre });
+      if (!novas) return;
+      for (const it of estado) {
+        if (!novas[it.ref]) continue;
+        it.tags = it.etiquetas = { ...it.tags, ...novas[it.ref] };
+        it.capaV = Date.now();
+        it.sem_nomes = false;
+      }
+      render();
+    }
+
     // ------------------------------------------------------------ etiquetas aos poucos
     async function lerEtiquetas() {
       const faltam = estado.filter((it) => !it.tags);
@@ -285,6 +307,13 @@ export function abrirRevisao({ titulo, itens, tipo = "pasta", cortado = false })
 
     render();
     lerEtiquetas();
+    // album com .cue sem os nomes das faixas: reconhece sozinho (com varias edicoes, pergunta qual)
+    (async () => {
+      for (const did of new Set(estado.filter((it) => it.sem_nomes && it.disco).map((it) => it.disco))) {
+        if (!modal.isConnected) return;
+        await reconhecer(did, false);
+      }
+    })();
   });
 }
 

@@ -809,7 +809,7 @@ select.input.sm-select { width: auto; flex: none; min-width: 130px; margin-left:
 .rev-album:focus, .rev-campo:focus { outline: none; border-color: rgba(255, 255, 255, 0.45); background: #18181b; }
 .rev-grupo.fechado .rev-faixas { display: none; }
 .rev-faixas { display: grid; padding: 4px 0; }
-.rev-linha { display: grid; grid-template-columns: 18px 26px minmax(0, 1.4fr) minmax(0, 1fr) 150px 40px 32px; align-items: center; gap: 8px; padding: 2px 12px; font-size: 13px; }
+.rev-linha { display: grid; grid-template-columns: 18px 30px minmax(0, 1.4fr) minmax(0, 1fr) 150px 40px 32px; align-items: center; gap: 8px; padding: 2px 12px; font-size: 13px; }
 .rev-linha:hover { background: rgba(255, 255, 255, 0.03); }
 .rev-linha.off .rev-campo { color: var(--muted); }
 .rev-num { text-align: right; }
@@ -841,3 +841,17 @@ select.input.sm-select { width: auto; flex: none; min-width: 130px; margin-left:
 .pasta-nome { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pasta-caminho { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 2px 0 8px; }
 .pasta-opcoes { gap: 14px; align-items: center; }
+
+/* ------------------------------------------------ CD: edicoes, cartao e aviso (disco.js, midias.js, atividades.js) */
+.ed-lista { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; max-height: 60vh; overflow: auto; }
+.ed-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid transparent; background: var(--panel-2); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.ed-row:hover { background: var(--panel-3); }
+.ed-row.on { border-color: var(--accent); }
+.ed-capa { width: 56px; height: 56px; border-radius: 6px; object-fit: cover; flex: none; background: rgba(255, 255, 255, 0.05); display: grid; place-items: center; font-size: 28px; color: var(--muted); }
+.ed-txt { display: grid; gap: 2px; min-width: 0; }
+.ed-nomes { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fonte-ic-box { display: grid; place-items: center; flex: none; }
+.fonte-capa { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+.disco-aviso { position: fixed; left: 18px; bottom: 18px; z-index: 90; display: flex; align-items: center; gap: 12px; width: min(440px, calc(100vw - 36px)); padding: 12px 14px; border-radius: 14px; background: rgba(20, 20, 22, 0.97); border: 1px solid var(--line-2); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); animation: pop 0.18s ease-out; }
+.disco-aviso img, .disco-aviso > .ms { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex: none; display: grid; place-items: center; font-size: 28px; color: var(--accent); }
+.disco-aviso .grow { min-width: 0; }

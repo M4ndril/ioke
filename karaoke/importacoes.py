@@ -54,8 +54,12 @@ class Importacoes:
         self.cache = Path(cache_dir or CACHE_DIR / "importar")
         self.lock = threading.Lock()
         self.cond = threading.Condition(self.lock)
-        self.refs = {}  # ref -> {"caminho", "t", "etiquetas"?}
-        self._por_caminho = {}  # caminho -> ref (o mesmo arquivo listado de novo tem a mesma ref)
+        # ref -> {"caminho", "t"; "etiquetas" (lidas ou da fonte); "trecho" (uma faixa dentro do arquivo de um album
+        # inteiro: {"inicio", "fim" em segundos, "bruto"}); "extras" (o que o servidor sabe e a pagina nao muda:
+        # {"capa": caminho, "origem": {...}, "isrc"})}
+        self.refs = {}
+        self._por_caminho = {}  # caminho (e trecho) -> ref (o mesmo arquivo listado de novo tem a mesma ref)
+        self.discos = None  # os CDs e os .cue (karaoke/disco/servico.py), quando o servidor liga
         self.jobs = {}  # id -> importacao (ver comecar)
         self.fila = []
         self._trabalhando = False
@@ -63,27 +67,56 @@ class Importacoes:
         lib.atividades_extras.append(self.atividades)
 
     # ------------------------------------------------------------ referencias
-    def registrar(self, caminho):
+    def registrar(self, caminho, trecho=None, etiquetas=None, extras=None):
         caminho = str(caminho)
+        chave = f"{caminho}#{trecho['inicio']}-{trecho['fim']}" if trecho else caminho
         with self.lock:
             agora = time.time()
-            ref = self._por_caminho.get(caminho)
-            if ref and ref in self.refs:
-                self.refs[ref]["t"] = agora
-                return ref
-            if len(self.refs) >= REFS_MAX:
-                self._limpar(agora)
-            ref = secrets.token_urlsafe(9)
-            self.refs[ref] = {"caminho": caminho, "t": agora}
-            self._por_caminho[caminho] = ref
+            ref = self._por_caminho.get(chave)
+            if not (ref and ref in self.refs):
+                if len(self.refs) >= REFS_MAX:
+                    self._limpar(agora)
+                ref = secrets.token_urlsafe(9)
+                self.refs[ref] = {"caminho": caminho}
+                self._por_caminho[chave] = ref
+            v = self.refs[ref]
+            v["t"] = agora
+            if trecho:
+                v["trecho"] = trecho
+            if etiquetas is not None:
+                v["etiquetas"] = etiquetas
+            if extras is not None:
+                v["extras"] = extras
             return ref
+
+    def fonte(self, ref):
+        """Tudo o que o servidor guarda de uma ref (uma copia), ou None."""
+        with self.lock:
+            v = self.refs.get(str(ref or ""))
+            if not v or time.time() - v["t"] > REF_HORAS * 3600:
+                return None
+            return {**v, "caminho": Path(v["caminho"])}
+
+    def mudar(self, ref, etiquetas=None, extras=None, substituir=False):
+        """Atualiza o que a fonte disse de uma ref (o album reconhecido de um CD, por exemplo)."""
+        with self.lock:
+            v = self.refs.get(ref)
+            if v is None:
+                return
+            if etiquetas is not None:
+                v["etiquetas"] = etiquetas if substituir else {**(v.get("etiquetas") or {}), **etiquetas}
+            if extras is not None:
+                v["extras"] = extras if substituir else {**(v.get("extras") or {}), **extras}
 
     def _limpar(self, agora):
         velhas = [r for r, v in self.refs.items() if agora - v["t"] > REF_HORAS * 3600]
         if len(self.refs) - len(velhas) >= REFS_MAX:  # todas novas: sai a metade mais antiga
             velhas = sorted(self.refs, key=lambda r: self.refs[r]["t"])[: REFS_MAX // 2]
+        velhas = set(velhas)
         for r in velhas:
-            self._por_caminho.pop(self.refs.pop(r)["caminho"], None)
+            self.refs.pop(r, None)
+        for chave in [c for c, r in self._por_caminho.items() if r in velhas]:
+            del self._por_caminho[chave]
 
     def caminho(self, ref):
         with self.lock:
@@ -112,19 +145,39 @@ class Importacoes:
                 "video": caminho.suffix.lower() in midia.VIDEO_EXTS}
 
     def listar_pasta(self, raiz, maximo=MAX_PASTA):
-        """Os arquivos de musica de uma pasta e das subpastas, em ordem. -> (itens, cortado)."""
+        """Os arquivos de musica de uma pasta e das subpastas, em ordem. -> (itens, cortado).
+        Um album num arquivo so com .cue vira as faixas dele."""
         raiz = Path(raiz)
         dados = DATA_DIR.resolve()
         achados = []
         for base, pastas, arquivos in os.walk(raiz):
             pastas[:] = sorted(p for p in pastas if not ignorar(p) and not _dentro(Path(base) / p, dados))
-            for f in sorted(arquivos, key=str.lower):
-                if ignorar(f) or Path(f).suffix.lower() not in midia.ACEITAS + midia.PROTEGIDAS:
-                    continue
-                achados.append(self.item(Path(base) / f, raiz))
-                if len(achados) >= maximo:
-                    return achados, True
+            caminhos = [Path(base) / f for f in sorted(arquivos, key=str.lower) if not ignorar(f)]
+            achados += self.itens_de(caminhos, raiz)
+            if len(achados) >= maximo:
+                return achados[:maximo], True
         return achados, False
+
+    def itens_de(self, caminhos, raiz=None):
+        """Os itens da revisao destes arquivos: o arquivo de um album inteiro citado por um .cue da mesma pasta vira
+        as faixas do .cue; o resto, um item por arquivo de musica."""
+        caminhos = [Path(c) for c in caminhos]
+        out, usados = [], set()
+        if self.discos:
+            for pasta in dict.fromkeys(c.parent for c in caminhos):
+                try:
+                    cues = sorted(f for f in pasta.iterdir() if f.suffix.lower() == ".cue" and not ignorar(f.name))
+                except OSError:
+                    continue
+                for c in cues:
+                    itens, arquivos = self.discos.itens_do_cue(c, raiz)
+                    if itens and not usados & set(arquivos) and set(arquivos) & set(caminhos):
+                        out += itens
+                        usados |= set(arquivos)
+        for c in caminhos:
+            if c not in usados and c.suffix.lower() in midia.ACEITAS + midia.PROTEGIDAS:
+                out.append(self.item(c, raiz))
+        return out
 
     # ------------------------------------------------------------ o que tem em cada arquivo
     def etiquetas(self, ref):
@@ -161,18 +214,21 @@ class Importacoes:
         return out
 
     def capa(self, ref):
-        """A capa pequena (JPG) para a revisao: a embutida, senao a da pasta. None se nao tem."""
-        caminho = self.caminho(ref)
-        if not caminho:
+        """A capa pequena (JPG) para a revisao: a da fonte (a do CD reconhecido), a embutida, senao a da pasta."""
+        f = self.fonte(ref)
+        if not f:
             return None
-        destino = self.cache / f"{ref}.jpg"
+        caminho, da_fonte = f["caminho"], (f.get("extras") or {}).get("capa")
+        destino = self.cache / f"{ref}-{Path(da_fonte).stem if da_fonte else 'a'}.jpg"
         if destino.exists():
             return destino
         self.cache.mkdir(parents=True, exist_ok=True)
         tmp = self.cache / f"{ref}-cheia.jpg"
         try:
             fonte = None
-            if (self.etiquetas(ref) or {}).get("capa"):
+            if da_fonte and Path(da_fonte).is_file():
+                fonte = Path(da_fonte)
+            elif (self.etiquetas(ref) or {}).get("capa"):
                 if midia.extrair_capa(caminho, tmp):
                     fonte = tmp
                 else:
@@ -194,17 +250,19 @@ class Importacoes:
 
     def trecho(self, ref):
         """15 s do meio da musica (MP3), para conferir antes de importar."""
-        caminho = self.caminho(ref)
-        if not caminho or not caminho.is_file():
+        f = self.fonte(ref)
+        if not f or not f["caminho"].is_file():
             return None
+        caminho, parte = f["caminho"], f.get("trecho") or {}
         destino = self.cache / f"{ref}-trecho.mp3"
         if destino.exists():
             return destino
         self.cache.mkdir(parents=True, exist_ok=True)
         dur = (self.etiquetas(ref) or {}).get("duracao") or 0
-        inicio = max(0.0, dur / 2 - TRECHO_S / 2) if dur > TRECHO_S else 0.0
-        proc = subprocess.run([require_ffmpeg(), "-hide_banner", "-loglevel", "error", "-y", "-ss", f"{inicio:.1f}",
-                               "-t", str(TRECHO_S), "-i", str(caminho), "-vn", "-ac", "2", "-b:a", "128k",
+        inicio = (parte.get("inicio") or 0) + (max(0.0, dur / 2 - TRECHO_S / 2) if dur > TRECHO_S else 0.0)
+        proc = subprocess.run([require_ffmpeg(), "-hide_banner", "-loglevel", "error", "-y", "-ss", f"{inicio:.2f}",
+                               "-t", str(TRECHO_S), *_entrada(parte), "-i", str(caminho), "-vn", "-ac", "2",
+                               "-b:a", "128k",
                                "-af", f"afade=t=out:st={TRECHO_S - 1.5}:d=1.5", str(destino)],
                               capture_output=True, timeout=60, creationflags=NO_WINDOW)
         if proc.returncode != 0 or not destino.exists():
@@ -286,14 +344,25 @@ class Importacoes:
         for it in job["itens"]:
             if job["cancelar"]:
                 return
-            caminho = self.caminho(it.get("ref"))
-            nome = caminho.name if caminho else str((it.get("dados") or {}).get("titulo") or "?")
+            f = self.fonte(it.get("ref")) or {}
+            caminho, extras = f.get("caminho"), dict(f.get("extras") or {})
+            dados = {**_dados(it.get("dados")), **{k: v for k, v in extras.items() if k != "origem"},
+                     "origem": {**(extras.get("origem") or {}), "de": job["tipo"]}}  # pasta, itunes, vigiada, cd...
+            nome = caminho.name if caminho else str(dados.get("titulo") or "?")
+            cortado = None
             try:
                 if not caminho or not caminho.is_file():
                     raise FileNotFoundError(i18n.t("arquivo.nao_encontrado", nome=nome))
-                dados = {**_dados(it.get("dados")), "origem": {"de": job["tipo"]}}  # pasta, itunes, vigiada...
-                meta, nova = self.lib.add_file(caminho, caminho.name, client, name, account, onde=job["onde"],
-                                               dados=dados)
+                if f.get("trecho"):  # uma faixa do album inteiro: corta (o arquivo da pessoa fica como esta)
+                    etq = f.get("etiquetas") or {}
+                    titulo = dados.get("titulo") or etq.get("titulo") or ""
+                    nome = f"{etq.get('faixa') or 0:02d} - {titulo}.flac" if titulo else f"{caminho.stem} {etq.get('faixa')}.flac"
+                    cortado = self._cortar(caminho, f["trecho"])
+                    meta, nova = self.lib.add_file(cortado, nome, client, name, account, mover=True, onde=job["onde"],
+                                                   dados=dados)
+                else:
+                    meta, nova = self.lib.add_file(caminho, caminho.name, client, name, account, onde=job["onde"],
+                                                   dados=dados)
                 if nova:
                     job["novas"].append(meta["id"])
                 else:
@@ -302,7 +371,25 @@ class Importacoes:
                 job["recusados"].append({"nome": nome, "motivo": i18n.t(f"arquivo.recusado.{exc.motivo}", nome=nome)})
             except Exception as exc:  # noqa: BLE001
                 job["recusados"].append({"nome": nome, "motivo": str(exc)[:300]})
+            finally:
+                if cortado:
+                    cortado.unlink(missing_ok=True)
             job["feitos"] += 1
+
+    def _cortar(self, caminho, parte):
+        """Uma faixa de um album inteiro (FLAC, sem perda), num arquivo temporario."""
+        pasta = self.cache / "faixas"
+        pasta.mkdir(parents=True, exist_ok=True)
+        destino = pasta / f"{secrets.token_hex(6)}.flac"
+        inicio, fim = parte.get("inicio") or 0, parte.get("fim")
+        args = [require_ffmpeg(), "-hide_banner", "-loglevel", "error", "-y", "-ss", f"{inicio:.6f}",
+                *(["-t", f"{fim - inicio:.6f}"] if fim else []), *_entrada(parte), "-i", str(caminho),
+                "-map", "0:a:0", "-map_metadata", "-1", "-c:a", "flac", str(destino)]
+        proc = subprocess.run(args, capture_output=True, timeout=1800, creationflags=NO_WINDOW)
+        if proc.returncode != 0 or not destino.exists():
+            destino.unlink(missing_ok=True)
+            raise RuntimeError(i18n.t("importar.corte_falhou"))
+        return destino
 
     def _esquecer_velhos(self):
         agora = time.time()
@@ -327,6 +414,11 @@ class Importacoes:
                                 "erro": i18n.t("importar.recusados", n=len(job["recusados"]), nomes=nomes_),
                                 "detalhes": [r["motivo"] for r in job["recusados"][:50]]})
         return out
+
+
+def _entrada(parte):
+    """Os parametros do FFmpeg para ler o arquivo: audio cru de CD (.bin) nao tem cabecalho."""
+    return ["-f", "s16le", "-ar", "44100", "-ac", "2"] if (parte or {}).get("bruto") else []
 
 
 def _dentro(p, pasta):

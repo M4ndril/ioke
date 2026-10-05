@@ -6,7 +6,7 @@ import { api, esc, h, icon } from "./common.js";
 import { jobEl, signature } from "./ui.js";
 import { t } from "./i18n.js";
 
-/* icons: auto_awesome record_voice_over movie extension pending pending_actions error library_add close */
+/* icons: auto_awesome record_voice_over movie extension pending pending_actions error library_add close album */
 const ICONES = { letra: "auto_awesome", voz_apoio: "record_voice_over", video: "movie", acao: "extension", importacao: "library_add" };
 const comErro = (a) => a.estado === "error" || a.estado === "erro";
 
@@ -109,6 +109,46 @@ export function mountAtividades(box) {
     for (const j of jobs) list.append(jobEl(j, { canDelete: true, canRetry: true, canCloud: true }));
     for (const a of outras) list.append(outraEl(a));
   }
+
+  // CD no leitor: um aviso (uma vez por disco) com o atalho para importar. No Adicionar, o cartao ja mostra.
+  const avisados = new Set();
+  try {
+    JSON.parse(sessionStorage.getItem("karaoke.discos") || "[]").forEach((id) => avisados.add(id));
+  } catch {
+    /* sem armazenamento: avisa de novo em cada pagina */
+  }
+  async function olharDisco() {
+    let r;
+    try {
+      r = await api("/api/disco", { timeout: 8000 });
+    } catch {
+      return setTimeout(olharDisco, 60000);
+    }
+    if (!r.leitores.length) return setTimeout(olharDisco, 60000); // sem leitor de CD
+    const d = (r.leitores.find((l) => l.disco) || {}).disco;
+    const pronto = d && !["novo", "identificando"].includes(d.estado);
+    if (pronto && !avisados.has(d.id) && location.pathname !== "/adicionar") {
+      avisados.add(d.id);
+      try {
+        sessionStorage.setItem("karaoke.discos", JSON.stringify([...avisados]));
+      } catch {
+        /* sem armazenamento */
+      }
+      const e = d.escolhida;
+      const aviso = h(`
+        <div class="disco-aviso">
+          ${e && e.capa ? `<img src="${esc(e.capa)}" alt="">` : `<span class="ms">album</span>`}
+          <div class="grow"><b>${esc(t("disco.aviso"))}</b><div class="small muted">${esc(e || d.palpite ? `${(e || d.palpite).titulo} · ${(e || d.palpite).artista}` : t("comum.musicas", { n: d.faixas }))}</div></div>
+          <a class="btn light sm" href="/adicionar#disco">${esc(t("disco.importar"))}</a>
+          <button class="icon-btn plain sm" title="${esc(t("comum.fechar"))}">${icon("close")}</button>
+        </div>`);
+      aviso.querySelector("button").onclick = () => aviso.remove();
+      document.body.append(aviso);
+      setTimeout(() => aviso.remove(), 30000);
+    }
+    setTimeout(olharDisco, 5000);
+  }
+  olharDisco();
 
   async function refresh() {
     clearTimeout(timer);

@@ -323,11 +323,42 @@
  "controle.voltar": "Back",
  "controle.voltar_t": "Back",
  "controle.volume": "Volume",
+ "disco.aviso": "CD in the drive",
+ "disco.cartao": "CD",
+ "disco.cd": "CD",
+ "disco.desconhecido": {
+  "one": "Unknown disc · 1 track",
+  "other": "Unknown disc · {n} tracks"
+ },
+ "disco.desconhecido_texto": "MusicBrainz doesn't know this disc. The track names can be fixed in the review (or pasted from a booklet).",
+ "disco.disco_de": "disc {n} of {de}",
+ "disco.edicoes": {
+  "one": "1 edition found",
+  "other": "{n} editions found: choose yours"
+ },
+ "disco.escolher_texto": {
+  "one": "1 edition has this disc. Check the country, label and catalog number on the cover or the side of the CD.",
+  "other": "{n} editions have this disc. Check the country, label and catalog number on the cover or the side of the CD."
+ },
+ "disco.escolher_titulo": "Which edition is yours?",
+ "disco.faixa_n": "Track {n}",
+ "disco.importar": "Import",
  "disco.livres": "{tamanho} free",
  "disco.minimo": "With less than {tamanho} free, new songs wait (they don't start just to fail halfway). To free up space, delete songs nobody sings.",
+ "disco.nao_encontrado": "That disc is no longer available.",
+ "disco.nenhuma": "None of these",
  "disco.ocupa": "The library uses {tamanho} ({musicas}, ~{cada} MB each) · {livres} on the disk.",
  "disco.pouco": "Low disk space on the IOkê PC: {livre} free. Below {minimo}, new songs wait — delete songs or free up space.",
+ "disco.reconhecendo": "Recognizing the disc...",
+ "disco.reconhecer": "Recognize the disc",
+ "disco.reconhecer_ajuda": "Look up the album, track names and cover on MusicBrainz",
+ "disco.sem_internet": "No connection to MusicBrainz to recognize the disc. Try again later.",
+ "disco.sem_internet_cartao": {
+  "one": "No internet to recognize it · 1 track",
+  "other": "No internet to recognize it · {n} tracks"
+ },
  "disco.titulo": "Disk space",
+ "disco.vazio": "No disc in {leitor}",
  "editor.cole_aqui": "Paste the lyrics here...",
  "editor.cole_primeiro": "Paste the lyrics first",
  "editor.desfazer": "Undo (Backspace)",
@@ -588,6 +619,7 @@
  "ia_config.titulo": "AI lyrics (word by word)",
  "ia_config.todas": "Sync the whole library",
  "ia_config.todas_confirmar": "Sync every song that has lyrics with the AI? It takes about 15–40 s per song, one at a time, on the graphics card.",
+ "importar.corte_falhou": "Couldn't split this track from the album file.",
  "importar.etapa": "{feitos} of {n}",
  "importar.nada": "No songs to import.",
  "importar.recusados": {

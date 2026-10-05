@@ -178,13 +178,14 @@ class Pastas:
             if not prontos:
                 return []
             if p.get("modo") == "sozinho":
-                itens = [{"ref": self.imp.registrar(raiz / rel), "dados": {}} for rel in prontos]
+                itens = True
             else:
                 fila = self.novos.setdefault(pid, [])
                 fila.extend(r for r in prontos if r not in fila)
                 itens = None
         log.info("pasta vigiada %s: %d novas", raiz, len(prontos))
-        if itens:
+        if itens:  # um album com .cue entra faixa por faixa, com os nomes do .cue
+            itens = [{"ref": it["ref"], "dados": _dados_da_fonte(it)} for it in self.imp.itens_de([raiz / r for r in prontos], raiz)]
             self.imp.comecar(itens, raiz.name, tipo="vigiada")
         return prontos
 
@@ -203,7 +204,7 @@ class Pastas:
         itens = []
         for p, rels in pares:
             raiz = Path(p["caminho"])
-            itens += [self.imp.item(raiz / rel, raiz) for rel in rels if (raiz / rel).is_file()]
+            itens += self.imp.itens_de([raiz / rel for rel in rels if (raiz / rel).is_file()], raiz)
         return itens
 
     def dispensar(self, pid=None, refs=None):
@@ -237,6 +238,12 @@ class Pastas:
             write_json(self.arquivo, self.estado)
         except OSError as exc:
             log.warning("indice das pastas vigiadas: %s", exc)
+
+
+def _dados_da_fonte(item):
+    """Os nomes que a fonte deu (o .cue), para importar sem revisao."""
+    etq = item.get("etiquetas") or {}
+    return {k: etq[k] for k in ("titulo", "artista", "album", "ano", "genero", "faixa", "disco") if etq.get(k)}
 
 
 def _dentro(p, pasta):

@@ -29,6 +29,14 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
   você pôs no iTunes (a biblioteca inteira ou uma playlist), com os nomes e álbuns organizados lá. As da assinatura
   Apple Music ficam de fora (são alugadas); as compradas com proteção contra cópia e as que não estão baixadas
   aparecem desmarcadas, com o motivo. Sem o arquivo da biblioteca, usa a pasta das músicas do iTunes.
+- **Álbuns copiados de CD num arquivo só, com `.cue`** (o jeito do EAC e de muitas coleções antigas): na revisão
+  de uma pasta (e nas pastas vigiadas), o álbum aparece faixa por faixa, com os nomes do `.cue`, e cada faixa entra
+  como uma música. Vale também quando o `.cue` cita um `.wav` que depois virou `.flac`, para um arquivo por faixa e
+  para imagens `.bin`.
+- **Reconhecer o disco no MusicBrainz:** quando o `.cue` não tem os nomes, o IOkê calcula o código do disco pelo
+  índice das faixas e busca o álbum, os nomes, o ano original e a capa. Quando o mesmo disco saiu em várias
+  edições, aparece uma janela para escolher a sua (país, selo, número de catálogo), e a escolha fica lembrada.
+  Álbuns de vários discos viram um álbum só, com as faixas na ordem.
 - **Número da faixa e do disco** no Editar da música (vêm das etiquetas ou do nome do arquivo); a prateleira de
   cada álbum no "Cantar" segue a ordem das faixas.
 
