@@ -59,6 +59,7 @@ export function mountMidias(box, { onDone } = {}) {
   itunes.onclick = async () => {
     if (!infoItunes) return;
     if (infoItunes.xml && infoItunes.playlists.length) return escolherPlaylist();
+    if (infoItunes.assinatura) toast(t("itunes.assinatura", { n: infoItunes.assinatura }), { ms: 8000 });
     if (infoItunes.xml || infoItunes.pasta) return revisarItunes();
     semItunes();
   };
@@ -86,6 +87,7 @@ export function mountMidias(box, { onDone } = {}) {
       <span class="grow">${esc(nome)}</span><span class="small muted">${esc(t("comum.musicas", { n }))}</span></button>`;
     const modal = openModal(t("itunes.titulo"), `
       <p class="small muted" style="margin-top:0">${esc(t("itunes.escolha"))}</p>
+      ${infoItunes.assinatura ? `<p class="small muted">${esc(t("itunes.assinatura", { n: infoItunes.assinatura }))}</p>` : ""}
       <div class="pl-lista">
         ${linha("", t("itunes.tudo"), infoItunes.total, "library_music")}
         ${infoItunes.playlists.map((p) => linha(p.id, p.nome, p.n, "queue_music")).join("")}

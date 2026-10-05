@@ -25,9 +25,10 @@ app (Settings → Updates), in the user's language.
   in them go to the review (the "Watched folders" card on Add shows how many) or come in by themselves. What was
   already in the folder only comes in through "Review"; a file still being copied waits until it's done; an
   unplugged USB drive shows as "offline" and comes back by itself; nothing is deleted from the library.
-- **Import from iTunes / Apple Music:** the card on Add reads the iTunes library (all of it or one playlist) with
-  the names and albums organized there. Songs with copy protection, Apple Music (subscription) songs and the ones
-  only in the cloud show up unchecked, with the reason. Without the library file, it uses the iTunes music folder.
+- **Import from the iTunes library:** the card on Add reads the songs bought on the iTunes Store and the ones you
+  added to iTunes (the whole library or one playlist), with the names and albums organized there. Apple Music
+  subscription songs are left out (they're rented); purchased songs with copy protection and the ones not
+  downloaded show up unchecked, with the reason. Without the library file, it uses the iTunes music folder.
 - **Track and disc number** in the song's Edit window (from the tags or the file name); each album's shelf in
   "Sing" follows the track order.
 

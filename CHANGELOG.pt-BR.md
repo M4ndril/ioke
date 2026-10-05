@@ -25,10 +25,10 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
   que aparece nelas vai para a revisão (o cartão "Pastas vigiadas" no Adicionar mostra quantas) ou entra sozinha.
   O que já estava na pasta só entra pelo "Revisar"; arquivo ainda sendo copiado espera terminar; pendrive tirado
   fica "fora do ar" e volta sozinho; nada é apagado da biblioteca.
-- **Importar do iTunes / Apple Music:** o cartão no Adicionar lê a biblioteca do iTunes (a inteira ou uma
-  playlist) com os nomes e álbuns organizados lá. As músicas com proteção contra cópia, as do Apple Music
-  (assinatura) e as que só estão na nuvem aparecem desmarcadas, com o motivo. Sem o arquivo da biblioteca, usa a
-  pasta das músicas do iTunes.
+- **Importar da biblioteca do iTunes:** o cartão no Adicionar lê as músicas compradas na iTunes Store e as que
+  você pôs no iTunes (a biblioteca inteira ou uma playlist), com os nomes e álbuns organizados lá. As da assinatura
+  Apple Music ficam de fora (são alugadas); as compradas com proteção contra cópia e as que não estão baixadas
+  aparecem desmarcadas, com o motivo. Sem o arquivo da biblioteca, usa a pasta das músicas do iTunes.
 - **Número da faixa e do disco** no Editar da música (vêm das etiquetas ou do nome do arquivo); a prateleira de
   cada álbum no "Cantar" segue a ordem das faixas.
 

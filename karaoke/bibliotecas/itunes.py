@@ -1,12 +1,14 @@
-"""A biblioteca do iTunes (ou do app Apple Music) no Windows: as musicas que a pessoa ja tem, com os nomes, os
-albuns e as playlists que ela organizou la.
+"""A biblioteca do iTunes (ou do app Apple Music) no Windows: as musicas que sao da pessoa (compradas na iTunes
+Store, copiadas de CDs, arquivos que ela pos la), com os nomes, os albuns e as playlists que ela organizou.
 
 O iTunes pode gravar a biblioteca num XML ("iTunes Music Library.xml"; nas versoes novas, so com a opcao
 "Compartilhar o XML da biblioteca do iTunes com outros aplicativos" ligada). Sem o XML, as musicas ainda estao na
 pasta "iTunes Media" (ou "Apple Music\\Media"), que vira uma pasta comum na revisao.
 
-Nunca usamos o que tem protecao contra copia (as compradas antes de 2009, .m4p) nem o que e do Apple Music
-(assinatura: so toca no app deles): essas aparecem na revisao, desmarcadas, com o motivo.
+O app base so importa midia que pode ser da pessoa: as musicas da assinatura Apple Music (alugadas: so tocam
+enquanto a assinatura durar, no app da Apple) e as radios da internet nem aparecem, so a quantidade delas.
+As compradas com protecao contra copia (antes de 2009, .m4p) e as compradas que nao estao baixadas aparecem na
+revisao, desmarcadas, com o motivo.
 
 Rotas (so o PC):
 - GET  /api/bibliotecas/itunes          o que foi achado (o XML e as playlists, ou so a pasta das musicas)
@@ -104,9 +106,13 @@ def ler(xml):
     with open(xml, "rb") as f:
         dados = plistlib.load(f)
     faixas = {}
+    assinatura = 0
     for tid, t in (dados.get("Tracks") or {}).items():
         if not isinstance(t, dict) or t.get("Podcast") or t.get("Movie") or t.get("TV Show") \
                 or t.get("Audiobooks") or "Audiobook" in str(t.get("Kind") or ""):
+            continue
+        if da_assinatura(t):
+            assinatura += 1
             continue
         faixas[str(tid)] = t
     playlists = []
@@ -117,20 +123,23 @@ def ler(xml):
         if ids:
             playlists.append({"id": str(pl.get("Playlist Persistent ID") or pl.get("Playlist ID")),
                               "nome": str(pl.get("Name") or "?"), "ids": ids})
-    out = {"faixas": faixas, "playlists": playlists}
+    out = {"faixas": faixas, "playlists": playlists, "assinatura": assinatura}
     with _lock:
         _cache.update(chave=chave, dados=out)
     return out
 
 
+def da_assinatura(t):
+    """Musica que nao e da pessoa: da assinatura Apple Music (alugada) ou uma radio da internet."""
+    return bool(t.get("Apple Music")) or "Apple Music" in str(t.get("Kind") or "") or t.get("Track Type") == "URL"
+
+
 def motivo(t, caminho):
     """Por que uma faixa nao pode ser importada (o texto da revisao), ou None se pode."""
     tipo = str(t.get("Kind") or "")
-    if t.get("Apple Music") or "Apple Music" in tipo:
-        return i18n.t("itunes.apple_music")
     if t.get("Protected") or "Protected" in tipo or (caminho and caminho.suffix.lower() in midia.PROTEGIDAS):
         return i18n.t("revisao.protegido_ajuda")
-    if t.get("Track Type") in ("Remote", "URL") or not caminho:
+    if t.get("Track Type") == "Remote" or not caminho:  # comprada, mas nao baixada neste PC
         return i18n.t("itunes.so_na_nuvem")
     if caminho.suffix.lower() not in midia.ACEITAS:
         return i18n.t("itunes.formato")
@@ -186,7 +195,7 @@ def make_blueprint(imp, is_host):
             except Exception as exc:  # noqa: BLE001 - XML quebrado ou de outro programa
                 log.warning("XML do iTunes %s: %s", xml, exc)
                 return jsonify({"xml": None, "erro": i18n.t("itunes.xml_ruim"), "pasta": _pasta_info()})
-            return jsonify({"xml": str(xml), "total": len(dados["faixas"]),
+            return jsonify({"xml": str(xml), "total": len(dados["faixas"]), "assinatura": dados["assinatura"],
                             "playlists": [{"id": p["id"], "nome": p["nome"], "n": len(p["ids"])} for p in dados["playlists"]]})
         return jsonify({"xml": None, "pasta": _pasta_info()})
 

@@ -36,13 +36,17 @@ def biblioteca(tmp_path, monkeypatch):
               "Track Type": "Remote"},
         "5": {"Track ID": 5, "Name": "Sumiu", "Kind": "MPEG audio file", "Track Type": "File",
               "Location": _url(media / "sumiu.mp3")},
+        "7": {"Track ID": 7, "Name": "Comprada na nuvem", "Kind": "Purchased AAC audio file", "Purchased": True,
+              "Track Type": "Remote"},
+        "8": {"Track ID": 8, "Name": "Uma radio", "Kind": "Internet audio stream", "Track Type": "URL",
+              "Location": "http://radio.example/stream"},
         "6": {"Track ID": 6, "Name": "Um podcast", "Podcast": True, "Track Type": "File", "Location": _url(media / "p.mp3")},
     }
     playlists = [
         {"Name": "Biblioteca", "Master": True, "Playlist ID": 10, "Playlist Items": [{"Track ID": 1}]},
         {"Name": "Músicas", "Distinguished Kind": 4, "Playlist ID": 11, "Playlist Items": [{"Track ID": 1}]},
         {"Name": "Festa", "Playlist ID": 12, "Playlist Persistent ID": "ABC",
-         "Playlist Items": [{"Track ID": 2}, {"Track ID": 4}, {"Track ID": 6}]},
+         "Playlist Items": [{"Track ID": 2}, {"Track ID": 4}, {"Track ID": 6}, {"Track ID": 7}]},
         {"Name": "Vazia", "Playlist ID": 13},
     ]
     xml = musica / "iTunes" / "iTunes Music Library.xml"
@@ -65,16 +69,18 @@ def test_library_and_playlists(biblioteca):
     xml, media, imp = biblioteca
     assert itunes.achar_xml() == xml
     dados = itunes.ler(xml)
-    assert sorted(dados["faixas"]) == ["1", "2", "3", "4", "5"]  # o podcast fica de fora
-    assert dados["playlists"] == [{"id": "ABC", "nome": "Festa", "ids": ["2", "4"]}]  # so as da pessoa, com faixas
+    # o podcast, a da assinatura Apple Music e a radio nem aparecem: nao sao da pessoa
+    assert sorted(dados["faixas"]) == ["1", "2", "3", "5", "7"] and dados["assinatura"] == 2
+    assert dados["playlists"] == [{"id": "ABC", "nome": "Festa", "ids": ["2", "7"]}]  # so as da pessoa, com faixas
     itens = {i["etiquetas"]["titulo"]: i for i in itunes.itens(imp, xml)}
     cais = itens["Cais"]["etiquetas"]
     assert (cais["album"], cais["faixa"], cais["artista_album"], cais["motivo"]) == ("Clube da Esquina", 2, "Milton & Lô", None)
     assert itens["Tudo Que Você Podia Ser"]["etiquetas"]["duracao"] == 177.0
     assert imp.caminho(itens["Cais"]["ref"]) == media / "02 Cais.mp3"
-    for nome in ("Velha", "Do Apple Music", "Sumiu"):  # aparecem, mas nao da para importar
+    assert "Do Apple Music" not in itens and "Uma radio" not in itens
+    for nome in ("Velha", "Sumiu", "Comprada na nuvem"):  # sao da pessoa, mas nao da para importar agora
         assert itens[nome]["etiquetas"]["motivo"] and imp.caminho(itens[nome]["ref"]) is None
-    assert [i["titulo"] for i in itunes.itens(imp, xml, "ABC")] == ["Cais", "Do Apple Music"]
+    assert [i["titulo"] for i in itunes.itens(imp, xml, "ABC")] == ["Cais", "Comprada na nuvem"]
 
 
 def test_routes(biblioteca, tmp_path):
@@ -83,7 +89,7 @@ def test_routes(biblioteca, tmp_path):
     app.register_blueprint(itunes.make_blueprint(imp, is_host=lambda: True))
     c = app.test_client()
     r = c.get("/api/bibliotecas/itunes").get_json()
-    assert r["total"] == 5 and r["playlists"] == [{"id": "ABC", "nome": "Festa", "n": 2}]
+    assert r["total"] == 5 and r["assinatura"] == 2 and r["playlists"] == [{"id": "ABC", "nome": "Festa", "n": 2}]
     assert len(c.post("/api/bibliotecas/itunes/itens", json={}).get_json()["itens"]) == 5
     # outro XML escolhido pela pessoa
     ruim = tmp_path / "x.xml"
