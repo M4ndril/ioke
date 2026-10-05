@@ -1,5 +1,5 @@
 // Configuracoes: player, musicas novas, nuvem, complementos, festa, contas, programa e atualizacoes.
-import { $$, api, avatar, biblioteca, esc, gb, icon, openModal, store, toast } from "./common.js";
+import { $$, api, avatar, biblioteca, confirmar, esc, gb, icon, mostrarTexto, openModal, store, toast } from "./common.js";
 import { timeAgo } from "./ui.js";
 import { idioma, t, t as tr } from "./i18n.js"; // tr: onde "t" ja e outra coisa (TABS.map((t) => ...))
 import { mountNuvem } from "./nuvem.js";
@@ -34,7 +34,7 @@ function mountAdmin(box) {
         </div>
       </div>`;
     box.querySelector("[data-reset]").onclick = async () => {
-      if (!confirm(tr("admin.trocar_confirmar"))) return;
+      if (!(await confirmar(tr("admin.trocar_confirmar"), { sim: tr("admin.trocar"), perigo: true }))) return;
       try {
         render((await api("/api/admin/reset", { method: "POST" })).url);
         toast(tr("admin.trocado"));
@@ -47,7 +47,7 @@ function mountAdmin(box) {
         await navigator.clipboard.writeText(url);
         toast(tr("admin.copiado"));
       } catch {
-        prompt(tr("admin.link"), url);
+        mostrarTexto(tr("admin.copiar"), url, tr("admin.link"));
       }
     };
   };
@@ -268,7 +268,7 @@ function mountApp(progBox, updBox, setBadge) {
     if (perfilSel) {
       perfilSel.onchange = async () => {
         const v = perfilSel.value;
-        if (!confirm(tr("config.perfil.confirmar", { perfil: tr(`config.perfil.${v}`) }))) {
+        if (!(await confirmar(tr("config.perfil.confirmar", { perfil: tr(`config.perfil.${v}`) })))) {
           perfilSel.value = st.perfil;
           return;
         }
@@ -288,7 +288,7 @@ function mountApp(progBox, updBox, setBadge) {
       try {
         await api("/api/app/restart", { method: "POST", body: {} });
       } catch (err) {
-        if (!(err.data && err.data.busy) || !confirm(tr("config.reiniciar_cantando"))) return toast(err.message, { error: true });
+        if (!(err.data && err.data.busy) || !(await confirmar(tr("config.reiniciar_cantando"), { sim: tr("config.reiniciar_mesmo"), perigo: true }))) return toast(err.message, { error: true });
         await api("/api/app/restart", { method: "POST", body: { force: true } });
       }
       toast(tr("programa.reiniciando"), { ms: 10000 });
@@ -306,7 +306,7 @@ function mountApp(progBox, updBox, setBadge) {
     }
     $$("[data-install]", updBox).forEach((b) => (b.onclick = async () => {
       const v = b.dataset.install;
-      if (!b.dataset.newer && !confirm(tr("atualizacoes.voltar_confirmar", { versao: v }))) return;
+      if (!b.dataset.newer && !(await confirmar(tr("atualizacoes.voltar_confirmar", { versao: v })))) return;
       try {
         render(await api("/api/app/install", { method: "POST", body: { version: v } }));
         poll();
@@ -404,8 +404,8 @@ async function mountLook(box) {
     save();
   };
   const controls = ["fundo", "letra", "borda"].map((g) => mountLookControls(box.querySelector(`[data-g="${g}"]`), [g], onChange));
-  box.querySelector("[data-reset]").onclick = () => {
-    if (!confirm(tr("visual.original_confirmar"))) return;
+  box.querySelector("[data-reset]").onclick = async () => {
+    if (!(await confirmar(tr("visual.original_confirmar")))) return;
     look = { ...info.defaults };
     pending = { ...info.defaults };
     paint();
@@ -443,7 +443,7 @@ async function changeDataFolder(app, current) {
     try {
       await send(false);
     } catch (err) {
-      if (!(err.data && err.data.busy) || !confirm(tr("config.reiniciar_cantando"))) {
+      if (!(err.data && err.data.busy) || !(await confirmar(tr("config.reiniciar_cantando"), { sim: tr("config.reiniciar_mesmo"), perigo: true }))) {
         return toast(err.message, { error: true });
       }
       await send(true);
@@ -668,13 +668,14 @@ export async function openSettings({ onChange, tab } = {}) {
   modal.querySelector("[data-ai-auto]").onchange = (e) =>
     save({ ai_lyrics_auto: e.target.checked }, e.target.checked ? tr("ia_config.auto_ligada") : tr("ia_config.auto_desligada"));
   modal.querySelector("[data-ai-all]").onclick = async (e) => {
-    if (!confirm(tr("ia_config.todas_confirmar"))) return;
-    e.currentTarget.disabled = true;
+    const btn = e.currentTarget; // depois do await, o evento ja nao tem o botao
+    if (!(await confirmar(tr("ia_config.todas_confirmar")))) return;
+    btn.disabled = true;
     try {
       const r = await api("/api/library/align-all", { method: "POST" });
       toast(tr("ia_config.na_fila", { n: r.count }));
     } catch (err) {
-      e.currentTarget.disabled = false;
+      btn.disabled = false;
       toast(err.message, { error: true });
     }
   };
@@ -694,7 +695,7 @@ export async function openSettings({ onChange, tab } = {}) {
     const bib = await biblioteca().catch(() => null);
     const ids = ((bib && bib.songs) || []).map((x) => x.id);
     if (!ids.length) return toast(tr("pacotes.nenhuma"));
-    if (!confirm(tr("pacotes.exportar_todas_confirmar", { n: ids.length }))) return;
+    if (!(await confirmar(tr("pacotes.exportar_todas_confirmar", { n: ids.length })))) return;
     import("./pacotes.js").then((m) => m.exportarPacotes(ids));
   };
   mountApp(modal.querySelector("[data-app-prog]"), modal.querySelector("[data-app-upd]"), (on) =>

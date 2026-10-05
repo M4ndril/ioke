@@ -2,7 +2,7 @@
 // musica tocando, aperte ESPACO quando cada linha comecar. Serve para criar
 // uma letra sincronizada a partir de uma letra sem tempo e para corrigir so
 // uma linha de uma letra que ja existe.
-import { $, $$, api, esc, fmtTime, icon, toast } from "./common.js";
+import { $, $$, api, confirmar, esc, fmtTime, icon, toast } from "./common.js";
 import { t as tr } from "./i18n.js";
 
 const REACTION = 0.12; // quem aperta o botao sempre atrasa um pouquinho
@@ -65,8 +65,8 @@ export async function openLyricsEditor(song, player, { onSaved, onClose } = {}) 
   // tempo da letra = tempo da musica - offset (igual ao player)
   const now = () => Math.max(0, player.time() - offset() - REACTION);
 
-  function close(force = false) {
-    if (dirty && !force && !confirm(tr("editor.sair_sem_salvar"))) return;
+  async function close(force = false) {
+    if (dirty && !force && !(await confirmar(tr("editor.sair_sem_salvar"), { sim: tr("editor.sair"), perigo: true }))) return;
     box.classList.remove("open");
     box.setAttribute("aria-hidden", "true");
     window.removeEventListener("keydown", onKey, true);
@@ -75,7 +75,7 @@ export async function openLyricsEditor(song, player, { onSaved, onClose } = {}) 
   }
 
   function onKey(e) {
-    if (mode !== "sync" || e.target.closest("textarea, input, select")) return;
+    if (mode !== "sync" || e.target.closest("textarea, input, select") || document.querySelector(".modal-backdrop")) return;
     const k = e.key;
     if (k === " " || k === "Enter") {
       e.preventDefault();
@@ -169,10 +169,10 @@ export async function openLyricsEditor(song, player, { onSaved, onClose } = {}) 
     } else if (mode === "text" || !timed) {
       const text = typed();
       if (!text.trim()) return toast(tr("editor.vazia"), { error: true });
-      if (!confirm(tr("editor.sem_tempo_confirmar"))) return;
+      if (!(await confirmar(tr("editor.sem_tempo_confirmar"), { sim: tr("editor.salvar_assim") }))) return;
       payload = { text: text.split("\n").filter((l) => l.trim() !== BREAK).join("\n"), source: "manual" };
     } else {
-      if (missing && !confirm(tr("editor.faltam_confirmar", { n: missing }))) return;
+      if (missing && !(await confirmar(tr("editor.faltam_confirmar", { n: missing }), { sim: tr("editor.salvar_assim") }))) return;
       payload = { text: lrc(), source: "manual" };
     }
     try {

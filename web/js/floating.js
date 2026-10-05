@@ -1,5 +1,5 @@
 // Botoes flutuantes no canto superior direito: atividades, sessao (QR), piano, MIDI e configuracoes.
-import { api, esc, gb, h, icon, keyLabel, openModal, store, toast } from "./common.js";
+import { api, confirmar, esc, gb, h, icon, keyLabel, openModal, store, toast } from "./common.js";
 import { mountMidiPicker } from "./midi.js";
 import { openSettings } from "./settings.js";
 import { appApi } from "./appwin.js";
@@ -16,7 +16,7 @@ export async function quitApp(app) {
   } catch {
     /* sem servidor: fecha */
   }
-  if (busy && !confirm(t("app.fechar_ocupado"))) return;
+  if (busy && !(await confirmar(t("app.fechar_ocupado"), { sim: t("app.fechar"), perigo: true }))) return;
   app.quit();
 }
 

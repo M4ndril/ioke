@@ -1,6 +1,6 @@
 // Pagina "Cantar": biblioteca com destaque, filtros e prateleiras.
 import {
-  $, $$, aosPoucos, api, avatar, biblioteca, chooseCover, chooseLyrics, dobrar, editSong, esc, fmtTime, h, icon, keyLabel,
+  $, $$, aosPoucos, api, avatar, biblioteca, chooseCover, chooseLyrics, confirmar, dobrar, editSong, esc, fmtTime, h, icon, keyLabel,
   stopPreview, store, toast, togglePreview,
 } from "./common.js";
 import { mountFabs } from "./floating.js";
@@ -167,7 +167,7 @@ function cardEl(s) {
     if (await editSong(full, { genres })) refresh();
   };
   el.querySelector("[data-del]").onclick = async () => {
-    if (!confirm(t("sing.excluir_confirmar", { nome: nameOf(s) }))) return;
+    if (!(await confirmar(t("sing.excluir_confirmar", { nome: nameOf(s) }), { sim: t("sing.excluir"), perigo: true }))) return;
     try {
       await api(`/api/songs/${s.id}`, { method: "DELETE" });
       toast(t("sing.excluida"));
@@ -508,8 +508,9 @@ async function refreshParty() {
 }
 
 $("#palcoFechar").onclick = async (e) => {
-  if (!confirm(t("palco.fechar_confirmar"))) return;
-  e.currentTarget.disabled = true;
+  const btn = e.currentTarget; // depois do await, o evento ja nao tem o botao
+  if (!(await confirmar(t("palco.fechar_confirmar"), { sim: t("palco.fechar"), perigo: true }))) return;
+  btn.disabled = true;
   try {
     await api("/api/stage/close", { method: "POST" });
     toast(t("palco.fechado"));

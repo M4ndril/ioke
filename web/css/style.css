@@ -855,3 +855,8 @@ select.input.sm-select { width: auto; flex: none; min-width: 130px; margin-left:
 .disco-aviso { position: fixed; left: 18px; bottom: 18px; z-index: 90; display: flex; align-items: center; gap: 12px; width: min(440px, calc(100vw - 36px)); padding: 12px 14px; border-radius: 14px; background: rgba(20, 20, 22, 0.97); border: 1px solid var(--line-2); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); animation: pop 0.18s ease-out; }
 .disco-aviso img, .disco-aviso > .ms { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; flex: none; display: grid; place-items: center; font-size: 28px; color: var(--accent); }
 .disco-aviso .grow { min-width: 0; }
+
+/* ------------------------------------------------ avisos do proprio app (confirmar, pedirTexto, mostrarTexto) */
+.modal.modal-aviso { width: min(480px, 100%); }
+.aviso-texto { margin: 0 0 14px; line-height: 1.5; white-space: pre-line; }
+.aviso-botoes { gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; }

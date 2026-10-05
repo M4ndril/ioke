@@ -40,6 +40,12 @@ app (Settings → Updates), in the user's language.
 - **Track and disc number** in the song's Edit window (from the tags or the file name); each album's shelf in
   "Sing" follows the track order.
 
+### Changed
+
+- **Every notice and question is now IOkê's own** (on the PC, the player and the phones): "are you sure?", typing
+  a path and copying the admin link open a window in the app's look, instead of the browser's box, which showed the
+  PC's address at the top. The buttons say what they'll do ("Delete", "Skip", "New party"), and Esc cancels.
+
 ## [1.1.0-beta.2] - 2026-10-03
 
 ### Added

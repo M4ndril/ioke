@@ -1,6 +1,6 @@
 // Os cartoes "de onde vem as musicas" do Adicionar (so no PC): o CD no leitor, a biblioteca do iTunes e as pastas
 // vigiadas. Cada um abre a revisao (revisao.js) antes de importar.
-import { $, api, esc, icon, openModal, toast } from "./common.js";
+import { $, api, esc, icon, openModal, pedirTexto, toast } from "./common.js";
 import { appApi } from "./appwin.js";
 import { t } from "./i18n.js";
 import { abrirRevisao } from "./revisao.js";
@@ -158,7 +158,7 @@ export function mountMidias(box, { onDone } = {}) {
       </div>`);
     $("[data-xml]", modal).onclick = async () => {
       const app = await appApi();
-      const caminho = app && app.escolher_xml_itunes ? await app.escolher_xml_itunes() : prompt(t("itunes.digite_xml"));
+      const caminho = app && app.escolher_xml_itunes ? await app.escolher_xml_itunes() : await pedirTexto(t("itunes.digite_xml"), { titulo: t("itunes.titulo") });
       if (!caminho) return;
       try {
         infoItunes = await api("/api/bibliotecas/itunes/xml", { method: "POST", body: { caminho } });

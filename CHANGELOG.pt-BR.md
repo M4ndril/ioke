@@ -40,6 +40,13 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 - **Número da faixa e do disco** no Editar da música (vêm das etiquetas ou do nome do arquivo); a prateleira de
   cada álbum no "Cantar" segue a ordem das faixas.
 
+### Mudado
+
+- **Todos os avisos e perguntas agora são do próprio IOkê** (no PC, no player e nos celulares): "tem certeza?",
+  digitar um caminho e copiar o link do administrador abrem uma janela no visual do app, em vez da caixa do
+  navegador, que mostrava o endereço do PC no topo. Os botões dizem o que vão fazer ("Excluir", "Pular", "Nova
+  festa"), e o Esc cancela.
+
 ## [1.1.0-beta.2] - 2026-10-03
 
 ### Adicionado

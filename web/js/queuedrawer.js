@@ -1,7 +1,7 @@
 // Gaveta lateral com a fila de cantores (PC): usada no palco e na biblioteca.
 // Mostra quem esta no palco, a fila (reordenar, subir ao palco, tirar), o
 // rodizio, o ranking da festa, quem ja cantou e o botao "Nova festa".
-import { $, api, avatar, esc, h, icon, toast } from "./common.js";
+import { $, api, avatar, confirmar, esc, h, icon, toast } from "./common.js";
 import { pickSongForQueue, rankingRows, renderQueue } from "./partyui.js";
 import { t } from "./i18n.js";
 
@@ -85,12 +85,12 @@ export function queueDrawer({ onChange, onOpen, autoRefresh = false, parent = do
     changed();
   };
   q("clear").onclick = async () => {
-    if (!confirm(t("fila.limpar_confirmar"))) return;
+    if (!(await confirmar(t("fila.limpar_confirmar"), { sim: t("fila.limpar"), perigo: true }))) return;
     await api("/api/party/clear", { method: "POST" }).catch((err) => toast(err.message, { error: true }));
     changed();
   };
   q("new").onclick = async () => {
-    if (!confirm(t("festa.nova_confirmar"))) return;
+    if (!(await confirmar(t("festa.nova_confirmar"), { sim: t("festa.nova"), perigo: true }))) return;
     await api("/api/party/new", { method: "POST" }).catch((err) => toast(err.message, { error: true }));
     changed();
   };

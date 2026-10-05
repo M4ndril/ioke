@@ -1,7 +1,7 @@
 // Pagina do celular: entrar na fila para cantar, controlar a musica quando e a
 // sua vez, ver a fila e buscar musicas novas nas fontes dos complementos.
 import {
-  $, $$, adminToken, aosPoucos, api, authHeaders, avatar, biblioteca, dobrar, esc, fmtTime, h, icon, openModal,
+  $, $$, adminToken, aosPoucos, api, authHeaders, avatar, biblioteca, confirmar, dobrar, esc, fmtTime, h, icon, openModal,
   storageOk, store, toast,
 } from "./common.js";
 import { bindTomSteppers, etaText, rankingRows, renderQueue, showNotices, tomStepper } from "./partyui.js";
@@ -354,7 +354,7 @@ function renderMini() {
 
 /** Passar a vez: as proximas pessoas cantam antes; a entrada nao sai da fila. */
 async function passTurn(entry, question) {
-  if (!confirm(question)) return;
+  if (!(await confirmar(question))) return;
   try {
     onParty(await api("/api/party/pass", { method: "POST", body: { entry_id: entry.id } }));
     toast(entry.mine ? t("celular.voce_passou") : t("celular.passou", { nome: entry.singer }), { ms: 4000 });
@@ -442,8 +442,8 @@ function renderStage() {
     const pass = $("[data-pass]", box);
     if (pass) pass.onclick = () => passTurn(cur, PASS_MINE());
     $$("[data-cmd]", box).forEach((b) => {
-      b.onclick = () => {
-        if (b.dataset.cmd === "skip" && !confirm(t("celular.pular_sua"))) return;
+      b.onclick = async () => {
+        if (b.dataset.cmd === "skip" && !(await confirmar(t("celular.pular_sua"), { sim: t("comum.pular") }))) return;
         command(b.dataset.cmd);
       };
     });
@@ -470,8 +470,8 @@ function renderStage() {
   const pass = $("[data-pass]", box);
   if (pass) pass.onclick = () => passTurn(cur, t("celular.passar_de_confirmar", { nome: cur.singer }));
   $$("[data-cmd]", box).forEach((b) => {
-    b.onclick = () => {
-      if (b.dataset.cmd === "skip" && !confirm(t("celular.pular_nome", { nome: cur.singer }))) return;
+    b.onclick = async () => {
+      if (b.dataset.cmd === "skip" && !(await confirmar(t("celular.pular_nome", { nome: cur.singer }), { sim: t("comum.pular") }))) return;
       command(b.dataset.cmd);
     };
   });
@@ -523,7 +523,7 @@ function renderQueueTools() {
       </button>
       <button class="btn outline sm new-party" id="newParty">${icon("celebration")} ${esc(t("festa.nova"))}</button>`;
     $("#newParty").onclick = async () => {
-      if (!confirm(t("festa.nova_confirmar"))) return;
+      if (!(await confirmar(t("festa.nova_confirmar"), { sim: t("festa.nova"), perigo: true }))) return;
       try {
         await api("/api/party/new", { method: "POST" });
         toast(t("celular.festa_nova"));

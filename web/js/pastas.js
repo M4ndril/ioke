@@ -1,6 +1,6 @@
 // Pastas vigiadas (Configuracoes -> Musicas novas): as pastas que o IOkê olha de tempos em tempos. Musica nova que
 // aparece numa delas vai para a revisao (o cartao no Adicionar) ou entra sozinha (karaoke/pastas.py).
-import { api, esc, h, icon, toast } from "./common.js";
+import { api, confirmar, esc, h, icon, pedirTexto, toast } from "./common.js";
 import { appApi } from "./appwin.js";
 import { t } from "./i18n.js";
 import { abrirRevisao } from "./revisao.js";
@@ -10,7 +10,7 @@ import { abrirRevisao } from "./revisao.js";
 /** Pede a pasta (a janela do Windows no app; no navegador, digitando o caminho) e passa a vigiar. */
 export async function vigiarPasta() {
   const app = await appApi();
-  const caminho = app && app.escolher_pasta_musicas ? await app.escolher_pasta_musicas() : prompt(t("pastas.digite"));
+  const caminho = app && app.escolher_pasta_musicas ? await app.escolher_pasta_musicas() : await pedirTexto(t("pastas.digite"), { titulo: t("pastas.vigiar") });
   if (!caminho) return null;
   try {
     const r = await api("/api/pastas", { method: "POST", body: { caminho, subpastas: true, modo: "perguntar" } });
@@ -91,7 +91,7 @@ export function mountPastas(box) {
       el.querySelector("[data-sub]").onchange = (e) => mudar({ subpastas: e.target.checked }, t("pastas.salva"));
       el.querySelector("[data-revisar]").onclick = () => revisarPasta(p.id);
       el.querySelector("[data-tirar]").onclick = async () => {
-        if (!confirm(t("pastas.parar_confirmar", { nome: p.nome }))) return;
+        if (!(await confirmar(t("pastas.parar_confirmar", { nome: p.nome }), { sim: t("pastas.parar"), perigo: true }))) return;
         try {
           render((await api(`/api/pastas/${p.id}`, { method: "DELETE" })).pastas);
         } catch (err) {

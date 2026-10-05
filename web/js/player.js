@@ -7,7 +7,7 @@
 // acaba, carrega a proxima SEM recarregar a pagina (o navegador so libera o
 // som depois de um clique, e esse clique precisa valer para a festa toda).
 import {
-  $, $$, api, avatar, chooseCover, chooseLyrics, esc, fmtTime, icon, keyLabel, NOTES, num, openModal, perguntarOnde,
+  $, $$, api, avatar, chooseCover, chooseLyrics, confirmar, esc, fmtTime, icon, keyLabel, NOTES, num, openModal, perguntarOnde,
   readyIn, SCALES, shiftText, store, toast, transposeKey,
 } from "./common.js";
 import { openPiano } from "./floating.js";
@@ -2018,7 +2018,7 @@ function startParty() {
   };
   $("#idleAdd").onclick = () => pickSongForQueue({ onDone: pollNow });
   $("#sbTakeOver").onclick = async () => {
-    if (!confirm(tr("player.usar_este_confirmar"))) return;
+    if (!(await confirmar(tr("player.usar_este_confirmar"), { sim: tr("player.usar_este") }))) return;
     await api("/api/stage/close", { method: "POST" }).catch((err) => toast(err.message, { error: true }));
     toast(tr("player.palco_tv_fechado"));
   };
@@ -2059,7 +2059,7 @@ function blockSolo() {
     }
   };
   $("#sbTakeOver").onclick = async () => {
-    if (!confirm(tr("player.usar_este_confirmar"))) return;
+    if (!(await confirmar(tr("player.usar_este_confirmar"), { sim: tr("player.usar_este") }))) return;
     await api("/api/stage/close", { method: "POST" }).catch((err) => toast(err.message, { error: true }));
     location.reload();
   };

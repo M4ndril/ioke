@@ -378,7 +378,8 @@ export function openModal(title, bodyHtml, { fixo = false } = {}) {
     document.removeEventListener("keydown", onKey);
     back.dispatchEvent(new CustomEvent("closed"));
   };
-  const onKey = (e) => e.key === "Escape" && close();
+  // Esc fecha so a janela de cima (um "tem certeza?" aberto sobre as Configuracoes nao fecha as duas)
+  const onKey = (e) => e.key === "Escape" && [...document.querySelectorAll(".modal-backdrop")].pop() === back && close();
   if (!fixo) {
     back.addEventListener("mousedown", (e) => e.target === back && close());
     back.querySelector("[data-close]").onclick = close;
@@ -388,6 +389,82 @@ export function openModal(title, bodyHtml, { fixo = false } = {}) {
   document.documentElement.classList.add("modal-open");
   back.close = close;
   return back;
+}
+
+// ------------------------------------------------------- avisos do proprio app
+// Nunca os do navegador (alert/confirm/prompt): eles mostram o endereco (o IP do PC) no topo e destoam do app.
+
+/** "Tem certeza?" Resolve com true (confirmou) ou false (cancelou, fechou ou apertou Esc). */
+export function confirmar(mensagem, { titulo, sim, nao, perigo = false } = {}) {
+  return new Promise((resolve) => {
+    let resposta = false;
+    const modal = openModal(titulo || t("comum.confirmar_titulo"), `
+      <p class="aviso-texto">${esc(mensagem)}</p>
+      <div class="row aviso-botoes">
+        <button class="btn outline" data-nao>${esc(nao || t("comum.cancelar"))}</button>
+        <button class="btn ${perigo ? "danger" : "light"}" data-sim data-nav-default>${esc(sim || t("comum.confirmar"))}</button>
+      </div>`);
+    modal.querySelector(".modal").classList.add("modal-aviso");
+    const fim = (v) => {
+      resposta = v;
+      modal.close();
+    };
+    modal.querySelector("[data-sim]").onclick = () => fim(true);
+    modal.querySelector("[data-nao]").onclick = () => fim(false);
+    modal.addEventListener("closed", () => resolve(resposta));
+    modal.querySelector("[data-sim]").focus();
+  });
+}
+
+/** Pede um texto. Resolve com o texto (sem espacos nas pontas) ou null (cancelou). */
+export function pedirTexto(mensagem, { titulo, valor = "", placeholder = "", ok } = {}) {
+  return new Promise((resolve) => {
+    let resposta = null;
+    const modal = openModal(titulo || t("comum.confirmar_titulo"), `
+      <p class="aviso-texto">${esc(mensagem)}</p>
+      <input class="input" data-txt value="${esc(valor)}" placeholder="${esc(placeholder)}" style="width:100%">
+      <div class="row aviso-botoes">
+        <button class="btn outline" data-nao>${esc(t("comum.cancelar"))}</button>
+        <button class="btn light" data-sim data-nav-default>${esc(ok || t("comum.ok"))}</button>
+      </div>`);
+    modal.querySelector(".modal").classList.add("modal-aviso");
+    const campo = modal.querySelector("[data-txt]");
+    const fim = (v) => {
+      resposta = v;
+      modal.close();
+    };
+    modal.querySelector("[data-sim]").onclick = () => fim(campo.value.trim() || null);
+    modal.querySelector("[data-nao]").onclick = () => fim(null);
+    campo.addEventListener("keydown", (e) => e.key === "Enter" && fim(campo.value.trim() || null));
+    modal.addEventListener("closed", () => resolve(resposta));
+    campo.focus();
+    campo.select();
+  });
+}
+
+/** Mostra um texto para copiar (um link, por exemplo), com o botao de copiar. */
+export function mostrarTexto(titulo, texto, mensagem = "") {
+  const modal = openModal(titulo, `
+    ${mensagem ? `<p class="aviso-texto">${esc(mensagem)}</p>` : ""}
+    <input class="input" data-txt value="${esc(texto)}" readonly style="width:100%">
+    <div class="row aviso-botoes">
+      <button class="btn outline" data-fechar>${esc(t("comum.fechar"))}</button>
+      <button class="btn light" data-copiar data-nav-default>${icon("content_copy")} ${esc(t("comum.copiar"))}</button>
+    </div>`);
+  modal.querySelector(".modal").classList.add("modal-aviso");
+  const campo = modal.querySelector("[data-txt]");
+  campo.select();
+  modal.querySelector("[data-fechar]").onclick = () => modal.close();
+  modal.querySelector("[data-copiar]").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      campo.select();
+      document.execCommand("copy"); // sem https (o IP do PC), a area de transferencia nova nao existe
+    }
+    toast(t("comum.copiado"));
+  };
+  return modal;
 }
 
 // ------------------------------------------------------- escolher a letra
@@ -824,7 +901,7 @@ export function editSong(song, { genres = [] } = {}) {
         }
       };
       trocar.onclick = async () => {
-        if (!confirm(t("musica.trocar_audio_confirmar"))) return;
+        if (!(await confirmar(t("musica.trocar_audio_confirmar"), { sim: t("musica.trocar_audio") }))) return;
         const app = await import("./appwin.js").then((m) => m.appApi());
         if (!app || !app.escolher_audio) return input.click();
         const caminho = await app.escolher_audio();
@@ -971,7 +1048,7 @@ export function editSong(song, { genres = [] } = {}) {
     const exportar = modal.querySelector("[data-exportar-pacote]");
     if (exportar) exportar.onclick = () => import("./pacotes.js").then((m) => m.exportarPacotes([song.id]));
     modal.querySelector("[data-reprocess]").onclick = async () => {
-      if (!confirm(t("musica.separar_confirmar"))) return;
+      if (!(await confirmar(t("musica.separar_confirmar"), { sim: t("musica.separar_de_novo") }))) return;
       try {
         const onde = await perguntarOnde("separar");
         if (onde === null) return;
