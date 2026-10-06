@@ -16,6 +16,7 @@ import threading
 import time
 from pathlib import Path
 
+from ..util import encerrar_arvore
 from ..versoes import NO_WINDOW, WINDOWS
 from . import cliente
 from .instalador import python_da_venv
@@ -155,16 +156,7 @@ class Processo:
     def parar(self):
         p = self.proc
         self.proc = None
-        if p and p.poll() is None:
-            p.terminate()
-            try:
-                p.wait(5)
-            except subprocess.TimeoutExpired:
-                p.kill()
-                try:
-                    p.wait(5)
-                except subprocess.TimeoutExpired:
-                    pass
+        encerrar_arvore(p, espera=5)  # o complemento e o que ele abriu (FFmpeg, downloads...)
 
 
 class Gerente:

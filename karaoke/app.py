@@ -28,7 +28,7 @@ from pathlib import Path
 
 from . import i18n
 from .config import APP_HOME, CONFIG, DATA_DIR, ROOT, WEB_DIR, app_version
-from .util import NO_WINDOW, read_json, write_json
+from .util import NO_WINDOW, encerrar_arvore as _encerrar_arvore, read_json, write_json
 
 RESTART_CODE = 75
 WINDOW_FILE = DATA_DIR / "janela.json"  # tela cheia ou janela, e o canal da janela aberta
@@ -216,11 +216,13 @@ class App:
                 urllib.request.urlopen(req, timeout=6).read()
             except Exception:  # noqa: BLE001
                 pass
-            self.server.terminate()
-            try:
-                self.server.wait(8)
-            except subprocess.TimeoutExpired:
-                self.server.kill()
+            try:  # desliga os complementos com calma (cada um e um processo proprio)
+                req = urllib.request.Request(self.url + "api/app/desligar", data=b"{}", method="POST",
+                                             headers={"Content-Type": "application/json"})
+                urllib.request.urlopen(req, timeout=20).read()
+            except Exception:  # noqa: BLE001
+                pass
+            _encerrar_arvore(self.server)
         _save_prefs(canal=None)
 
     def quit_now(self, code=None):

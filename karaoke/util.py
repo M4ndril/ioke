@@ -38,6 +38,26 @@ def require_ffmpeg():
     return FFMPEG
 
 
+def encerrar_arvore(proc, espera=8):
+    """Encerra um processo e os que ele abriu. No Windows, terminate() mata so ele, na hora: os filhos (complementos,
+    FFmpeg...) ficariam rodando sozinhos."""
+    if not proc or proc.poll() is not None:
+        return
+    try:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True, timeout=15,
+                           creationflags=NO_WINDOW)
+        else:
+            proc.terminate()
+        proc.wait(espera)
+    except (OSError, subprocess.SubprocessError):
+        proc.kill()
+        try:
+            proc.wait(5)
+        except subprocess.TimeoutExpired:
+            pass
+
+
 def run_ffmpeg(args, timeout=None):
     cmd = [require_ffmpeg(), "-hide_banner", "-loglevel", "error", "-y", *args]
     proc = subprocess.run(

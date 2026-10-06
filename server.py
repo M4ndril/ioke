@@ -815,6 +815,16 @@ def api_save_settings():
     return jsonify(_settings_payload())
 
 
+@app.post("/api/app/desligar")
+def api_desligar():
+    """A janela do app vai fechar: desliga os complementos antes (no Windows, encerrar o servidor nao deixa o
+    Python fazer a limpeza, e os processos deles ficariam rodando sozinhos ate a proxima abertura)."""
+    if not is_host():
+        return error("erro.so_pc_config", 403)
+    complementos.encerrar()
+    return jsonify({"ok": True})
+
+
 # ----------------------------------------------------- fila de cantores
 def party_limit():
     """Musicas esperando por pessoa (0 = sem limite)."""
