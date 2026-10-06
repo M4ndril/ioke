@@ -135,6 +135,13 @@ lyrics, cover, album, genre and year, and the separation into **vocals × instru
 vocals**. ✕ cancels, ↻ tries again. With add-ons that are song sources, the page also has **Search in**, with
 previews.
 
+**Choose folder** opens the review: the songs grouped by album, to uncheck, fix names and hear a preview before
+importing. The lyrics (a `.lrc`/`.txt` with the same name, or inside the file) and the folder's cover come along.
+Albums ripped from CD as one file with a `.cue` come in track by track; when the `.cue` has no names, IOkê
+recognizes the disc on MusicBrainz (album, tracks, original year and cover). The cards under the upload area import
+from the **iTunes library** (purchases and your own songs; Apple Music subscription songs are left out) and from
+**watched folders** (Settings → New songs), which IOkê checks every minute for new songs.
+
 On a phone, the QR code opens the karaoke page (`/m`). With add-on sources that allow phones, people can search
 and add songs from there too, follow the processing and delete only their own. Files are only added on the PC.
 

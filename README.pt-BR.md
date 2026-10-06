@@ -136,6 +136,13 @@ letra, capa, álbum, estilo e ano, e a separação em **voz × instrumental** e 
 cancela, ↻ tenta de novo. Com complementos que são fontes de músicas, a página ganha o **Buscar em**, com o trecho
 para ouvir antes.
 
+**Escolher pasta** abre a revisão: as músicas agrupadas por álbum, para desmarcar, corrigir nomes e ouvir um trecho
+antes de importar. A letra (`.lrc`/`.txt` com o mesmo nome, ou dentro do arquivo) e a capa da pasta vêm junto.
+Álbuns copiados de CD num arquivo só com `.cue` entram faixa por faixa; quando o `.cue` não tem os nomes, o IOkê
+reconhece o disco no MusicBrainz (álbum, faixas, ano original e capa). Os cartões embaixo da área de envio importam
+da **biblioteca do iTunes** (as compradas e as suas; as da assinatura Apple Music ficam de fora) e das **pastas
+vigiadas** (Configurações → Músicas novas), que o IOkê olha a cada minuto atrás de músicas novas.
+
 No celular, o QR code abre a página do karaokê (`/m`). Com fontes de complementos que deixam o celular buscar, dá
 para adicionar músicas por lá também, acompanhar o processamento e apagar só as próprias. Arquivos, só pelo PC.
 

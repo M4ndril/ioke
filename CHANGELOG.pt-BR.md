@@ -11,8 +11,18 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+## [1.1.0] - 2026-10-05
+
+Reúne tudo o que saiu nas versões de teste 1.1.0-beta.1 e 1.1.0-beta.2, mais a importação de mídias (pastas com
+revisão, pastas vigiadas, biblioteca do iTunes, álbuns com `.cue` e reconhecimento de CDs).
+
 ### Adicionado
 
+- **Aviso de primeiro uso e relatórios de erro (opcionais):** antes de começar, a pessoa confirma que é
+  responsável pelo conteúdo que usa no IOkê (só segue marcando "Li e concordo") e escolhe se o app pode mandar os
+  erros automaticamente, para serem corrigidos nas próximas versões. Vai o erro, a versão, o Windows e as últimas
+  linhas do registro; nunca o seu IP, o nome do PC, o seu usuário, as suas contas nem as suas chaves. Os dois ficam
+  em Configurações → Programa.
 - **Revisar antes de importar uma pasta:** escolher uma pasta no app abre uma janela com as músicas agrupadas por
   álbum (capa, artista, ano e faixas na ordem). Dá para desmarcar o que não quer, corrigir nomes, renomear o álbum,
   colar a lista de faixas de um encarte e ouvir um trecho de cada uma. A importação roda em segundo plano e aparece
@@ -39,16 +49,69 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
   Álbuns de vários discos viram um álbum só, com as faixas na ordem.
 - **Número da faixa e do disco** no Editar da música (vêm das etiquetas ou do nome do arquivo); a prateleira de
   cada álbum no "Cantar" segue a ordem das faixas.
+- **Selecionar músicas no "Cantar" e exportar como pacotes:** o botão **Selecionar** marca as músicas com um clique;
+  a barra de baixo exporta as marcadas. **Selecionar todas** pega todas as músicas da busca e do filtro atuais, mesmo
+  as que ainda não apareceram. Ctrl + clique e Shift + clique também selecionam (uma música, ou um intervalo), como
+  no Windows.
+- **Várias separações ao mesmo tempo na nuvem** (Configurações → Nuvem → Separações ao mesmo tempo, até 6): numa
+  fila grande, cada música separa numa placa própria e a fila termina antes. O custo por música continua o mesmo.
+- **Central "Em andamento"** nas telas do PC (início, Adicionar, Cantar): uma pílula ao lado dos botões do topo mostra o
+  que está rodando em segundo plano (músicas sendo preparadas ou separadas, letra por IA, refazer voz/apoio, vídeos,
+  ações de complemento); clicar abre um painel lateral com os detalhes, para cancelar ou tentar de novo. Nunca
+  aparece no player, no palco nem nos celulares.
+- **Faixas guardadas:** cada separação (e cada "refazer só voz/apoio") fica guardada, até 4 por música. No Editar da
+  música, escolha de qual veio cada faixa (instrumental, voz principal, vocal de apoio): por exemplo, a voz de uma
+  separação e o apoio de outra, sem separar de novo.
 
 ### Mudado
 
-- **Todos os avisos e perguntas agora são do próprio IOkê** (no PC, no player e nos celulares): "tem certeza?",
-  digitar um caminho e copiar o link do administrador abrem uma janela no visual do app, em vez da caixa do
-  navegador, que mostrava o endereço do PC no topo. Os botões dizem o que vão fazer ("Excluir", "Pular", "Nova
+- **Todos os avisos e perguntas agora são do próprio IOkê** (no PC, no player e nos celulares): os "tem certeza?"
+  e o link do administrador abrem uma janela no visual do app, em vez da caixa do navegador, que mostrava o
+  endereço do PC no topo. Os botões dizem o que vão fazer ("Excluir", "Pular", "Nova
   festa"), e o Esc cancela.
 - **Escolher uma pasta com o IOkê aberto no navegador:** em vez de um campo para colar o caminho, um explorador
   de pastas do próprio app (os lugares de sempre, os discos, as subpastas e as músicas de cada pasta). Vale para
   as pastas vigiadas e para achar o arquivo da biblioteca do iTunes. No app instalado continua a janela do Windows.
+- **Separação na nuvem mais rápida:** mostrar o andamento não pausa mais a placa, e a próxima música da fila já
+  espera na nuvem, então a máquina nunca fica parada (nem desliga) entre uma música e outra.
+- Separação na nuvem: cada música anota onde foi o tempo (envio, esperando placa, separação, volta e os tamanhos),
+  mostrado no Editar da música e no registro.
+- **Onde sincronizar a letra** tem configuração própria (Configurações → Nuvem), separada de onde separar. Refazer
+  voz/apoio segue o "onde separar".
+- **"Usar estas escolhas automaticamente"** (Configurações → Nuvem): desligado, com a nuvem conectada, o PC pergunta
+  "neste PC ou na nuvem?" a cada música nova, separar de novo, refazer voz/apoio e sincronizar letra.
+- Os pacotes exportados levam a capa em uso (também quando é a miniatura da fonte) e o vídeo de fundo, se tiver.
+- Botões do topo: a tela inicial ganha o de Configurações; os de piano e MIDI saem da página "Cantar" (ficam no
+  player).
+- A sincronização da letra por IA segue o "onde separar": com **Nuvem** escolhida, ela roda na nuvem mesmo num PC com
+  placa NVIDIA.
+- Refazer só voz/apoio não sincroniza mais a letra de novo sozinho (o áudio é o mesmo, então o tempo não muda; uma
+  sincronia boa podia piorar).
+- Pacotes cujo nome ganhou ".zip" no fim (o Google Drive faz isso) também são aceitos.
+- **Atualizações ocupam menos espaço e tempo:** versões com as mesmas dependências agora dividem um ambiente só
+  (`ambientes\` na pasta do programa), em vez de cada uma ter o seu; uma atualização que só muda o código não instala
+  nada de novo. Ambientes antigos saem quando nenhuma versão guardada usa mais.
+- **O desinstalador pode manter os arquivos baixados** (Python e dependências, alguns GB), para uma reinstalação
+  limpa na mesma pasta não baixar tudo de novo.
+- O pacote de atualização e o instalador não levam mais o que só serve para desenvolver (automações do GitHub,
+  testes, documentos, scripts de montagem).
+
+### Corrigido
+
+- **Fechar o IOkê fecha também os complementos:** antes, os processos deles ficavam rodando sozinhos até a
+  próxima vez que o app abria.
+- Adicionar muitos arquivos de uma vez: a lista embaixo da área de envio tem altura fixa e rolagem.
+- Escolher "Vídeo" de fundo numa música sem vídeo dizia "música não encontrada"; agora diz que o vídeo não foi
+  encontrado.
+- Gastos da nuvem: o gasto real do mês nunca vinha depois do dia 7 (o Modal recusa relatório por hora com mais de 7
+  dias); agora o relatório é pedido em pedaços.
+- Pacotes .karaoke importados aparecem na biblioteca na hora (antes, só reiniciando o app).
+- As prateleiras por estilo (e por artista e álbum): a seta da direita não rolava e escondia o botão de excluir de um
+  card.
+- Complementos ligados podiam abrir desligados depois de reiniciar o PC.
+- Fechar o app também fecha a janela do palco.
+- Enquanto a IA baixa os modelos pela primeira vez, o player diz isso e continua acompanhando o andamento (antes,
+  podia ficar em "na fila" até sair do player).
 
 ## [1.1.0-beta.2] - 2026-10-03
 
@@ -201,7 +264,8 @@ A primeira versão pública do IOkê: um app de karaokê para Windows que roda n
 - **Atualizações** por esta página, em segundo plano, com os canais Estável e Testes, e a volta sozinha para a versão
   anterior se uma nova não abrir.
 
-[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.1.0-beta.2...HEAD
+[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/M4ndril/ioke/compare/v1.0.2...v1.1.0
 [1.1.0-beta.2]: https://github.com/M4ndril/ioke/compare/v1.1.0-beta.1...v1.1.0-beta.2
 [1.1.0-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.2...v1.1.0-beta.1
 [1.0.2]: https://github.com/M4ndril/ioke/compare/v1.0.1...v1.0.2

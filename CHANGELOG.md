@@ -11,8 +11,18 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-05
+
+Brings together everything from the 1.1.0-beta.1 and 1.1.0-beta.2 test versions, plus media import (folders
+with review, watched folders, the iTunes library, albums with a `.cue` and CD recognition).
+
 ### Added
 
+- **First-use notice and error reports (optional):** before starting, you confirm you are responsible for the
+  content you use in IOkê (it only goes on after ticking "I have read and agree") and choose whether the app may send
+  errors automatically, so they get fixed in the next versions. It sends the error, the version, Windows and the
+  last lines of the log; never your IP, your PC's name, your user name, your accounts or your keys. Both are in
+  Settings → Program.
 - **Review before importing a folder:** choosing a folder in the app opens a window with the songs grouped by album
   (cover, artist, year and tracks in order). You can uncheck what you don't want, fix names, rename the album, paste
   the track list from a booklet and hear a preview of each one. The import runs in the background and shows in
@@ -39,15 +49,67 @@ app (Settings → Updates), in the user's language.
   remembered. Multi-disc albums become one album, with the tracks in order.
 - **Track and disc number** in the song's Edit window (from the tags or the file name); each album's shelf in
   "Sing" follows the track order.
+- **Select songs in "Sing" and export them as packages:** the **Select** button marks songs with a click; the bar at
+  the bottom exports the marked ones. **Select all** takes every song of the current search and filter, even the
+  ones not shown yet. Ctrl + click and Shift + click also select (one song, or a range), as in Windows.
+- **Several cloud separations at the same time** (Settings → Cloud → Separations at the same time, up to 6): in a big
+  queue, each song separates on its own GPU and the queue finishes sooner. The cost per song stays the same.
+- **"In progress" center** on the PC screens (home, Add, Sing): a pill next to the top buttons shows what is running
+  in the background (songs being prepared or separated, AI lyrics, redoing lead/backing, videos, add-on actions);
+  clicking it opens a side panel with the details, to cancel or retry. It never shows on the player, the stage or
+  the phones.
+- **Saved tracks:** each separation (and each "redo only lead/backing") is kept, up to 4 per song. In the song's
+  Edit window, choose where each track comes from (instrumental, lead vocals, backing vocals): for example, the
+  lead from one separation and the backing from another, without separating again.
 
 ### Changed
 
-- **Every notice and question is now IOkê's own** (on the PC, the player and the phones): "are you sure?", typing
-  a path and copying the admin link open a window in the app's look, instead of the browser's box, which showed the
+- **Every notice and question is now IOkê's own** (on the PC, the player and the phones): the "are you sure?"
+  questions and the admin link open a window in the app's look, instead of the browser's box, which showed the
   PC's address at the top. The buttons say what they'll do ("Delete", "Skip", "New party"), and Esc cancels.
 - **Choosing a folder with IOkê open in the browser:** instead of a field to paste the path, the app's own folder
   explorer (the usual places, the drives, the subfolders and each folder's songs). It's used for watched folders
   and to find the iTunes library file. The installed app still uses the Windows window.
+- **Faster cloud separation:** reporting progress no longer pauses the GPU, and the next song in the queue is
+  already waiting in the cloud, so the machine never sits idle (or shuts down) between songs.
+- Cloud separation: each song records where its time went (upload, waiting for a GPU, separation, download, and
+  the sizes), shown in the song's Edit window and in the log.
+- **Where to sync the lyrics** has its own setting (Settings → Cloud), apart from where to separate. Redoing
+  lead/backing follows "where to separate".
+- **"Use these choices automatically"** (Settings → Cloud): turned off, with the cloud connected, the PC asks "on this
+  PC or in the cloud?" for each new song, separate again, redo lead/backing and lyrics sync.
+- Exported packages carry the cover in use (also when it is the source's thumbnail) and the background video, if
+  there is one.
+- The top buttons: the home screen gets Settings; the piano and MIDI buttons leave the "Sing" page (they are in
+  the player).
+- AI lyrics sync follows "where to separate": with **Cloud** chosen, it runs in the cloud even on a PC with an NVIDIA
+  card.
+- Redoing only lead/backing no longer syncs the lyrics again by itself (the audio is the same, so the timing doesn't
+  change; a good sync could get worse).
+- Packages whose name got a ".zip" at the end (Google Drive does that) are accepted too.
+- **Updates take less space and time:** versions with the same dependencies now share one environment
+  (`ambientes\` in the program folder) instead of each having its own; an update that only changes the code
+  doesn't install anything again. Old environments are removed when no saved version uses them.
+- **The uninstaller can keep the downloaded files** (Python and dependencies, a few GB), so a clean reinstall in the
+  same folder doesn't download everything again.
+- The update package and the installer no longer carry what is only for development (GitHub automations, tests,
+  docs, build scripts).
+
+### Fixed
+
+- **Closing IOkê also closes the add-ons:** before, their processes kept running on their own until the next time
+  the app opened.
+- Adding many files at once: the list under the upload area keeps a fixed height and scrolls.
+- Choosing "Video" as the background of a song without a video said "song not found"; it now says the video
+  wasn't found.
+- Cloud spending: the real month's spending never came after the 7th (Modal refuses hourly reports longer
+  than 7 days); the report is now asked in pieces.
+- Imported .karaoke packages show up in the library right away (before, only after restarting the app).
+- The genre (and artist, album) shelves: the right arrow didn't scroll, and it hid the delete button of a card.
+- Add-ons turned on could start off after restarting the PC.
+- Closing the app also closes the stage window.
+- While the AI downloads its models the first time, the player says so and keeps following the progress (before, it
+  could stay on "queued" until you left the player).
 
 ## [1.1.0-beta.2] - 2026-10-03
 
@@ -200,7 +262,8 @@ The first public version of IOkê: a karaoke app for Windows that runs on your o
 - **Updates** from this page, in the background, with the Stable and Testing channels, and going back to the
   previous version by itself if a new one doesn't open.
 
-[Unreleased]: https://github.com/M4ndril/ioke/compare/v1.1.0-beta.2...HEAD
+[Unreleased]: https://github.com/M4ndril/ioke/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/M4ndril/ioke/compare/v1.0.2...v1.1.0
 [1.1.0-beta.2]: https://github.com/M4ndril/ioke/compare/v1.1.0-beta.1...v1.1.0-beta.2
 [1.1.0-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.2...v1.1.0-beta.1
 [1.0.2]: https://github.com/M4ndril/ioke/compare/v1.0.1...v1.0.2
