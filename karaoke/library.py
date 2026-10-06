@@ -185,6 +185,7 @@ class Library:
             if status == "canceling" or meta.get("deleting"):  # estava sendo apagada quando o servidor fechou
                 shutil.rmtree(d, ignore_errors=True)
                 continue
+            meta.pop("chegando", None)  # o app fechou no meio de um envio: entra na fila assim mesmo
             if status == "downloading":
                 meta["status"] = "queued"
             elif status == "separating":
@@ -649,6 +650,8 @@ class Library:
             if existing:  # estava com erro: recomeca com o arquivo novo
                 meta = {**existing, **{k: meta[k] for k in ("files", "origem", "status", "stage", "progress")},
                         "error": None}
+            # a fila so pega depois da capa e da letra que vieram com o arquivo (senao busca as da internet antes)
+            meta["chegando"] = True
             self.songs[sid] = meta
             self._save(sid)
         # a capa e a letra que vieram com o arquivo: as da pessoa valem mais que as buscadas na internet
@@ -678,6 +681,8 @@ class Library:
                 except Exception as exc:  # noqa: BLE001
                     log.info("letra que veio com %s: %s", nome_original, exc)
         with self.cond:
+            meta.pop("chegando", None)
+            self._save(sid)
             self.cond.notify_all()
         return meta, True
 
@@ -1691,7 +1696,8 @@ class Library:
     def _next(self, status, filtro=None):
         """A proxima da fila: quem alguem esta esperando para cantar primeiro; depois, por ordem de pedido.
         filtro(meta): so as musicas desta linha de trabalho (a placa ou a nuvem)."""
-        candidates = [m for m in self.songs.values() if m.get("status") == status and (not filtro or filtro(m))]
+        candidates = [m for m in self.songs.values()
+                      if m.get("status") == status and not m.get("chegando") and (not filtro or filtro(m))]
         if not candidates:
             return None
         wanted = self.wanted()

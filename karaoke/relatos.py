@@ -1,6 +1,6 @@
 """Relatorios de erro (Sentry), so com o consentimento da pessoa (Configuracoes > Programa).
 
-CONFIG["enviar_erros"]: None (ainda nao perguntou: a tela inicial pergunta uma vez), True ou False.
+CONFIG["enviar_erros"]: None (ainda nao respondeu: o aviso de primeiro uso pergunta, junto com o aceite), True ou False.
 
 O que vai: o erro (tipo, mensagem e as linhas do codigo), a versao, o perfil (nvidia/cpu/leve), o idioma, o
 Windows e as ultimas linhas do registro antes do erro (podem ter nomes de musicas). Um numero aleatorio desta

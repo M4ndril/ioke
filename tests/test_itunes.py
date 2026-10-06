@@ -13,7 +13,8 @@ from tests.test_importacoes import FakeLib
 
 
 def _url(p):
-    return "file://localhost/" + quote(str(p).replace("\\", "/"))
+    # como o iTunes grava: file://localhost/C:/... (no Linux dos testes automaticos, file://localhost/tmp/...)
+    return "file://localhost/" + quote(str(p).replace("\\", "/").lstrip("/"))
 
 
 @pytest.fixture

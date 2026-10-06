@@ -1,5 +1,5 @@
 // Configuracoes: player, musicas novas, nuvem, complementos, festa, contas, programa e atualizacoes.
-import { $$, api, avatar, biblioteca, confirmar, esc, gb, icon, mostrarTexto, openModal, store, toast } from "./common.js";
+import { $$, api, avatar, biblioteca, confirmar, esc, gb, icon, mostrarAviso, mostrarTexto, openModal, store, toast } from "./common.js";
 import { timeAgo } from "./ui.js";
 import { idioma, t, t as tr } from "./i18n.js"; // tr: onde "t" ja e outra coisa (TABS.map((t) => ...))
 import { mountNuvem } from "./nuvem.js";
@@ -586,6 +586,10 @@ export async function openSettings({ onChange, tab } = {}) {
         <div><b>${tr("relatos.titulo")}</b><div class="small muted">${tr("relatos.texto")}</div></div>
         <input type="checkbox" data-relatos${s.enviar_erros ? " checked" : ""} style="flex:none;width:18px;height:18px">
       </label>
+      <div class="reprocess">
+        <div><b>${tr("aviso.titulo_config")}</b><div class="small muted">${tr("aviso.texto_config")}</div></div>
+        <button class="btn outline sm" data-ver-aviso>${tr("aviso.ver")}</button>
+      </div>
       <section class="set-section">
         <h4>${icon("inventory_2")} ${tr("pacotes.titulo")}</h4>
         <p class="muted small" style="margin-top:0">${tr("pacotes.texto")}</p>
@@ -663,6 +667,7 @@ export async function openSettings({ onChange, tab } = {}) {
     const n = Number(e.target.value);
     save({ party_limit: n }, n ? tr("festa.limite_salvo", { n }) : tr("festa.sem_limite_salvo"));
   };
+  modal.querySelector("[data-ver-aviso]").onclick = () => mostrarAviso();
   modal.querySelector("[data-relatos]").onchange = (e) =>
     save({ enviar_erros: e.target.checked }, e.target.checked ? tr("relatos.ligado") : tr("relatos.desligado"));
   modal.querySelector("[data-ai-auto]").onchange = (e) =>

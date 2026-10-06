@@ -146,34 +146,61 @@ export async function perguntarOnde(tipo) {
   });
 }
 
-// ------------------------------------------------------- relatorios de erro
-/** Pergunta uma vez (no PC) se a pessoa quer mandar os relatorios de erro (karaoke/relatos.py). Fechar sem
- *  responder pergunta de novo na proxima abertura. */
-export async function perguntarRelatos() {
-  if (document.body.classList.contains("mobile")) return;
+// ------------------------------------------------------- aviso de primeiro uso
+// A pessoa declara que e responsavel pelo conteudo que usa (obrigatorio para seguir) e escolhe se manda os
+// relatorios de erro (karaoke/relatos.py). So no PC; volta a aparecer se o texto mudar (AVISO_VERSAO no servidor).
+const AVISO_ITENS = ["aviso.item_responsavel", "aviso.item_direitos", "aviso.item_drm", "aviso.item_garantia"];
+const avisoTexto = () => `
+  <p class="aviso-texto">${esc(t("aviso.intro"))}</p>
+  <ul class="aviso-lista">${AVISO_ITENS.map((k) => `<li>${esc(t(k))}</li>`).join("")}</ul>`;
+
+/** Mostra o aviso ate a pessoa aceitar (nas telas do PC: inicio, Adicionar, Cantar). */
+export async function pedirAceite() {
+  if (document.body.classList.contains("mobile") || document.querySelector(".modal-aviso-uso")) return;
+  try {
+    if (sessionStorage.getItem("karaoke.tv") === "1") return; // a janela do palco nunca mostra
+  } catch {
+    /* sem armazenamento: segue */
+  }
   let s;
   try {
     s = await api("/api/settings");
   } catch {
     return;
   }
-  if (!s.is_host || s.enviar_erros !== null) return;
-  const modal = openModal(t("relatos.pergunta"), `
-    <p style="margin-top:0">${esc(t("relatos.pergunta_texto"))}</p>
-    <p class="small muted">${esc(t("relatos.pergunta_detalhe"))}</p>
-    <div class="row" style="gap:10px;justify-content:flex-end">
-      <button class="btn outline" data-r="0">${esc(t("relatos.nao"))}</button>
-      <button class="btn light" data-r="1" data-nav-default>${icon("check")} ${esc(t("relatos.sim"))}</button>
-    </div>`);
-  modal.querySelectorAll("[data-r]").forEach((b) => (b.onclick = async () => {
-    modal.close();
+  if (!s.is_host || !s.aceite_pendente) return;
+  const modal = openModal(t("aviso.titulo"), `${avisoTexto()}
+    <label class="toggle-row aviso-check"><input type="checkbox" data-aceito> <b>${esc(t("aviso.aceito"))}</b></label>
+    <label class="toggle-row aviso-check"><input type="checkbox" data-erros${s.enviar_erros ? " checked" : ""}>
+      <span>${esc(t("aviso.erros"))}<span class="small muted" style="display:block">${esc(t("relatos.pergunta_detalhe"))}</span></span></label>
+    <div class="row aviso-botoes">
+      <button class="btn light" data-seguir data-nav-default disabled>${icon("check")} ${esc(t("aviso.continuar"))}</button>
+    </div>`, { fixo: true });
+  modal.querySelector(".modal").classList.add("modal-aviso", "modal-aviso-uso");
+  const aceito = modal.querySelector("[data-aceito]");
+  const seguir = modal.querySelector("[data-seguir]");
+  aceito.onchange = () => (seguir.disabled = !aceito.checked);
+  seguir.onclick = async () => {
+    if (!aceito.checked) return;
+    seguir.disabled = true;
+    const erros = modal.querySelector("[data-erros]").checked;
     try {
-      await api("/api/settings", { method: "PUT", body: { enviar_erros: b.dataset.r === "1" } });
-      toast(t(b.dataset.r === "1" ? "relatos.ligado" : "relatos.depois"));
+      await api("/api/settings", { method: "PUT", body: { aceite: true, enviar_erros: erros } });
+      modal.close();
+      if (erros) toast(t("relatos.ligado"));
     } catch (err) {
+      seguir.disabled = false;
       toast(err.message, { error: true });
     }
-  }));
+  };
+}
+
+/** O mesmo aviso, so para ler de novo (Configuracoes -> Programa). */
+export function mostrarAviso() {
+  const modal = openModal(t("aviso.titulo"), `${avisoTexto()}
+    <div class="row aviso-botoes"><button class="btn outline" data-fechar>${esc(t("comum.fechar"))}</button></div>`);
+  modal.querySelector(".modal").classList.add("modal-aviso", "modal-aviso-uso");
+  modal.querySelector("[data-fechar]").onclick = () => modal.close();
 }
 
 // ------------------------------------------------------------- biblioteca

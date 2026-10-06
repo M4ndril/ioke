@@ -716,6 +716,15 @@ def api_set_cover(sid):
 
 
 # ------------------------------------------------------------ configuracoes
+# O aviso de primeiro uso (a pessoa e responsavel pelo conteudo que usa; relatorios de erro opcionais). Mudou o texto
+# de um jeito que precisa aceitar de novo: sobe a versao.
+AVISO_VERSAO = 1
+
+
+def _aceite_pendente():
+    return int((CONFIG.get("aceite") or {}).get("versao") or 0) < AVISO_VERSAO
+
+
 def _settings_payload():
     # os textos das qualidades e dos modelos no idioma de quem pediu
     presets = {k: {**p, "label": i18n.t(f"qualidade.{k}"), "description": i18n.t(f"qualidade.{k}_texto"),
@@ -735,6 +744,7 @@ def _settings_payload():
         "idioma": CONFIG.get("idioma") or "auto",
         "pacote_formato": CONFIG.get("pacote_formato") or "flac",
         "enviar_erros": CONFIG.get("enviar_erros"),  # None: ainda nao perguntou
+        "aceite_pendente": _aceite_pendente(),  # o aviso de primeiro uso (so o PC pode aceitar)
         "disk": lib.disk(),
         "is_host": can_manage(),
     }
@@ -787,6 +797,8 @@ def api_save_settings():
         CONFIG["usar_letra_do_arquivo"] = bool(body["usar_letra_do_arquivo"])
     if "enviar_erros" in body:
         CONFIG["enviar_erros"] = bool(body["enviar_erros"])
+    if body.get("aceite") is True:
+        CONFIG["aceite"] = {"versao": AVISO_VERSAO, "em": int(time.time())}
     if "download_video" in body:
         CONFIG["download_video"] = bool(body["download_video"])
     if "video_max_height" in body:

@@ -1,5 +1,5 @@
 // Botoes flutuantes no canto superior direito: atividades, sessao (QR), piano, MIDI e configuracoes.
-import { api, confirmar, esc, gb, h, icon, keyLabel, openModal, store, toast } from "./common.js";
+import { api, confirmar, esc, gb, h, icon, keyLabel, openModal, pedirAceite, store, toast } from "./common.js";
 import { mountMidiPicker } from "./midi.js";
 import { openSettings } from "./settings.js";
 import { appApi } from "./appwin.js";
@@ -109,7 +109,10 @@ export function mountFabs({ qr = false, piano = false, midi = false, settings = 
   if (settings) add("settings", t("config.titulo"), () => openSettings());
   // app instalado (tela cheia, sem barra de titulo): a saida do programa
   appApi().then((app) => app && add("power_settings_new", t("app.fechar"), () => quitApp(app)));
-  if (atividades) mountAtividades(box);
+  if (atividades) {
+    mountAtividades(box);
+    setTimeout(pedirAceite, 800); // as telas do PC: o aviso de primeiro uso, ate aceitar
+  }
   document.body.append(box);
   return box;
 }

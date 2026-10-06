@@ -176,3 +176,21 @@ def test_replace_audio_keeps_the_song_and_goes_back_if_it_fails(lib, mp3, tmp_pa
     lib._fail(sid, RuntimeError("a separacao falhou"))
     assert meta["status"] == "error" and meta["error"] == "o preparo falhou" and not meta["troca"]
     assert "troca_de" not in meta
+
+
+@needs_ffmpeg
+def test_queue_waits_for_the_lyrics_and_cover_that_came_with_the_file(lib, tmp_path, monkeypatch):
+    """Num lote, a fila pode acordar no meio do envio: ela so pega a musica depois da letra e da capa do arquivo."""
+    f = tmp_path / "a.mp3"
+    ff("-f", "lavfi", "-i", "sine=duration=1", f)
+    (tmp_path / "a.txt").write_text("linha um\nlinha dois", encoding="utf-8")
+    vistos = []
+    original = lib.set_lyrics
+
+    def set_lyrics(sid, *a, **k):
+        vistos.append(lib._next("queued"))  # a fila olhando bem nessa hora
+        return original(sid, *a, **k)
+
+    monkeypatch.setattr(lib, "set_lyrics", set_lyrics)
+    meta, _ = lib.add_file(f, f.name)
+    assert vistos == [None] and lib._next("queued") == meta["id"] and "chegando" not in meta

@@ -136,3 +136,20 @@ def test_without_subfolders(pv, tmp_path):
     _novo(m, "y.mp3")
     pv.olhar(p, agora)
     assert pv.olhar(p, agora + 60) == ["y.mp3"]
+
+
+def test_new_files_survive_a_restart(pv, tmp_path):
+    """As novas ja estao nos "vistos": se o app fechar antes da revisao, elas tem que continuar esperando."""
+    m = tmp_path / "m"
+    m.mkdir()
+    p = pv.adicionar(m)
+    agora = time.time() + 10
+    pv.olhar(p, agora)
+    _novo(m, "nova.mp3")
+    pv.olhar(p, agora)
+    pv.olhar_todas(agora + 60)
+    assert pv.contar_novas()["n"] == 1
+    reaberto = pastas.Pastas(pv.imp, arquivo=pv.arquivo)  # fechou e abriu o app
+    assert reaberto.contar_novas()["n"] == 1 and [i["nome"] for i in reaberto.itens_novos()] == ["nova.mp3"]
+    reaberto.dispensar()
+    assert pastas.Pastas(pv.imp, arquivo=pv.arquivo).contar_novas()["n"] == 0  # dispensar tambem fica gravado

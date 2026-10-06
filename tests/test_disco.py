@@ -278,3 +278,29 @@ def test_the_same_cd_again_remembers_the_edition(ds, tmp_path):
             break
         time.sleep(0.02)
     assert d["escolhida"]["id"] == "mb2"
+
+
+def test_a_cd_left_in_the_drive_keeps_working(ds, tmp_path, monkeypatch):
+    """As refs vencem em 12 h: o disco parado no leitor renova as dele quando e usado."""
+    _album(tmp_path / "cd", nomes=False)
+    disco = ds.de_cue(tmp_path / "cd" / "album.cue")
+    agora = time.time()
+    monkeypatch.setattr(importacoes.time, "time", lambda: agora + 13 * 3600)  # 13 h depois
+    assert ds.imp.fonte(disco["refs"][0]) is None  # vencida...
+    assert len(ds.itens(disco)) == 2 and ds.imp.fonte(disco["refs"][0])  # ...e renovada ao abrir a revisao
+
+
+def test_old_preview_files_are_cleaned(tmp_path, monkeypatch):
+    monkeypatch.setattr(importacoes, "DATA_DIR", tmp_path / "dados")
+    cache = tmp_path / "cache"
+    (cache / "faixas").mkdir(parents=True)
+    velho, novo, corte = cache / "a-trecho.mp3", cache / "b.jpg", cache / "faixas" / "x.flac"
+    for f in (velho, novo, corte):
+        f.write_bytes(b"x")
+    antigo = time.time() - 13 * 3600
+    import os
+
+    os.utime(velho, (antigo, antigo))
+    os.utime(corte, (antigo, antigo))
+    importacoes.Importacoes(FakeLib(), cache_dir=cache)
+    assert not velho.exists() and not corte.exists() and novo.exists()

@@ -65,6 +65,18 @@ class Importacoes:
         self._trabalhando = False
         self.ao_importar = []  # (caminhos revisados) -> None: quem quer saber (as pastas vigiadas)
         lib.atividades_extras.append(self.atividades)
+        self._limpar_cache()
+
+    def _limpar_cache(self):
+        """As capas pequenas, os trechos e os cortes de faixa de antes: as refs deles ja nao valem (sem isso, a
+        pasta so cresce)."""
+        limite = time.time() - REF_HORAS * 3600
+        for f in [*self.cache.glob("*"), *self.cache.glob("faixas/*")]:
+            try:
+                if f.is_file() and f.stat().st_mtime < limite:
+                    f.unlink()
+            except OSError:
+                pass
 
     # ------------------------------------------------------------ referencias
     def registrar(self, caminho, trecho=None, etiquetas=None, extras=None):
@@ -96,6 +108,16 @@ class Importacoes:
             if not v or time.time() - v["t"] > REF_HORAS * 3600:
                 return None
             return {**v, "caminho": Path(v["caminho"])}
+
+    def renovar(self, refs):
+        """Mais REF_HORAS para estas refs (um CD que continua no leitor). False se alguma ja tinha saido."""
+        with self.lock:
+            agora = time.time()
+            vivas = [self.refs.get(r) for r in refs]
+            for v in vivas:
+                if v:
+                    v["t"] = agora
+            return all(vivas)
 
     def mudar(self, ref, etiquetas=None, extras=None, substituir=False):
         """Atualiza o que a fonte disse de uma ref (o album reconhecido de um CD, por exemplo)."""

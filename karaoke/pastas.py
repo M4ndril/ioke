@@ -53,7 +53,9 @@ class Pastas:
         self.lock = threading.Lock()
         self.estado = read_json(self.arquivo, {}) or {}  # id -> {"vistos": {rel: [tamanho, mtime]}, "pronta", ...}
         self.candidatos = {}  # id -> {rel: (tamanho, mtime)}: vistos uma vez, esperando parar de crescer
-        self.novos = {}  # id -> [rel]: esperando a revisao (modo "perguntar")
+        # id -> [rel]: esperando a revisao (modo "perguntar"). Fica gravado: ja estao nos "vistos", entao se o app
+        # fechasse antes da revisao, nunca mais apareceriam
+        self.novos = {pid: list(e.get("novos") or []) for pid, e in self.estado.items() if isinstance(e, dict)}
         self.acordar = threading.Event()
         imp.ao_importar.append(self._importados)
 
@@ -220,6 +222,7 @@ class Pastas:
                 elif k in pastas:
                     raiz = Path(pastas[k]["caminho"])
                     self.novos[k] = [rel for rel in self.novos[k] if str(raiz / rel) not in caminhos]
+            self._gravar()
 
     def _importados(self, caminhos):
         """Uma importacao comecou (de qualquer revisao): o que estava esperando e foi revisado sai das novas
@@ -231,8 +234,11 @@ class Pastas:
                 if k in pastas:
                     raiz = Path(pastas[k]["caminho"])
                     self.novos[k] = [rel for rel in rels if str(raiz / rel) not in caminhos]
+            self._gravar()
 
     def _gravar(self):
+        for pid, e in self.estado.items():
+            e["novos"] = list(self.novos.get(pid) or [])
         try:
             self.arquivo.parent.mkdir(parents=True, exist_ok=True)
             write_json(self.arquivo, self.estado)

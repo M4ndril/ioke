@@ -54,8 +54,9 @@ class Discos:
             return None
         with self.lock:
             did = self._por_cue.get(chave)
-            if did in self.discos:
-                return self.discos[did]
+            disco = self.discos.get(did)
+        if disco and self.imp.renovar(disco["refs"]):  # as refs vencem: um CD parado no leitor renova as dele
+            return disco
         c = cues.ler(caminho)
         if not c or not all(a.is_file() for a in c.arquivos):
             return None
@@ -88,6 +89,12 @@ class Discos:
         return self.itens(disco, raiz), disco["cue"].arquivos
 
     def itens(self, disco, raiz=None):
+        if not self.imp.renovar(disco["refs"]):  # muito tempo parado (e muitas refs depois): monta de novo
+            novo = self.de_cue(disco["cue"].caminho, leitor=disco["leitor"])
+            if novo:
+                if disco["leitor"]:
+                    self._no_leitor[disco["leitor"]] = novo["id"]
+                disco = novo
         out = []
         pasta = ""
         if raiz:
