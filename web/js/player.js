@@ -8,7 +8,7 @@
 // som depois de um clique, e esse clique precisa valer para a festa toda).
 import {
   $, $$, api, avatar, chooseCover, chooseLyrics, confirmar, esc, fmtTime, icon, keyLabel, NOTES, num, openModal, perguntarOnde,
-  readyIn, SCALES, shiftText, store, toast, transposeKey,
+  readyIn, SCALES, shiftText, sourceLabel, store, toast, transposeKey,
 } from "./common.js";
 import { openPiano } from "./floating.js";
 import { initMidi, mountMidiPicker, sendKey } from "./midi.js";
@@ -298,7 +298,7 @@ async function loadLyrics() {
 
 // ------------------------------------------------ efeito karaoke (preenchimento)
 // A linha da vez vai sendo "pintada" enquanto e cantada. Com o tempo de cada
-// palavra (LRC enhanced, ex.: NetEase), pinta palavra a palavra. Sem ele, o
+// palavra (LRC enhanced, de qualquer fonte que tenha), pinta palavra a palavra. Sem ele, o
 // preenchimento segue a voz original: so anda enquanto tem voz no stem "lead".
 let voice = null; // envelope da voz: { id, rate, cum } (quadros com voz acumulados)
 
@@ -1200,7 +1200,6 @@ async function pickLyrics() {
 // dela (sem mudar o texto). Ajustar a versao: bis e linhas nao cantadas. No servidor.
 let aiTimer = null;
 let aiWatching = null;
-const AI_SRC = { lrclib: "LRCLIB", netease: "NetEase", musixmatch: "Musixmatch" };
 
 function aiText(ai) {
   if (!ai) return tr("ia.explica");
@@ -1209,7 +1208,7 @@ function aiText(ai) {
   if (ai.state === "error") return tr("ia.nao_conseguiu", { erro: ai.error || "" });
   const parts = [ai.mode === "adapt" ? tr("ia.ajustada") : tr("ia.palavra_a_palavra")];
   if (ai.source) parts.push(ai.source === "ia" ? tr("ia.texto_anterior") : ai.source === "manual" ? tr("ia.texto_manual")
-    : tr("ia.texto_de", { fonte: AI_SRC[ai.source] || ai.source }));
+    : tr("ia.texto_de", { fonte: sourceLabel(ai.source) }));
   if (ai.repeats) parts.push(tr("ia.repetidas", { n: ai.repeats }));
   if (ai.skips) parts.push(tr("ia.removidas", { n: ai.skips }));
   return parts.join(" · ") + ".";

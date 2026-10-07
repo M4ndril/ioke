@@ -250,8 +250,11 @@ def search_all(query, duration=None, sources=None):
     def sort_key(it):
         order = list(SOURCES).index(it["source"]) if it["source"] in SOURCES else len(SOURCES)
         diff = abs((it["duration"] or 0) - duration) if (duration and it["duration"]) else 999
-        # palavra a palavra primeiro, depois sincronizada, depois sem tempo
-        return (order, not it.get("words"), it["synced"] is False, diff)
+        # pela qualidade, de qualquer fonte (a do app ou as dos complementos, igual para todas): a mesma versao da
+        # musica (duracao parecida) primeiro; dentro dela, palavra a palavra, depois sincronizada, depois sem tempo.
+        # A fonte so desempata. Os complementos so mexem na ordem pelo que mandam (duracao, sincronizada, palavras)
+        versao = 0 if diff <= 2 else 1 if diff <= 6 else 2
+        return (versao, not it.get("words"), it["synced"] is False, diff, order)
 
     results.sort(key=sort_key)
     return {"results": results, "errors": errors}

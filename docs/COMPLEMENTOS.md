@@ -111,6 +111,12 @@ and `X-Idioma` headers; everything is JSON. The SDK does all of this for you.
   song-source add-on that is on (again whenever an add-on is turned on). Only your add-on knows your old format:
   if the song is yours, answer with `ref` (and `chave`: keep the one the song id came from), and from then on it is
   yours in today's format. Otherwise answer `null`.
+- **Lyrics** (`/letras/buscar`): your results are listed together with those of IOkê's own source and of every
+  other lyrics add-on, sorted by quality, the same way for all: the same version of the song first (`duracao` close
+  to the song's), then `palavras` (the timing of each word), then `sincronizada`. The source only breaks ties, and
+  there is no priority field: fill these three honestly. Results may come without the text; IOkê asks
+  `/letras/obter` with your `fonte` and `id` when it needs it (to show, use, or compare lyrics against the voice).
+  Each add-on gets one checkbox in the lyrics picker, with its name; the automatic choice also uses them.
 - Time limits on IOkê's side: `saude` 3 s, `buscar` 20 s, `trecho` 60 s, `letras` 20 s, `acoes` 30 s; a task
   without progress for 10 minutes is canceled.
 - Error messages (`{"erro": "..."}`) are shown to people as they are: write them in `comp.idioma`.

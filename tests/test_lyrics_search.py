@@ -151,3 +151,15 @@ def test_extras_in_the_name_still_find_the_lyrics(no_services, monkeypatch):
     assert lyrics._same_song({"artist": "Legião Urbana", "title": "Tempo Perdido (Ao Vivo)"}, "Legião Urbana e Outros",
                              "Tempo Perdido - Acústico")
     assert not lyrics._same_song({"artist": "Legião Urbana", "title": "Pais e Filhos"}, "Legião Urbana", "Tempo Perdido")
+
+
+def test_every_source_is_sorted_by_quality(no_services, monkeypatch):
+    """A lista junta as fontes pela qualidade, igual para todas: antes, as dos complementos ficavam todas depois das
+    do app, no fim da lista."""
+    monkeypatch.setattr(lyrics, "complementos", FakeComplementos())
+    lrclib = [{"source": "lrclib", "id": str(k), "artist": "A", "title": "T", "album": "", "duration": d,
+               "synced": s, "text": None} for k, (d, s) in enumerate([(200, True), (260, True), (200, False)])]
+    monkeypatch.setitem(lyrics._SEARCHERS, "lrclib", lambda q: [dict(x) for x in lrclib])
+    r = [(it["source"], it["id"]) for it in lyrics.search_all("A T", 200)["results"]]
+    # mesma versao: palavra a palavra, sincronizadas (a fonte desempata), sem tempo; outra versao no fim
+    assert r == [("extras:rede", "2"), ("lrclib", "0"), ("extras:rede", "1"), ("lrclib", "2"), ("lrclib", "1")]

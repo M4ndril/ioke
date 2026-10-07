@@ -11,6 +11,13 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Add-on lyrics in the lyrics picker:** the first search went out before the window knew which lyrics add-ons
+  were on, and their lyrics never showed up, even with the box checked. The list now puts all sources together by
+  quality (the same version of the song first, then word by word, then synced), instead of putting the add-ons' at
+  the end.
+
 ## [1.1.0] - 2026-10-05
 
 Brings together everything from the 1.1.0-beta.1 and 1.1.0-beta.2 test versions, plus media import (folders

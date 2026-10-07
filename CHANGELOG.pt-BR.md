@@ -11,6 +11,13 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+### Corrigido
+
+- **Letras dos complementos na escolha da letra:** a primeira busca saía antes de a janela saber quais complementos
+  de letras estavam ligados, e as letras deles nunca apareciam, mesmo com a caixa marcada. Agora a lista junta todas
+  as fontes pela qualidade (a mesma versão da música primeiro, depois palavra a palavra, depois sincronizada), em
+  vez de pôr as dos complementos no fim.
+
 ## [1.1.0] - 2026-10-05
 
 Reúne tudo o que saiu nas versões de teste 1.1.0-beta.1 e 1.1.0-beta.2, mais a importação de mídias (pastas com

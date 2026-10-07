@@ -1336,7 +1336,7 @@ class Library:
             meta["lyrics_rank"].update(state="running")
         try:
             items = opts["items"]
-            for it in items:  # NetEase/Musixmatch: a busca nao traz o texto
+            for it in items:  # as fontes que so mandam o texto ao pedir (as dos complementos): baixa aqui
                 if not it.get("text") and it.get("id"):
                     try:
                         it["text"] = lyrics.fetch(it.get("source") or "", it["id"]) or ""
@@ -2262,7 +2262,7 @@ def base_lyrics(d, lyr, current_text, mode):
     Ajustar parte do original guardado (se nao tiver, do texto da tela).
     A letra anterior (lyrics-anterior.*) nunca e usada: e outra letra."""
     src = (lyr.get("base") if lyr.get("source") == "ia" else lyr.get("source")) or "manual"
-    # guide: os tempos do texto sao de uma letra baixada (LRCLIB, NetEase...). Nao valem os de uma
+    # guide: os tempos do texto sao de uma letra baixada (do LRCLIB ou de um complemento). Nao valem os de uma
     # rodada anterior da IA nem os de uma letra digitada (linha sem tempo ganha um tempo estimado)
     current = {"source": src, "text": current_text, "guide": lyr.get("source") not in ("ia", "manual")}
     if lyr.get("source") != "ia":

@@ -472,7 +472,7 @@ export function mostrarTexto(titulo, texto, mensagem = "") {
 // ------------------------------------------------------- escolher a letra
 const SOURCE_LABEL = { lrclib: "LRCLIB", manual: "Manual", ia: "IA" };
 /** O nome de uma fonte de letra: as do nucleo, ou "<complemento>:<fonte>" (mostra a fonte). */
-const sourceLabel = (s) => SOURCE_LABEL[s] || (String(s || "").split(":").pop() || "").replace(/^\w/, (c) => c.toUpperCase());
+export const sourceLabel = (s) => SOURCE_LABEL[s] || (String(s || "").split(":").pop() || "").replace(/^\w/, (c) => c.toUpperCase());
 
 function diffClass(itemDur, songDur) {
   if (!itemDur || !songDur) return "";
@@ -506,12 +506,13 @@ export function chooseLyrics(song) {
         <button class="btn ghost sm" data-skip>${t("comum.pular")}</button>
       </div>`);
     modal.addEventListener("closed", () => resolve(chosen));
-    // as fontes de letras dos complementos ligados (NetEase, Musixmatch...)
-    api("/api/recursos").then((r) => {
+    // as fontes de letras dos complementos ligados (cada uma com a caixa dela). A primeira busca espera esta lista:
+    // a busca manda as fontes marcadas, e antes das caixas existirem iria so o LRCLIB
+    const fontesProntas = api("/api/recursos").then((r) => {
       $("[data-fontes-letras]", modal).innerHTML = (r.letras || []).map((f) =>
         `<label class="badge gray"><input type="checkbox" value="${esc(f.id)}" checked> ${esc(f.nome)}</label>`).join(" ");
       $$("[data-fontes-letras] input", modal).forEach((i) => (i.onchange = search));
-    }).catch(() => {});
+    }).catch(() => {}); // sem a lista (servidor antigo, outro computador): busca so nas fontes do app
     const results = $("[data-results]", modal);
     const qInput = $("[data-q]", modal);
 
@@ -609,7 +610,7 @@ export function chooseLyrics(song) {
 
     /** A IA da uma nota para cada letra: quanto ela encaixa no que foi cantado. */
     async function rank(btn) {
-      const items = shown.filter((it) => !String(it.source).endsWith(":musixmatch") || it.text);
+      const items = shown; // o servidor baixa o texto das que vieram sem ele, de qualquer fonte
       if (!items.length) return toast(t("letra.busque_primeiro"), { error: true });
       btn.disabled = true;
       btn.innerHTML = `<span class="spinner"></span> ${t("letra.comparando")}`;
@@ -715,7 +716,7 @@ export function chooseLyrics(song) {
       $("[data-save]", results).onclick = () => ta.value.trim() && use({ text: ta.value, source: "manual" });
       ta.focus();
     };
-    search();
+    fontesProntas.then(search);
   });
 }
 
