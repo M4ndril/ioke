@@ -83,7 +83,8 @@ and `X-Idioma` headers; everything is JSON. The SDK does all of this for you.
 | `POST /configurar` | all | `{"opcoes", "idioma"}` → `{"ok": true}` (on start and when options change) |
 | `GET /estado` | optional | → `{"texto", "nivel": "ok"\|"aviso"\|"erro"}` (shown in Settings) |
 | `POST /acoes/<id>` | if `acoes` | `{}` → `{"texto", "abrir_url"?}` |
-| `POST /fonte/buscar` | `fonte_musicas` | `{"texto", "limite"}` → `{"resultados": [{"ref", "chave", "titulo", "artista", "album"?, "duracao"?, "capa_url"?, "tem_trecho", "tem_video"}]}` |
+| `POST /fonte/buscar` | `fonte_musicas` | `{"texto", "limite"}` → `{"resultados": [{"ref", "chave", "titulo", "artista", "album"?, "duracao"?, "capa_url"?, "tem_trecho", "tem_video", "tipo"?, "quantidade"?}]}` |
+| `POST /fonte/lista` | `fonte_musicas` (if you return lists) | `{"ref"}` → `{"titulo", "artista"?, "capa_url"?, "itens": [search results]}` |
 | `POST /fonte/trecho` | `fonte_musicas` | `{"ref", "destino"}` → `{"arquivo"}` (about 7 s to listen to) |
 | `POST /fonte/reconhecer` | `fonte_musicas` (optional) | `{"musica": {...}}` → `{"musica": {"ref", "chave"?, "info"?, "contexto"?} \| null}` |
 | `POST /tarefas` | `fonte_musicas` | `{"tipo": "obter", "ref", "destino", "video"}` → `{"tarefa"}` |
@@ -111,13 +112,19 @@ and `X-Idioma` headers; everything is JSON. The SDK does all of this for you.
   song-source add-on that is on (again whenever an add-on is turned on). Only your add-on knows your old format:
   if the song is yours, answer with `ref` (and `chave`: keep the one the song id came from), and from then on it is
   yours in today's format. Otherwise answer `null`.
+- **Lists** (a playlist, an album): a search result with `"tipo": "lista"` (and `quantidade`, the number of songs)
+  is shown as a list, with a button that opens the **review window** (the same one used for folders and CDs). IOkê
+  asks `/fonte/lista` with its `ref` and gets the songs, in the format of search results (each item may also bring
+  `faixa`, `disco` and `ano`). The person unchecks what they don't want and fixes names; each checked song is then
+  added as if it had been added from the search (your `obter` delivers it as usual), and the names the person fixed
+  are kept over what `obter` says. Lists are only shown on the PC (phones don't get them).
 - **Lyrics** (`/letras/buscar`): your results are listed together with those of IOkê's own source and of every
   other lyrics add-on, sorted by quality, the same way for all: the same version of the song first (`duracao` close
   to the song's), then `palavras` (the timing of each word), then `sincronizada`. The source only breaks ties, and
   there is no priority field: fill these three honestly. Results may come without the text; IOkê asks
   `/letras/obter` with your `fonte` and `id` when it needs it (to show, use, or compare lyrics against the voice).
   Each add-on gets one checkbox in the lyrics picker, with its name; the automatic choice also uses them.
-- Time limits on IOkê's side: `saude` 3 s, `buscar` 20 s, `trecho` 60 s, `letras` 20 s, `acoes` 30 s; a task
+- Time limits on IOkê's side: `saude` 3 s, `buscar` 20 s, `lista` 60 s, `trecho` 60 s, `letras` 20 s, `acoes` 30 s; a task
   without progress for 10 minutes is canceled.
 - Error messages (`{"erro": "..."}`) are shown to people as they are: write them in `comp.idioma`.
 
@@ -221,7 +228,20 @@ As rotas estão na tabela da seção em inglês. Pontos importantes:
   `/fonte/reconhecer` de cada complemento de fonte ligado (de novo sempre que um complemento liga). Só o seu
   complemento conhece o seu formato antigo: se a música é sua, responda com a `ref` (e a `chave`: mantenha a que deu
   o id da música) e ela passa a ser sua, no formato de hoje. Se não é, responda `null`.
-- Tempos limite do lado do IOkê: `saude` 3 s, `buscar` 20 s, `trecho` 60 s, `letras` 20 s, `acoes` 30 s; tarefa
+- **Listas** (uma playlist, um álbum): um resultado da busca com `"tipo": "lista"` (e `quantidade`, o número de
+  músicas) aparece como lista, com um botão que abre a **janela de revisão** (a mesma das pastas e dos CDs). O IOkê
+  pede `/fonte/lista` com a `ref` dele e recebe as músicas, no formato dos resultados da busca (cada item pode trazer
+  também `faixa`, `disco` e `ano`). A pessoa desmarca o que não quer e corrige nomes; cada música marcada é então
+  adicionada como se viesse da busca (o seu `obter` entrega como sempre), e os nomes que a pessoa corrigiu valem
+  mais que os do `obter`. Listas só aparecem no PC (o celular não recebe).
+- **Letras** (`/letras/buscar`): os seus resultados aparecem junto com os da fonte do próprio IOkê e de todos os
+  outros complementos de letras, ordenados pela qualidade, igual para todos: primeiro a mesma versão da música
+  (`duracao` perto da da música), depois `palavras` (o tempo de cada palavra), depois `sincronizada`. A fonte só
+  desempata, e não existe campo de prioridade: preencha esses três com honestidade. Os resultados podem vir sem o
+  texto; o IOkê pede `/letras/obter` com a sua `fonte` e o `id` quando precisar (para mostrar, usar ou comparar a
+  letra com a voz). Cada complemento ganha uma caixa com o nome dele na escolha da letra; a escolha automática
+  também usa as letras dele.
+- Tempos limite do lado do IOkê: `saude` 3 s, `buscar` 20 s, `lista` 60 s, `trecho` 60 s, `letras` 20 s, `acoes` 30 s; tarefa
   sem avanço por 10 minutos é cancelada.
 - As mensagens de erro (`{"erro": "..."}`) aparecem para a pessoa como estão: escreva no `comp.idioma`.
 

@@ -11,6 +11,13 @@ app (Settings → Updates), in the user's language.
 
 ## [Unreleased]
 
+### Added
+
+- **Lists from song add-ons (playlists, albums):** a song add-on can show a list in the Add page's search. "See the
+  songs" opens the review window (the same one used for folders and CDs): uncheck, fix names and hear a preview of
+  each one, and the checked ones come in as if added one by one. The names fixed in the review stay, even after the
+  add-on delivers the song. PC only.
+
 ### Fixed
 
 - **Add-on lyrics in the lyrics picker:** the first search went out before the window knew which lyrics add-ons

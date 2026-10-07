@@ -468,11 +468,14 @@ class Library:
             return self._bib[1], self._bib[2]
 
     # ------------------------------------------------------------------ acoes
-    def add_fonte(self, fonte, ref, info=None, client="", name="", account=None, onde=None):
+    def add_fonte(self, fonte, ref, info=None, client="", name="", account=None, onde=None, dados=None):
         """Uma musica de um complemento (fonte de musicas): o complemento entrega o arquivo no
         preparo (_obter_complemento). O id e sha1(chave)[:12]: uma fonte de videos pode usar o id do
-        video como chave, e as musicas antigas dela mantem o mesmo id."""
+        video como chave, e as musicas antigas dela mantem o mesmo id.
+        `dados`: o que a pessoa corrigiu na revisao (titulo, artista, album, ano, faixa, disco): vale mais que o
+        que o complemento disser depois, ao entregar a musica."""
         info = info or {}
+        dados = dados or {}
         ref = str(ref)
         chave = str(info.get("chave") or f"{fonte}:{ref}")[:300]
         sid = song_id_for(chave)
@@ -510,6 +513,10 @@ class Library:
             }
             if onde in ("local", "nuvem"):
                 meta["separar_onde"] = onde
+            fixos = _da_revisao(dados)
+            if fixos:
+                meta.update(fixos)
+                meta["fixos"] = sorted(fixos)  # o complemento nao troca estes ao entregar a musica
             self.dir(sid).mkdir(parents=True, exist_ok=True)
             self.songs[sid] = meta
             self._save(sid)
@@ -548,11 +555,12 @@ class Library:
                                   "account": bool(q.get("conta"))})
         if not meta.get("troca"):
             year = re.match(r"\d{4}", str(info.get("ano") or ""))
+            fixos = set(meta.get("fixos") or [])  # os que a pessoa corrigiu na revisao
             self._set(sid, **{k: v for k, v in {
                 "title": nomes.clean_display_title(info["titulo"]) if info.get("titulo") else None,
                 "track": info.get("titulo"), "artist": info.get("artista"), "album": info.get("album"),
                 "genre": info.get("genero"), "year": year.group(0) if year else None,
-                "duration": info.get("duracao") or meta.get("duration")}.items() if v})
+                "duration": info.get("duracao") or meta.get("duration")}.items() if v and k not in fixos})
         if isinstance(info.get("contexto"), dict):
             self._set(sid, contexto={k: str(info["contexto"].get(k) or "")[:2000] for k in ("title", "channel", "description")})
         if info.get("capa_url") and not (d / "thumb.jpg").exists():
@@ -2249,6 +2257,24 @@ def queue_eta(songs, wanted, ratio, lanes=1):
         eta = entrar(estimate(m))
         eta += DOWNLOAD_GUESS if m["status"] in ("queued", "downloading") and not k and not running else 0
         out[m["id"]] = {"ahead": len(running) + k, "eta": round(eta)}
+    return out
+
+
+def _da_revisao(dados):
+    """As correcoes da revisao (titulo, artista, album, ano, faixa, disco) nos campos da musica."""
+    out = {}
+    titulo = str(dados.get("titulo") or "").strip()[:200]
+    if titulo:
+        out.update(title=nomes.clean_display_title(titulo), track=titulo)
+    for chave, campo in (("artista", "artist"), ("album", "album")):
+        if str(dados.get(chave) or "").strip():
+            out[campo] = str(dados[chave]).strip()[:200]
+    ano = re.match(r"\d{4}", str(dados.get("ano") or ""))
+    if ano:
+        out["year"] = ano.group(0)
+    for chave, campo in (("faixa", "track_no"), ("disco", "disc_no")):
+        if midia.numero(dados.get(chave)):
+            out[campo] = midia.numero(dados[chave])
     return out
 
 

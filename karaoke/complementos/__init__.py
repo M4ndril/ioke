@@ -258,6 +258,21 @@ class Servico:
                 artwork.permitir_host(x["capa_url"])
         return resultados
 
+    def lista_de_musicas(self, cid, ref, idioma):
+        """As musicas de um resultado "lista" (uma playlist, um album): {"titulo", "artista", "capa_url", "itens"}.
+        Os itens tem o formato dos resultados da busca (e nunca sao listas)."""
+        p = self._proc(cid, "fonte_musicas")
+        r = p.chamar("POST", "/fonte/lista", {"ref": ref}, tempo=cliente.TEMPOS["lista"], idioma=idioma)
+        from .. import artwork
+
+        itens = [x for x in r.get("itens") or [] if isinstance(x, dict) and x.get("ref") is not None
+                 and x.get("tipo") != "lista"]
+        for x in [r, *itens]:
+            if x.get("capa_url"):
+                artwork.permitir_host(x["capa_url"])
+        return {"titulo": str(r.get("titulo") or ""), "artista": str(r.get("artista") or ""),
+                "capa_url": r.get("capa_url") or "", "itens": itens}
+
     @staticmethod
     def _dentro(arquivo, destino):
         """O arquivo devolvido pelo complemento precisa estar dentro do destino que o app deu."""

@@ -6,7 +6,8 @@ import urllib.error
 import urllib.request
 
 # tempos limite (s) de cada tipo de pedido
-TEMPOS = {"saude": 3, "buscar": 20, "trecho": 60, "letras": 20, "acoes": 30, "tarefa": 5, "configurar": 10}
+TEMPOS = {"saude": 3, "buscar": 20, "lista": 60, "trecho": 60, "letras": 20, "acoes": 30, "tarefa": 5,
+          "configurar": 10}
 
 
 class ComplementoIndisponivel(RuntimeError):

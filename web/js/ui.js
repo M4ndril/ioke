@@ -13,7 +13,8 @@ export function bindNav(nav = document.querySelector(".nav")) {
 /** Um resultado de uma fonte (complemento) no formato que a lista desenha. */
 function daFonte(fonte, r) {
   return { fonte, ref: r.ref, info: r, title: r.titulo || r.ref, channel: r.artista || "", duration: r.duracao,
-    thumb: r.capa_url || "", tem_trecho: !!r.tem_trecho, library: r.library };
+    thumb: r.capa_url || "", tem_trecho: !!r.tem_trecho, library: r.library,
+    lista: r.tipo === "lista", quantidade: r.quantidade }; // uma lista (playlist, album): abre a revisao
 }
 
 /** Busca na fonte getFonte() (um complemento) e mostra os resultados com trecho e "Adicionar". */
@@ -42,7 +43,46 @@ export function setupSearch({ form, input, button, results, getName, onResults, 
   });
 }
 
+/** Um resultado que e uma lista de musicas (uma playlist, um album): "Ver as musicas" abre a janela de revisao (a
+ *  mesma das pastas e dos CDs), e as marcadas entram como se fossem adicionadas uma a uma. So no PC. */
+/* icons: queue_music playlist_add */
+function listaEl(it) {
+  const el = h(`
+    <div class="result fonte lista">
+      <div class="thumb">
+        ${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy">` : `<span class="job-art ms">queue_music</span>`}
+        <span class="dur">${icon("queue_music", "sm")} ${it.quantidade || ""}</span>
+      </div>
+      <div class="grow">
+        <div class="title">${esc(it.title)}</div>
+        <div class="sub">${esc([it.channel, it.quantidade ? t("busca.lista_n", { n: it.quantidade }) : t("busca.lista")].filter(Boolean).join(" · "))}</div>
+        <div class="actions"><button class="btn sm" data-ver>${icon("playlist_add")} ${esc(t("busca.ver_musicas"))}</button></div>
+      </div>
+    </div>`);
+  const ver = el.querySelector("[data-ver]");
+  ver.onclick = async () => {
+    ver.disabled = true;
+    const antes = ver.innerHTML;
+    ver.innerHTML = `<span class="spinner"></span> ${esc(t("busca.abrindo_lista"))}`;
+    try {
+      const r = await api("/api/importar/fonte", { method: "POST", body: { fonte: it.fonte, ref: it.ref }, timeout: 90000 });
+      if (!r.itens.length) return toast(t("busca.lista_vazia"));
+      const { abrirRevisao } = await import("./revisao.js"); // so no PC (o celular nao recebe listas)
+      if (await abrirRevisao({ titulo: r.nome, itens: r.itens, tipo: "complemento" })) {
+        document.dispatchEvent(new CustomEvent("karaoke:refresh"));
+      }
+    } catch (err) {
+      toast(err.message, { error: true });
+    } finally {
+      ver.disabled = false;
+      ver.innerHTML = antes;
+    }
+  };
+  return el;
+}
+
 function resultEl(it, getName, sing = false) {
+  if (it.lista) return listaEl(it);
   const lib = it.library;
   const ready = lib && lib.status === "ready";
   const badge = ready ? `<span class="badge ok">${icon("check", "sm")} ${esc(t("busca.na_biblioteca"))}</span>`

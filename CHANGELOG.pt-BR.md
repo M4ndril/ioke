@@ -11,6 +11,13 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Listas dos complementos de músicas (playlists, álbuns):** um complemento de músicas pode mostrar uma lista na
+  busca do Adicionar. "Ver as músicas" abre a janela de revisão (a mesma das pastas e dos CDs): dá para desmarcar,
+  corrigir nomes e ouvir o trecho de cada uma, e as marcadas entram como se fossem adicionadas uma a uma. Os nomes
+  corrigidos na revisão ficam, mesmo depois de o complemento entregar a música. Só no PC.
+
 ### Corrigido
 
 - **Letras dos complementos na escolha da letra:** a primeira busca saía antes de a janela saber quais complementos

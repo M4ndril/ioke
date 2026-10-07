@@ -170,8 +170,11 @@ def make_blueprint(servico, is_host, nuvem_conectada=lambda: False, na_bibliotec
             resultados = servico.buscar(cid, q, i18n.idioma_do_pedido())
         except Exception as exc:  # noqa: BLE001
             return falha(exc)
+        if not is_host():  # uma lista (playlist, album) abre a revisao, que so existe no PC
+            resultados = [r for r in resultados if r.get("tipo") != "lista"]
         for r in resultados:  # marca o que ja esta na biblioteca (ou sendo preparado)
-            r["library"] = na_biblioteca(str(r.get("chave") or f"{cid}:{r['ref']}"))
+            if r.get("tipo") != "lista":
+                r["library"] = na_biblioteca(str(r.get("chave") or f"{cid}:{r['ref']}"))
         return jsonify({"resultados": resultados})
 
     @bp.get("/api/fontes/<cid>/trecho")

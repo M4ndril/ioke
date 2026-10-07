@@ -8,6 +8,7 @@
 
 Rotas (so o PC):
 - POST   /api/importar/pasta         {"pasta"}: lista os arquivos de uma pasta (com as subpastas)
+- POST   /api/importar/fonte         {"fonte", "ref"}: as musicas de uma lista de um complemento (playlist, album)
 - POST   /api/importar/etiquetas     {"refs": [...]}: as etiquetas, a letra e a capa de cada um
 - GET    /api/importar/capa/<ref>    a capa (embutida ou a da pasta), pequena
 - GET    /api/importar/trecho/<ref>  15 s do meio, para ouvir antes
@@ -60,6 +61,9 @@ class Importacoes:
         self.refs = {}
         self._por_caminho = {}  # caminho (e trecho) -> ref (o mesmo arquivo listado de novo tem a mesma ref)
         self.discos = None  # os CDs e os .cue (karaoke/disco/servico.py), quando o servidor liga
+        # os complementos (karaoke/complementos), quando o servidor liga: as listas das fontes de musicas (uma
+        # playlist, um album) entram na revisao como refs de "complemento" (sem arquivo: ele entrega ao importar)
+        self.complementos = None
         self.jobs = {}  # id -> importacao (ver comecar)
         self.fila = []
         self._trabalhando = False
@@ -101,6 +105,21 @@ class Importacoes:
                 v["extras"] = extras
             return ref
 
+    def registrar_fonte(self, cid, ref, info, etiquetas):
+        """Uma musica de um complemento na revisao (de uma lista dele). Importar = adicionar como se fosse da busca."""
+        chave = f"complemento:{cid}:{ref}"
+        with self.lock:
+            agora = time.time()
+            r = self._por_caminho.get(chave)
+            if not (r and r in self.refs):
+                if len(self.refs) >= REFS_MAX:
+                    self._limpar(agora)
+                r = secrets.token_urlsafe(9)
+                self._por_caminho[chave] = r
+            self.refs[r] = {"caminho": "", "t": agora, "complemento": cid, "ref_fonte": str(ref), "info": info,
+                            "etiquetas": etiquetas}
+            return r
+
     def fonte(self, ref):
         """Tudo o que o servidor guarda de uma ref (uma copia), ou None."""
         with self.lock:
@@ -141,9 +160,10 @@ class Importacoes:
             del self._por_caminho[chave]
 
     def caminho(self, ref):
+        """O arquivo de uma ref (None se venceu, ou se e uma musica de complemento, que nao tem arquivo)."""
         with self.lock:
             v = self.refs.get(str(ref or ""))
-            if not v or time.time() - v["t"] > REF_HORAS * 3600:
+            if not v or time.time() - v["t"] > REF_HORAS * 3600 or v.get("complemento"):
                 return None
             return Path(v["caminho"])
 
@@ -248,7 +268,15 @@ class Importacoes:
         tmp = self.cache / f"{ref}-cheia.jpg"
         try:
             fonte = None
-            if da_fonte and Path(da_fonte).is_file():
+            url = (f.get("info") or {}).get("capa_url") if f.get("complemento") else None
+            if url:  # a miniatura que o complemento deu (o host ja foi liberado quando a lista chegou)
+                from . import artwork
+
+                artwork.download_image(url, tmp)
+                fonte = tmp
+            elif f.get("complemento"):
+                return None
+            elif da_fonte and Path(da_fonte).is_file():
                 fonte = Path(da_fonte)
             elif (self.etiquetas(ref) or {}).get("capa"):
                 if midia.extrair_capa(caminho, tmp):
@@ -273,6 +301,11 @@ class Importacoes:
     def trecho(self, ref):
         """15 s do meio da musica (MP3), para conferir antes de importar."""
         f = self.fonte(ref)
+        if f and f.get("complemento"):  # o trecho de uma musica de complemento vem dele
+            if not self.complementos:
+                return None
+            return self.complementos.trecho(f["complemento"], f["ref_fonte"], self.cache / f"{ref}-trecho",
+                                            i18n.idioma_do_pc())
         if not f or not f["caminho"].is_file():
             return None
         caminho, parte = f["caminho"], f.get("trecho") or {}
@@ -373,9 +406,16 @@ class Importacoes:
             nome = caminho.name if caminho else str(dados.get("titulo") or "?")
             cortado = None
             try:
-                if not caminho or not caminho.is_file():
+                if f.get("complemento"):  # de uma lista de complemento: como se fosse adicionada da busca
+                    etq = f.get("etiquetas") or {}
+                    nome = str(etq.get("titulo") or f["ref_fonte"])
+                    # so o que a pessoa mudou na revisao fica fixo (o resto, o complemento acerta ao entregar)
+                    mudou = {k: v for k, v in _dados(it.get("dados")).items() if str(v) != str(etq.get(k) or "")}
+                    meta, nova = self.lib.add_fonte(f["complemento"], f["ref_fonte"], f.get("info") or {}, client,
+                                                    name, account, onde=job["onde"], dados=mudou)
+                elif not caminho or not caminho.is_file():
                     raise FileNotFoundError(i18n.t("arquivo.nao_encontrado", nome=nome))
-                if f.get("trecho"):  # uma faixa do album inteiro: corta (o arquivo da pessoa fica como esta)
+                elif f.get("trecho"):  # uma faixa do album inteiro: corta (o arquivo da pessoa fica como esta)
                     etq = f.get("etiquetas") or {}
                     titulo = dados.get("titulo") or etq.get("titulo") or ""
                     nome = f"{etq.get('faixa') or 0:02d} - {titulo}.flac" if titulo else f"{caminho.stem} {etq.get('faixa')}.flac"
@@ -479,6 +519,30 @@ def make_blueprint(imp, is_host, quem):
         itens, cortado = imp.listar_pasta(raiz)
         return jsonify({"itens": itens, "cortado": cortado, "nome": raiz.name or str(raiz)})
 
+    @bp.post("/api/importar/fonte")
+    def lista_de_fonte():
+        """As musicas de um resultado "lista" de um complemento (uma playlist, um album), para a revisao."""
+        body = request.get_json(silent=True) or {}
+        cid, ref = str(body.get("fonte") or ""), str(body.get("ref") or "")
+        if not imp.complementos or not cid or not ref:
+            return jsonify({"error": i18n.t("importar.nada")}), 400
+        try:
+            lista = imp.complementos.lista_de_musicas(cid, ref, i18n.idioma_do_pedido())
+        except Exception as exc:  # noqa: BLE001 - o complemento desligou, falhou, demorou
+            return jsonify({"error": str(exc)[:300]}), 502
+        itens = []
+        for x in lista["itens"]:
+            etq = {"titulo": str(x.get("titulo") or x["ref"]), "artista": str(x.get("artista") or ""),
+                   "artista_album": lista["artista"], "album": str(x.get("album") or ""), "ano": str(x.get("ano") or ""),
+                   "genero": "", "faixa": midia.numero(x.get("faixa")), "disco": midia.numero(x.get("disco")),
+                   "duracao": x.get("duracao") or 0, "video": bool(x.get("tem_video")), "capa": bool(x.get("capa_url")),
+                   "letra": None, "protegido": False, "sem_audio": False}
+            r = imp.registrar_fonte(cid, x["ref"], {**x, "chave": x.get("chave")}, etq)
+            itens.append({"ref": r, "nome": etq["titulo"], "pasta": "", "tamanho": 0, "titulo": etq["titulo"],
+                          "artista": etq["artista"], "faixa": etq["faixa"], "video": etq["video"], "etiquetas": etq,
+                          "trecho": bool(x.get("tem_trecho"))})
+        return jsonify({"itens": itens, "nome": lista["titulo"] or cid})
+
     @bp.post("/api/importar/etiquetas")
     def etiquetas():
         refs = [str(r) for r in ((request.get_json(silent=True) or {}).get("refs") or [])][:LOTE_ETIQUETAS]
@@ -499,12 +563,12 @@ def make_blueprint(imp, is_host, quem):
         f = imp.trecho(ref)
         if not f:
             return jsonify({"error": i18n.t("importar.sem_trecho")}), 404
-        return send_file(f, mimetype="audio/mpeg", conditional=True)
+        return send_file(f, conditional=True)  # o tipo pela extensao (o de um complemento pode nao ser .mp3)
 
     @bp.post("/api/importar")
     def importar():
         body = request.get_json(silent=True) or {}
-        itens = [it for it in (body.get("itens") or []) if isinstance(it, dict) and imp.caminho(it.get("ref"))]
+        itens = [it for it in (body.get("itens") or []) if isinstance(it, dict) and imp.fonte(it.get("ref"))]
         if not itens:
             return jsonify({"error": i18n.t("importar.nada")}), 400
         onde = body.get("onde") if body.get("onde") in ("local", "nuvem") else None

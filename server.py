@@ -219,6 +219,7 @@ complementos = Complementos(versao_app=app_version(),
                             testes=lambda: bool(APP_HOME) and updates.channel().get("canal") == "testes")
 lib.complementos = complementos
 lyrics.complementos = complementos
+importacoes.complementos = complementos  # as listas (playlists, albuns) das fontes de musicas
 app.register_blueprint(complementos_routes(complementos, is_host=lambda: is_host(),
                                            nuvem_conectada=nuvem_conta.conectada, na_biblioteca=_na_biblioteca))
 app.register_blueprint(update_routes(updates, is_host=lambda: is_host(), busy=_someone_singing, restart_app=_restart_app))
