@@ -20,6 +20,9 @@ app (Settings → Updates), in the user's language.
 
 ### Fixed
 
+- **Going back to an earlier separation:** in the song's Edit window, the choice of which saved version to use for
+  each track only worked with its own button; Save ignored it, and the song kept the last separation. Save now also
+  applies the track choice.
 - **Add-on lyrics in the lyrics picker:** the first search went out before the window knew which lyrics add-ons
   were on, and their lyrics never showed up, even with the box checked. The list now puts all sources together by
   quality (the same version of the song first, then word by word, then synced), instead of putting the add-ons' at

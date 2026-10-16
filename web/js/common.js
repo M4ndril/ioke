@@ -1005,22 +1005,7 @@ export function editSong(song, { genres = [] } = {}) {
           ${sel("instrumental", esc(t("musica.faixa_instrumental")))}
           ${sel("lead", esc(t("musica.faixa_voz")))}
           ${sel("backing", esc(t("musica.faixa_apoio")))}
-          <div class="row"><button class="btn outline sm" data-faixas-usar>${icon("tune")} ${esc(t("musica.faixas_usar"))}</button></div>
         </div>`;
-      faixasBox.querySelector("[data-faixas-usar]").onclick = async (e) => {
-        const escolha = {};
-        faixasBox.querySelectorAll("[data-faixa]").forEach((s) => (escolha[s.dataset.faixa] = s.value));
-        e.currentTarget.disabled = true;
-        try {
-          fresh = await api(`/api/songs/${song.id}/faixas`, { method: "PUT", body: { escolha } });
-          saved = true;
-          toast(t("musica.faixas_ok"));
-          renderResplit();
-        } catch (err) {
-          toast(err.message, { error: true });
-          e.currentTarget.disabled = false;
-        }
-      };
     };
     const refreshResplit = () => api(`/api/songs/${song.id}`).then((s) => { fresh = s; renderResplit(); }).catch(() => {
       resplitTimer = setTimeout(refreshResplit, 4000);
@@ -1083,7 +1068,15 @@ export function editSong(song, { genres = [] } = {}) {
     modal.querySelector("[data-save]").onclick = async () => {
       const body = {};
       for (const f of ["title", "artist", "track", "album", "genre", "year", "track_no", "disc_no"]) body[f] = get(f).value;
+      // as faixas escolhidas (de qual versao guardada vem cada uma): o "Salvar" aplica junto
+      const ativas = fresh.faixas_ativas || {};
+      const escolha = {};
+      faixasBox.querySelectorAll("[data-faixa]").forEach((s) => s.value !== ativas[s.dataset.faixa] && (escolha[s.dataset.faixa] = s.value));
       try {
+        if (Object.keys(escolha).length) {
+          fresh = await api(`/api/songs/${song.id}/faixas`, { method: "PUT", body: { escolha } });
+          toast(t("musica.faixas_ok"));
+        }
         await api(`/api/songs/${song.id}`, { method: "PATCH", body });
         saved = true;
         toast(t("musica.salva"));

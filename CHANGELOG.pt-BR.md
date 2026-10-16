@@ -20,6 +20,9 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ### Corrigido
 
+- **Voltar para uma separação anterior:** no Editar da música, a escolha de qual versão guardada usar em cada
+  faixa só valia no botão próprio dela; o Salvar ignorava a escolha, e a música continuava com a última separação.
+  Agora o Salvar aplica também a escolha das faixas.
 - **Letras dos complementos na escolha da letra:** a primeira busca saía antes de a janela saber quais complementos
   de letras estavam ligados, e as letras deles nunca apareciam, mesmo com a caixa marcada. Agora a lista junta todas
   as fontes pela qualidade (a mesma versão da música primeiro, depois palavra a palavra, depois sincronizada), em
