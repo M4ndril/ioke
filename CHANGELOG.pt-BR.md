@@ -11,13 +11,14 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ## [Não lançado]
 
+## [1.2.0] - 2026-10-29
+
 ### Adicionado
 
 - **Janela de atualização:** quando sai uma versão nova, o app agora pergunta ao abrir (na tela inicial do PC),
   com o que mudou e três opções: atualizar agora (ele prepara a versão nova enquanto você continua usando e
   depois oferece reiniciar), depois (pergunta de novo na próxima vez que o app abrir) ou pular esta versão.
   Antes era só um aviso pequeno que aparecia uma vez.
-
 - **Listas dos complementos de músicas (playlists, álbuns):** um complemento de músicas pode mostrar uma lista na
   busca do Adicionar. "Ver as músicas" abre a janela de revisão (a mesma das pastas e dos CDs): dá para desmarcar,
   corrigir nomes e ouvir o trecho de cada uma, e as marcadas entram como se fossem adicionadas uma a uma. Os nomes
@@ -298,7 +299,8 @@ A primeira versão pública do IOkê: um app de karaokê para Windows que roda n
 - **Atualizações** por esta página, em segundo plano, com os canais Estável e Testes, e a volta sozinha para a versão
   anterior se uma nova não abrir.
 
-[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.1.0...HEAD
+[Não lançado]: https://github.com/M4ndril/ioke/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/M4ndril/ioke/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/M4ndril/ioke/compare/v1.0.2...v1.1.0
 [1.1.0-beta.2]: https://github.com/M4ndril/ioke/compare/v1.1.0-beta.1...v1.1.0-beta.2
 [1.1.0-beta.1]: https://github.com/M4ndril/ioke/compare/v1.0.2...v1.1.0-beta.1
