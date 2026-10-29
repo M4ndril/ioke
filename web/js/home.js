@@ -1,5 +1,5 @@
 // Home: metade "Adicionar musicas" e metade "Cantar" com o carrossel de capas.
-import { $, api, biblioteca, esc, icon, store, toast } from "./common.js";
+import { $, api, biblioteca, confirmar, esc, icon, openModal, store, toast } from "./common.js";
 import { mountFabs } from "./floating.js";
 import "./tvnav.js";
 import "./stageopen.js";
@@ -113,17 +113,92 @@ async function refresh() {
 
 refresh();
 
-// app instalado: ao abrir ele procura atualizacoes sozinho e aqui so avisa (uma vez por versao)
+// app instalado: ao abrir ele procura atualizacoes sozinho e aqui pergunta se quer atualizar. "Depois" pergunta de
+// novo na proxima vez que o app abrir; "Pular" so na versao seguinte. Nunca instala sem a pessoa mandar.
+const sessao = (v) => {
+  try {
+    if (v === undefined) return sessionStorage.getItem("karaoke.updateLater");
+    sessionStorage.setItem("karaoke.updateLater", v);
+  } catch {
+    /* sem sessionStorage: pergunta de novo ao voltar ao inicio */
+  }
+};
+
 async function updateNotice(tries = 6) {
   try {
     const st = await api("/api/app");
-    if (!st.app) return;
-    if (st.update_available && store("karaoke.updateSeen") !== st.latest) {
-      store("karaoke.updateSeen", st.latest);
-      toast(t("inicio.atualizacao", { versao: st.latest }), { ms: 12000 });
-    } else if (!st.checked_at && tries > 0) setTimeout(() => updateNotice(tries - 1), 20000);
+    if (!st.app || document.body.classList.contains("mobile")) return;
+    if (!st.checked_at) return tries > 0 && setTimeout(() => updateNotice(tries - 1), 20000);
+    const v = st.latest;
+    if (!st.update_available || store("karaoke.updateSkip") === v || sessao() === v) return;
+    // outra janela aberta (o aviso de primeiro uso, por exemplo): espera ela fechar
+    if (document.querySelector(".modal-backdrop")) return tries > 0 && setTimeout(() => updateNotice(tries - 1), 5000);
+    sessao(v);
+    updateModal(st);
   } catch {
     /* sem servidor ou outro aparelho */
   }
 }
 setTimeout(updateNotice, 5000);
+
+function updateModal(st) {
+  const v = st.latest;
+  const notas = ((st.available || []).find((x) => x.version === v)?.notes || []).slice(0, 8);
+  const modal = openModal(t("inicio.atualizacao_titulo"), `
+    <p style="margin-top:0">${esc(t("inicio.atualizacao_texto", { versao: v, atual: st.version }))}</p>
+    ${notas.length ? `<b class="small">${esc(t("inicio.atualizacao_novidades"))}</b>
+      <ul class="upd-notes">${notas.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+    <div data-job style="margin-top:12px"></div>
+    <div class="row wrap" style="gap:8px;justify-content:flex-end;margin-top:14px" data-botoes>
+      <button class="btn ghost sm" data-pular>${esc(t("inicio.atualizacao_pular"))}</button>
+      <button class="btn outline sm" data-depois>${esc(t("inicio.atualizacao_depois"))}</button>
+      <button class="btn sm" data-atualizar data-nav-default>${icon("system_update")} ${esc(t("atualizacoes.atualizar"))}</button>
+    </div>`);
+  const q = (s) => modal.querySelector(s);
+  q("[data-depois]").onclick = modal.close;
+  q("[data-pular]").onclick = () => {
+    store("karaoke.updateSkip", v);
+    modal.close();
+  };
+  q("[data-atualizar]").onclick = async (e) => {
+    e.currentTarget.disabled = true;
+    try {
+      await api("/api/app/install", { method: "POST", body: { version: v } });
+      acompanhar();
+    } catch (err) {
+      e.currentTarget.disabled = false;
+      toast(err.message, { error: true });
+    }
+  };
+  // prepara a versao nova (minutos, com o app funcionando) e depois oferece reiniciar
+  async function acompanhar() {
+    if (!document.contains(modal)) return;
+    const job = (await api("/api/app").catch(() => ({}))).job;
+    const box = q("[data-job]");
+    q("[data-botoes]").style.display = "none";
+    if (!job || job.state === "running") {
+      box.innerHTML = `<div class="upd-job"><span class="spinner"></span> ${esc(t("atualizacoes.preparando", { versao: v }))}
+        ${esc(t("atualizacoes.continuar_usando"))}<pre class="upd-log">${esc(((job && job.log) || []).slice(-6).join("\n"))}</pre></div>`;
+      setTimeout(acompanhar, 1500);
+    } else if (job.state === "ready") {
+      box.innerHTML = `<div class="upd-job ok">${esc(t("atualizacoes.pronta", { versao: v }))}
+        <button class="btn sm" data-restart data-nav-default>${icon("restart_alt")} ${esc(t("atualizacoes.reiniciar"))}</button>
+        <div class="small muted">${esc(t("atualizacoes.reiniciar_dica"))}</div></div>`;
+      box.querySelector("[data-restart]").onclick = reiniciar;
+    } else {
+      box.innerHTML = `<div class="upd-job err">${esc(t("atualizacoes.falhou", { versao: v, erro: job.error || "" }))}</div>`;
+    }
+  }
+}
+
+async function reiniciar() {
+  try {
+    await api("/api/app/restart", { method: "POST", body: {} });
+  } catch (err) {
+    if (!(err.data && err.data.busy) || !(await confirmar(t("config.reiniciar_cantando"), { sim: t("config.reiniciar_mesmo"), perigo: true }))) {
+      return toast(err.message, { error: true });
+    }
+    await api("/api/app/restart", { method: "POST", body: { force: true } });
+  }
+  toast(t("programa.reiniciando"), { ms: 10000 });
+}

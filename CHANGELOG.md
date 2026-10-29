@@ -13,6 +13,11 @@ app (Settings → Updates), in the user's language.
 
 ### Added
 
+- **Update window:** when a new version comes out, the app now asks when it opens (on the PC's home screen), with
+  what changed and three choices: update now (it prepares the new version while you keep using the app, then
+  offers to restart), later (it asks again the next time the app opens) or skip this version. Before, there was
+  only a small notice that showed once.
+
 - **Lists from song add-ons (playlists, albums):** a song add-on can show a list in the Add page's search. "See the
   songs" opens the review window (the same one used for folders and CDs): uncheck, fix names and hear a preview of
   each one, and the checked ones come in as if added one by one. The names fixed in the review stay, even after the

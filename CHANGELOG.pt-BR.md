@@ -13,6 +13,11 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ### Adicionado
 
+- **Janela de atualização:** quando sai uma versão nova, o app agora pergunta ao abrir (na tela inicial do PC),
+  com o que mudou e três opções: atualizar agora (ele prepara a versão nova enquanto você continua usando e
+  depois oferece reiniciar), depois (pergunta de novo na próxima vez que o app abrir) ou pular esta versão.
+  Antes era só um aviso pequeno que aparecia uma vez.
+
 - **Listas dos complementos de músicas (playlists, álbuns):** um complemento de músicas pode mostrar uma lista na
   busca do Adicionar. "Ver as músicas" abre a janela de revisão (a mesma das pastas e dos CDs): dá para desmarcar,
   corrigir nomes e ouvir o trecho de cada uma, e as marcadas entram como se fossem adicionadas uma a uma. Os nomes
