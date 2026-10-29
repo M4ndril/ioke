@@ -99,6 +99,18 @@ def _patch_progress():
     _patched = True
 
 
+def _placa_suportada(capacidade, archs):
+    """O PyTorch tem codigo para esta placa? sm_XY roda nas placas X.Y em diante da mesma geracao (X); compute_XY
+    (PTX) roda em qualquer uma de X.Y para cima."""
+    cap = capacidade[0] * 10 + capacidade[1]
+    for a in archs:
+        tipo, _, n = a.partition("_")
+        n = int("".join(c for c in n if c.isdigit()) or 0)
+        if (tipo == "sm" and n // 10 == capacidade[0] and n <= cap) or (tipo == "compute" and n <= cap):
+            return True
+    return False
+
+
 def detect_device():
     if CONFIG.get("force_cpu"):
         return {"device": "cpu", "name": "CPU (forcado no config.json)"}
@@ -106,7 +118,11 @@ def detect_device():
         import torch
 
         if torch.cuda.is_available():
-            return {"device": "cuda", "name": torch.cuda.get_device_name(0)}
+            name = torch.cuda.get_device_name(0)
+            if _placa_suportada(torch.cuda.get_device_capability(0), torch.cuda.get_arch_list()):
+                return {"device": "cuda", "name": name}
+            log.warning("a placa %s e antiga demais para este PyTorch: separando na CPU", name)
+            return {"device": "cpu", "name": f"CPU ({name}: placa sem suporte)"}
     except Exception as exc:  # noqa: BLE001
         log.warning("torch indisponivel: %s", exc)
     return {"device": "cpu", "name": "CPU"}

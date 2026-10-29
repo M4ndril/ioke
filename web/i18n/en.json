@@ -40,6 +40,7 @@
  "app.fechar_pergunta": "Close IOkê?",
  "app.nao_abriu": "IOkê couldn't open.",
  "app.nome": "IOkê",
+ "app.sem_webview2": "IOkê needs Microsoft WebView2 to open its window, and this PC doesn't have it. Install it from https://go.microsoft.com/fwlink/p/?LinkId=2124703 and open IOkê again.",
  "app.reiniciou": "IOkê restarted its server... just a moment.",
  "arquivo.nao_encontrado": "“{nome}” was not found.",
  "arquivo.pasta_invalida": "That folder doesn't exist.",

@@ -50,3 +50,13 @@ def test_a_model_that_still_fails_gives_a_normal_error(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError):
         separation._carregar(sep, "m.ckpt")
     assert (tmp_path / "m.ckpt").exists()  # arquivo inteiro: nao apaga
+
+
+def test_old_nvidia_cards_fall_back_to_the_cpu():
+    cu128 = ["sm_75", "sm_80", "sm_86", "sm_90", "sm_100", "sm_120"]
+    assert separation._placa_suportada((8, 9), cu128)  # RTX 40xx: roda o codigo da sm_86
+    assert separation._placa_suportada((12, 0), cu128)  # RTX 50xx
+    assert not separation._placa_suportada((6, 1), cu128)  # GTX 10xx
+    assert not separation._placa_suportada((5, 2), cu128)  # GTX 9xx
+    assert separation._placa_suportada((6, 1), ["sm_50", "sm_60", "compute_70"])
+    assert separation._placa_suportada((8, 9), ["sm_80", "compute_80"])

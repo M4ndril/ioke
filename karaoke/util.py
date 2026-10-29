@@ -14,16 +14,14 @@ class Canceled(Exception):
 
 
 def _find_ffmpeg():
-    """FFmpeg do Windows (PATH) ou, no app instalado sem ele, o que vem no pacote imageio-ffmpeg."""
-    found = shutil.which("ffmpeg")
-    if found:
-        return found
+    """O FFmpeg que vem com o app (imageio-ffmpeg: sempre o mesmo, com o rubberband do tom) ou, sem ele, o do PATH.
+    Um FFmpeg qualquer do PC pode ser velho ou nao ter o rubberband."""
     try:
         import imageio_ffmpeg
 
         return imageio_ffmpeg.get_ffmpeg_exe()
     except Exception:  # noqa: BLE001
-        return None
+        return shutil.which("ffmpeg")
 
 
 FFMPEG = _find_ffmpeg()
@@ -32,10 +30,13 @@ NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 def ffmpeg_no_path(pasta):
     """Bibliotecas que chamam "ffmpeg" pelo nome (o audio-separator, o pydub) nao acham o do imageio-ffmpeg, que tem
-    outro nome. Poe um ffmpeg.exe com esse nome em `pasta` e a pasta no PATH deste processo."""
-    if not FFMPEG or shutil.which("ffmpeg"):
-        return
+    outro nome. Poe um ffmpeg.exe com esse nome em `pasta` e a pasta no comeco do PATH deste processo (e dos que ele
+    abrir, como os complementos), na frente de um FFmpeg qualquer do PC."""
+    if not FFMPEG or Path(FFMPEG).stem.lower() == "ffmpeg":
+        return  # ja tem o nome certo (veio do PATH)
     pasta = Path(pasta)
+    if str(pasta) in os.environ.get("PATH", "").split(os.pathsep):
+        return
     exe = pasta / ("ffmpeg.exe" if os.name == "nt" else "ffmpeg")
     if not exe.exists() or exe.stat().st_size != Path(FFMPEG).stat().st_size:
         pasta.mkdir(parents=True, exist_ok=True)

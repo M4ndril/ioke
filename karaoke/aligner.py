@@ -69,9 +69,9 @@ class _Models:
 
 
 def _device():
-    import torch
+    from .separation import detect_device
 
-    return "cuda" if torch.cuda.is_available() and not CONFIG.get("force_cpu") else "cpu"
+    return detect_device()["device"]
 
 
 def _whisper():

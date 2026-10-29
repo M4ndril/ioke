@@ -24,6 +24,14 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
   nome de arquivo, e o separador procura pelo nome. Agora ele encontra.
 - **Separação falhando de vez depois de um download de modelo interrompido:** o arquivo do modelo pela metade
   ficava e quebrava todas as separações. Agora o app percebe, apaga e baixa de novo.
+- **PCs sem o Visual C++ da Microsoft** (um Windows recém-instalado, por exemplo): a separação, a letra por IA e o
+  tom precisam dele, e nada o instalava. Agora o instalador e o app, ao abrir, instalam (o Windows pede
+  permissão uma vez).
+- **Placas NVIDIA mais antigas (GTX 10xx e anteriores):** o PyTorch instalado não tem suporte a elas, e a
+  separação falhava. Agora elas separam na CPU.
+- **FFmpeg:** o app agora usa sempre a cópia que vem com ele (a mesma em todo PC, com o que a troca de tom
+  precisa), e só usa a do PC quando não tem a dele. Os complementos também passam a encontrá-lo.
+- **PCs sem o WebView2:** o app fechava sem dizer por quê. Agora ele mostra onde instalar.
 - **Voltar para uma separação anterior:** no Editar da música, a escolha de qual versão guardada usar em cada
   faixa só valia no botão próprio dela; o Salvar ignorava a escolha, e a música continuava com a última separação.
   Agora o Salvar aplica também a escolha das faixas.

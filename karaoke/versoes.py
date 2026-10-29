@@ -220,6 +220,49 @@ LISTAS = {"nvidia": "requirements-lock-cuda.txt", "cpu": "requirements-lock-cpu.
           "leve": "requirements-lock-leve.txt"}
 
 
+VCREDIST_URL = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+VCREDIST_DLLS = ("msvcp140.dll", "msvcp140_1.dll", "vcomp140.dll")
+
+
+def falta_vcredist():
+    """Faltam as DLLs do Visual C++ que o PyTorch, o ONNX, o Whisper e o librosa usam? (o Python e um Windows
+    recem-instalado nao trazem)"""
+    sistema = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32"
+    return WINDOWS and not all((sistema / n).exists() for n in VCREDIST_DLLS)
+
+
+def instalar_vcredist(home):
+    """Baixa o instalador do Visual C++ da Microsoft, confere a assinatura e roda (o Windows pede administrador)."""
+    exe = home.path("cache", "vc_redist.x64.exe")
+    exe.parent.mkdir(parents=True, exist_ok=True)
+    with urllib.request.urlopen(VCREDIST_URL, timeout=300) as r:
+        exe.write_bytes(r.read())
+    q = str(exe).replace("'", "''")
+    script = (f"$s = Get-AuthenticodeSignature -LiteralPath '{q}'; "
+              "if ($s.Status -ne 'Valid' -or $s.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') { exit 2 }; "
+              f"$p = Start-Process -FilePath '{q}' -ArgumentList '/install','/quiet','/norestart' -Verb RunAs -Wait -PassThru; "
+              "exit $p.ExitCode")
+    try:
+        code = subprocess.run(["powershell", "-NoProfile", "-Command", script], creationflags=NO_WINDOW,
+                              timeout=900).returncode
+    finally:
+        exe.unlink(missing_ok=True)
+    if code not in (0, 1638, 3010):  # 1638: ja tem um mais novo; 3010: pede para reiniciar
+        raise RuntimeError(f"o instalador do Visual C++ terminou com o codigo {code}")
+
+
+def _garantir_vcredist(home, log):
+    if not falta_vcredist():
+        return True
+    log("Instalando o Visual C++ da Microsoft (o Windows vai pedir permissão)...")
+    try:
+        instalar_vcredist(home)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        log(f"AVISO: não consegui instalar o Visual C++ ({exc}).")
+        return False
+
+
 def has_nvidia():
     try:
         return subprocess.run(["nvidia-smi"], capture_output=True, timeout=20, creationflags=NO_WINDOW).returncode == 0
@@ -779,6 +822,11 @@ def launch(home):
     - codigo 75: o app pediu para abrir de novo (trocou de versao);
     - versao nova que fecha com erro antes de confirmar: volta para a anterior;
     - app que cai: abre de novo; se cair 3 vezes em 2 minutos, avisa e para."""
+    if not _garantir_vcredist(home, print):
+        _message("IOkê",
+                 "IOkê needs the Microsoft Visual C++ Redistributable. Install it from:\n" + VCREDIST_URL
+                 if _em_ingles(home) else
+                 "O IOkê precisa do Visual C++ da Microsoft. Instale por este link:\n" + VCREDIST_URL)
     crashes = []
     while True:
         try:
@@ -877,6 +925,7 @@ def main(argv=None):
         home.log = log
         try:
             v = install(home, args.codigo, args.dados, channel=args.canal, perfil=args.perfil)
+            _garantir_vcredist(home, log)  # antes dos modelos: o teste deles carrega o PyTorch
             if args.modelos and home.perfil() != "leve":
                 log("Baixando os modelos de separação (uns 1,5 GB na primeira vez)...")
                 try:

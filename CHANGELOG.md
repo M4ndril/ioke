@@ -24,6 +24,14 @@ app (Settings → Updates), in the user's language.
   file name, and the separator looks for it by name. It is now found.
 - **Separation failing for good after a model download stopped halfway:** the incomplete model file stayed and
   broke every separation. The app now notices it, deletes it and downloads it again.
+- **PCs without the Microsoft Visual C++ Redistributable** (a freshly installed Windows, for example): separation,
+  AI lyrics and key detection need it, and nothing installed it. The installer, and the app when it opens, now
+  install it (Windows asks for permission once).
+- **Older NVIDIA cards (GTX 10xx and before):** the installed PyTorch has no support for them, and separation
+  failed. They now separate on the CPU.
+- **FFmpeg:** the app now always uses the copy it brings (the same everywhere, with what the key change needs),
+  and only uses one from the PC when it has none. Add-ons also find it.
+- **PCs without WebView2:** the app closed without saying why. It now shows where to install it.
 - **Going back to an earlier separation:** in the song's Edit window, the choice of which saved version to use for
   each track only worked with its own button; Save ignored it, and the song kept the last separation. Save now also
   applies the track choice.

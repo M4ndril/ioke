@@ -40,6 +40,7 @@
  "app.fechar_pergunta": "Fechar o IOkê?",
  "app.nao_abriu": "O IOkê não conseguiu abrir.",
  "app.nome": "IOkê",
+ "app.sem_webview2": "O IOkê precisa do WebView2 da Microsoft para abrir a janela, e ele não está neste PC. Instale por https://go.microsoft.com/fwlink/p/?LinkId=2124703 e abra o IOkê de novo.",
  "app.reiniciou": "O IOkê reiniciou o servidor... só um instante.",
  "arquivo.nao_encontrado": "“{nome}” não foi encontrado.",
  "arquivo.pasta_invalida": "Essa pasta não existe.",

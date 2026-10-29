@@ -54,7 +54,7 @@ from karaoke.library import VIDEO_TYPES, Library, owned_by, song_id_for  # noqa:
 from karaoke.party import LimitError, Party  # noqa: E402
 from karaoke.separation import BACKING_MODELS, PRESETS, VOCAL_MODELS, current_quality  # noqa: E402
 from karaoke.network import Address  # noqa: E402
-from karaoke.util import read_json, write_json  # noqa: E402
+from karaoke.util import ffmpeg_no_path, read_json, write_json  # noqa: E402
 from karaoke import relatos  # noqa: E402
 import time  # noqa: E402
 
@@ -1191,6 +1191,7 @@ def main():
     if APP_HOME:
         updates.check_later()  # procura atualizacoes e so avisa
     address.watch()  # o roteador pode dar outro IP ao PC no meio da festa
+    ffmpeg_no_path(CACHE_DIR / "bin")  # antes dos complementos: eles herdam o PATH
     complementos.iniciar()  # liga os complementos ligados (em segundo plano)
     pastas_vigiadas.iniciar()  # olha as pastas vigiadas de tempos em tempos
     discos.iniciar()  # olha os leitores de CD (quando tem)

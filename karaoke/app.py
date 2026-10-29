@@ -338,8 +338,17 @@ class App:
                                                  min_size=(900, 600), background_color=BG, js_api=MainApi(self))
         self.window.events.closing += self.on_closing
         icon = WEB_DIR / "img" / "karaoke.ico"
-        self.webview.start(self.boot, gui="edgechromium", private_mode=False, storage_path=str(DATA_DIR / "janela"),
-                           icon=str(icon) if icon.exists() else None)
+        try:
+            self.webview.start(self.boot, gui="edgechromium", private_mode=False, storage_path=str(DATA_DIR / "janela"),
+                               icon=str(icon) if icon.exists() else None)
+        except Exception:
+            if _tem_webview2():
+                raise
+            import ctypes
+
+            log.exception("sem o WebView2")
+            ctypes.windll.user32.MessageBoxW(None, _t("app.sem_webview2"), _t("app.nome"), 0x10)
+            return 0
         self.shutdown()
         return self.exit_code
 
@@ -498,6 +507,22 @@ def _allow_permissions():
         original_popup(self, sender, args)
 
     edgechromium.EdgeChrome.on_new_window_request = on_popup
+
+
+def _tem_webview2():
+    """O WebView2 (o motor do Edge que a janela usa) esta instalado? (as chaves que a Microsoft indica)"""
+    import winreg
+
+    guid = r"Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+    for raiz, chave in ((winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\" + guid),
+                        (winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\" + guid), (winreg.HKEY_CURRENT_USER, "Software\\" + guid)):
+        try:
+            with winreg.OpenKey(raiz, chave) as k:
+                if winreg.QueryValueEx(k, "pv")[0] not in ("", "0.0.0.0"):
+                    return True
+        except OSError:
+            pass
+    return False
 
 
 def main():
