@@ -30,6 +30,23 @@ FFMPEG = _find_ffmpeg()
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 
+def ffmpeg_no_path(pasta):
+    """Bibliotecas que chamam "ffmpeg" pelo nome (o audio-separator, o pydub) nao acham o do imageio-ffmpeg, que tem
+    outro nome. Poe um ffmpeg.exe com esse nome em `pasta` e a pasta no PATH deste processo."""
+    if not FFMPEG or shutil.which("ffmpeg"):
+        return
+    pasta = Path(pasta)
+    exe = pasta / ("ffmpeg.exe" if os.name == "nt" else "ffmpeg")
+    if not exe.exists() or exe.stat().st_size != Path(FFMPEG).stat().st_size:
+        pasta.mkdir(parents=True, exist_ok=True)
+        exe.unlink(missing_ok=True)
+        try:
+            os.link(FFMPEG, exe)  # mesmo disco: nao ocupa espaco
+        except OSError:
+            shutil.copy2(FFMPEG, exe)
+    os.environ["PATH"] = str(pasta) + os.pathsep + os.environ.get("PATH", "")
+
+
 def require_ffmpeg():
     if not FFMPEG:
         raise RuntimeError(

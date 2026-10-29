@@ -7,9 +7,11 @@ import importlib
 import logging
 import threading
 import types
+import zipfile
 from pathlib import Path
 
 from .config import CACHE_DIR, CONFIG, MODELS_DIR
+from .util import ffmpeg_no_path
 
 log = logging.getLogger("karaoke.separation")
 
@@ -213,6 +215,28 @@ def _classify(paths):
     return vocals, other
 
 
+def _corrompido(model):
+    """Os .ckpt sao arquivos zip (torch.save); sem o fim do zip, o download parou no meio."""
+    f = MODELS_DIR / model
+    return f.suffix in (".ckpt", ".pth") and f.exists() and not zipfile.is_zipfile(f)
+
+
+def _carregar(sep, model):
+    """Carrega o modelo. Se o arquivo ficou pela metade (download interrompido), apaga e baixa de novo, uma vez."""
+    for tentativa in (1, 2):
+        try:
+            sep.load_model(model_filename=model)
+            return
+        except (Exception, SystemExit) as e:  # noqa: BLE001 - o audio-separator da sys.exit(1) quando falha
+            if tentativa == 1 and _corrompido(model):
+                log.warning("modelo %s incompleto: baixando de novo", model)
+                (MODELS_DIR / model).unlink()
+                continue
+            if isinstance(e, SystemExit):
+                raise RuntimeError(f"nao foi possivel carregar o modelo {model}") from None
+            raise
+
+
 class StemSeparator:
     def __init__(self):
         self.out_dir = CACHE_DIR / "separator"
@@ -258,6 +282,7 @@ class StemSeparator:
         from audio_separator.separator import Separator
 
         _patch_progress()
+        ffmpeg_no_path(CACHE_DIR / "bin")
         sep = Separator(
             use_autocast=fp16,
             mdxc_params={
@@ -276,7 +301,7 @@ class StemSeparator:
             # 1.0 = so reduz se for clipar; mantem o volume relativo entre os stems
             normalization_threshold=1.0,
         )
-        sep.load_model(model_filename=model)
+        _carregar(sep, model)
         with self._lock:
             self._separators[key] = sep
         return sep

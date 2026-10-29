@@ -20,6 +20,10 @@ dentro do app (Configurações → Atualizações), no idioma de quem usa.
 
 ### Corrigido
 
+- **Separação falhando com "FFmpeg is not installed":** nos PCs sem FFmpeg, a cópia que vem com o app tem outro
+  nome de arquivo, e o separador procura pelo nome. Agora ele encontra.
+- **Separação falhando de vez depois de um download de modelo interrompido:** o arquivo do modelo pela metade
+  ficava e quebrava todas as separações. Agora o app percebe, apaga e baixa de novo.
 - **Voltar para uma separação anterior:** no Editar da música, a escolha de qual versão guardada usar em cada
   faixa só valia no botão próprio dela; o Salvar ignorava a escolha, e a música continuava com a última separação.
   Agora o Salvar aplica também a escolha das faixas.

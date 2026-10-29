@@ -20,6 +20,10 @@ app (Settings → Updates), in the user's language.
 
 ### Fixed
 
+- **Separation failing with "FFmpeg is not installed":** on PCs without FFmpeg, the copy the app brings has another
+  file name, and the separator looks for it by name. It is now found.
+- **Separation failing for good after a model download stopped halfway:** the incomplete model file stayed and
+  broke every separation. The app now notices it, deletes it and downloads it again.
 - **Going back to an earlier separation:** in the song's Edit window, the choice of which saved version to use for
   each track only worked with its own button; Save ignored it, and the song kept the last separation. Save now also
   applies the track choice.
